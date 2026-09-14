@@ -1,0 +1,12 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.git
+.gitignore
+.idea
+*.iml
+*.DS_Store
+uploads/
+.env
+.env.local
+run.sh
+run.bat

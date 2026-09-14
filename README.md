@@ -94,3 +94,92 @@ main
 ```
 
 For detailed phase tracking and implementation milestones, see [ROADMAP.md](./ROADMAP.md).
+
+---
+
+## Getting Started
+
+### Prerequisites
+- **Java:** JDK 21+ (e.g. OpenJDK 21 or Temurin 26)
+- **Docker & Docker Compose:** For running PostgreSQL (and optional containerized app)
+- **Git**
+
+---
+
+### Method 1: Running the Application Locally (Recommended for Development)
+
+#### Step 1: Start PostgreSQL in Docker
+If PostgreSQL is not already running on your machine, start the database service using Docker Compose:
+
+```bash
+docker compose up -d postgres
+```
+
+> **Note:** The default connection configuration is:
+> - **Host:** `localhost:5432`
+> - **Database:** `agroloop`
+> - **User:** `postgres`
+> - **Password:** `7200`
+> - **JDBC URL:** `jdbc:postgresql://localhost:5432/agroloop`
+
+#### Step 2: Configure Environment (Optional)
+The project includes a pre-configured `.env` and default values in `application.properties`. To customize settings (e.g. port or database credentials), copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+#### Step 3: Start the Application
+
+- **On macOS / Linux:**
+  ```bash
+  ./run.sh
+  ```
+  *(Or directly via the Maven wrapper: `./mvnw spring-boot:run`)*
+
+- **On Windows (Command Prompt / PowerShell):**
+  ```cmd
+  run.bat
+  ```
+  *(Or directly via the Maven wrapper: `mvnw.cmd spring-boot:run`)*
+
+#### Step 4: Access the Application
+Once started, navigate to:
+👉 **[http://localhost:8080](http://localhost:8080)**
+
+You will see the AgroLoop homepage with a green **PostgreSQL Connected** status badge, overview of stakeholder portals (Household, Farmer, Admin), and the 12-phase roadmap progress tracker.
+
+---
+
+### Method 2: Running Everything in Docker (App + Database)
+
+To build and run the entire stack (PostgreSQL database and Spring Boot Java server) in isolated Docker containers:
+
+```bash
+# Build and run in detached mode
+docker compose up --build -d
+
+# View live application logs
+docker compose logs -f app
+
+# Stop the containers
+docker compose down
+```
+
+---
+
+### Running Automated Tests
+
+Run the test suite locally to verify database connectivity and web routes:
+
+- **macOS / Linux:**
+  ```bash
+  ./mvnw test
+  ```
+
+- **Windows:**
+  ```cmd
+  mvnw.cmd test
+  ```
+
+

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${appName} + ' — Sustainable Waste & Reward Ecosystem'">AgroLoop</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="brand">
+                <div class="logo-icon">🌱</div>
+                <div>
+                    <h1 class="brand-title" th:text="${appName}">AgroLoop</h1>
+                    <span class="brand-subtitle">Circular Economy Platform</span>
+                </div>
+            </div>
+            <div class="nav-badges">
+                <span class="badge phase-badge" th:text="${currentPhase}">Phase 1: Project Setup</span>
+                <span th:if="${dbConnected}" class="badge db-badge db-success">
+                    <span class="indicator-dot online"></span> PostgreSQL Connected
+                </span>
+                <span th:unless="${dbConnected}" class="badge db-badge db-error">
+                    <span class="indicator-dot offline"></span> DB Disconnected
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container hero-container">
+            <div class="hero-badge">Phase 1 Milestone Complete</div>
+            <h2 class="hero-heading">Bridging Waste Management, Agriculture & Sustainable Commerce</h2>
+            <p class="hero-desc">
+                AgroLoop transforms household organic waste into agricultural value. Farmers collect and verify waste, households earn EcoTokens, and everyone participates in a transparent, sustainable marketplace.
+            </p>
+
+            <!-- Quick System Diagnostics Banner -->
+            <div class="system-status-card">
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Database Status</span>
+                        <span class="status-value" th:classappend="${dbConnected} ? 'text-green' : 'text-red'">
+                            <span th:text="${dbConnected ? 'Active' : 'Offline'}">Active</span>
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Engine / DB Info</span>
+                        <span class="status-value monospace" th:text="${dbInfo}">PostgreSQL 16</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Framework</span>
+                        <span class="status-value">Spring Boot 3.3.4 (Java 21+)</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">System Time</span>
+                        <span class="status-value monospace" th:text="${timestamp}">2026-09-14 22:30</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Role Portals Section -->
+    <section class="roles-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Role Architecture</span>
+                <h3 class="section-title">Three Integrated Ecosystem Stakeholders</h3>
+            </div>
+            <div class="cards-grid">
+                <!-- Household Card -->
+                <div class="role-card">
+                    <div class="card-icon household-icon">🏡</div>
+                    <h4>Household Portal</h4>
+                    <p>Submit organic waste with photo attachments, schedule convenient door collections, and monitor your EcoToken reward wallet.</p>
+                    <ul class="card-features">
+                        <li>Organic waste photo uploads</li>
+                        <li>Real-time pickup status tracking</li>
+                        <li>EcoToken balance & marketplace shopping</li>
+                    </ul>
+                    <span class="card-status-pill upcoming">Planned for Phase 2–4</span>
+                </div>
+
+                <!-- Farmer Card -->
+                <div class="role-card">
+                    <div class="card-icon farmer-icon">🚜</div>
+                    <h4>Farmer Portal</h4>
+                    <p>Discover available waste submissions, schedule collection runs, verify quality/quantity with photo comparison, and list products.</p>
+                    <ul class="card-features">
+                        <li>Submissions map & pickup claims</li>
+                        <li>Post-collection weight & grade verification</li>
+                        <li>Produce and organic compost listings</li>
+                    </ul>
+                    <span class="card-status-pill upcoming">Planned for Phase 5–6</span>
+                </div>
+
+                <!-- Admin Card -->
+                <div class="role-card">
+                    <div class="card-icon admin-icon">🛡️</div>
+                    <h4>Admin Portal</h4>
+                    <p>Oversee system transactions, audit EcoToken distributions, resolve pickup disputes, and inspect circular economy metrics.</p>
+                    <ul class="card-features">
+                        <li>User role management & security</li>
+                        <li>Dispute resolution & verification audit</li>
+                        <li>Marketplace transaction oversight</li>
+                    </ul>
+                    <span class="card-status-pill upcoming">Planned for Phase 10</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 12-Phase Roadmap Section -->
+    <section class="roadmap-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Development Roadmap</span>
+                <h3 class="section-title">12-Phase Implementation Progress</h3>
+                <p class="section-subtitle">Following the prioritized workflow from setup to AI classification.</p>
+            </div>
+
+            <div class="phases-timeline">
+                <div class="phase-row current">
+                    <div class="phase-step">1</div>
+                    <div class="phase-info">
+                        <div class="phase-title-line">
+                            <span class="phase-name">Phase 1: Project Setup</span>
+                            <span class="phase-tag active-tag">In Progress / Milestone Met</span>
+                        </div>
+                        <p class="phase-desc">Maven Spring Boot project setup, PostgreSQL connection, Thymeleaf templating, and baseline documentation.</p>
+                    </div>
+                </div>
+
+                <div class="phase-row">
+                    <div class="phase-step">2</div>
+                    <div class="phase-info">
+                        <div class="phase-title-line">
+                            <span class="phase-name">Phase 2: Authentication & Security</span>
+                            <span class="phase-tag pending-tag">Next</span>
+                        </div>
+                        <p class="phase-desc">Spring Security, user registration, role segregation (`HOUSEHOLD`, `FARMER`, `ADMIN`), and session management.</p>
+                    </div>
+                </div>
+
+                <div class="phase-row">
+                    <div class="phase-step">3</div>
+                    <div class="phase-info">
+                        <div class="phase-title-line">
+                            <span class="phase-name">Phase 3: Profiles & Dashboards</span>
+                            <span class="phase-tag pending-tag">Upcoming</span>
+                        </div>
+                        <p class="phase-desc">Dedicated dashboard workflows for households, farmers, and administrative management.</p>
+                    </div>
+                </div>
+
+                <div class="phase-row">
+                    <div class="phase-step">4</div>
+                    <div class="phase-info">
+                        <div class="phase-title-line">
+                            <span class="phase-name">Phase 4: Waste Submission & Images</span>
+                            <span class="phase-tag pending-tag">Upcoming</span>
+                        </div>
+                        <p class="phase-desc">Multipart image upload with validation, local disk persistence, and database reference tracking.</p>
+                    </div>
+                </div>
+
+                <div class="phase-row">
+                    <div class="phase-step">5–8</div>
+                    <div class="phase-info">
+                        <div class="phase-title-line">
+                            <span class="phase-name">Phases 5–8: Pickups, Verification, EcoTokens & Marketplace</span>
+                            <span class="phase-tag pending-tag">Core Engine</span>
+                        </div>
+                        <p class="phase-desc">Farmer claim & collection, post-collection verification, atomic EcoToken rewards, and marketplace checkout.</p>
+                    </div>
+                </div>
+
+                <div class="phase-row">
+                    <div class="phase-step">9–12</div>
+                    <div class="phase-info">
+                        <div class="phase-title-line">
+                            <span class="phase-name">Phases 9–12: Route Planning, Admin, Hardening & AI Classification</span>
+                            <span class="phase-tag pending-tag">Advanced</span>
+                        </div>
+                        <p class="phase-desc">Optimized collection routes, review systems, production tests, and multimodal AI waste classification.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>&copy; 2026 AgroLoop. Built with Spring Boot, Thymeleaf & PostgreSQL.</p>
+            <p class="footer-meta">Git Branch: <code>feature/project-setup</code></p>
+        </div>
+    </footer>
+
+</body>
+</html>
