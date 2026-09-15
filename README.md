@@ -6,6 +6,12 @@ AgroLoop is a Java Spring Boot web application designed to connect households an
 
 ---
 
+📚 **[Comprehensive Developer Documentation Hub & Freshers Guide](./docs/INDEX.md)**  
+*Complete setup guide (how to install Java, how to install Docker, start the project on Windows/Mac, OOP principles, and deep-dive documentation for all modules).*
+
+---
+
+
 ## Tech Stack
 
 - **Backend:** Java (JDK 21+ / Temurin 26), Spring Boot 3.x (Spring MVC, Spring Data JPA, Spring Validation)
