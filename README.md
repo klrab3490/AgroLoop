@@ -172,20 +172,27 @@ classDiagram
 
 ---
 
-## Git Branch Plan
+## Git Branch & Promotion Strategy
 
-All development follows feature branches aligned with the project roadmap:
+All development is performed on feature branches, integrated initially into `dev`, and promoted to `main` only after review and verification:
 
 ```
-main
-├── feature/project-setup
-├── feature/user-management
-├── feature/waste-submission
-├── feature/pickup-verification
-├── feature/ecotokens
-├── feature/marketplace
-└── feature/admin-testing
+main (stable releases / production)
+└── dev (active development & integration)
+    ├── feature/project-setup
+    ├── feature/user-management
+    ├── feature/waste-submission
+    ├── feature/pickup-verification
+    ├── feature/ecotokens
+    ├── feature/marketplace
+    └── feature/admin-testing
 ```
+
+Workflow:
+1. Develop features on `feature/<phase-name>`.
+2. Push and merge verified features into `dev`.
+3. Conduct testing and review on `dev`.
+4. Merge `dev` into `main` for milestone releases.
 
 For detailed phase tracking and implementation milestones, see [ROADMAP.md](./ROADMAP.md).
 
