@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "vscjava.vscode-java-pack",
+    "vmware.vscode-spring-boot",
+    "vscjava.vscode-spring-boot-dashboard",
+    "vscjava.vscode-spring-initializr",
+    "vscjava.vscode-lombok",
+    "redhat.vscode-xml",
+    "redhat.vscode-yaml",
+    "humao.rest-client",
+    "usernamehw.errorlens"
+  ]
+}

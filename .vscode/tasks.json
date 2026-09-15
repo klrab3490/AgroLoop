@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "maven: compile",
+      "type": "shell",
+      "command": "./mvnw compile || mvn compile",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$mavenCompile"]
+    },
+    {
+      "label": "maven: test",
+      "type": "shell",
+      "command": "./mvnw test || mvn test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": ["$mavenTest"]
+    },
+    {
+      "label": "spring-boot: run",
+      "type": "shell",
+      "command": "./mvnw spring-boot:run || mvn spring-boot:run",
+      "problemMatcher": []
+    },
+    {
+      "label": "maven: package",
+      "type": "shell",
+      "command": "./mvnw clean package || mvn clean package",
+      "problemMatcher": ["$mavenCompile"]
+    },
+    {
+      "label": "maven: package (skip tests)",
+      "type": "shell",
+      "command": "./mvnw clean package -DskipTests || mvn clean package -DskipTests",
+      "problemMatcher": ["$mavenCompile"]
+    }
+  ]
+}

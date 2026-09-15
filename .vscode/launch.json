@@ -1,0 +1,34 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "AgroLoopApplication",
+      "request": "launch",
+      "mainClass": "com.agroloop.AgroLoopApplication",
+      "projectName": "agroloop",
+      "args": ""
+    },
+    {
+      "type": "java",
+      "name": "AgroLoopApplication (Dev Profile)",
+      "request": "launch",
+      "mainClass": "com.agroloop.AgroLoopApplication",
+      "projectName": "agroloop",
+      "args": "--spring.profiles.active=dev"
+    },
+    {
+      "type": "java",
+      "name": "Attach to Remote JVM",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5005
+    },
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    }
+  ]
+}

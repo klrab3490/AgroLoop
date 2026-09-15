@@ -1,0 +1,46 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.format.enabled": true,
+  "java.format.onType.enabled": true,
+  "java.saveActions.organizeImports": true,
+  "editor.formatOnSave": true,
+
+  "[java]": {
+    "editor.defaultFormatter": "redhat.java",
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "on"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "redhat.vscode-xml"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+
+  "spring-boot.ls.checkJdk": true,
+  "boot-java.rewrite.reconcile": true,
+
+  "maven.executable.preferMavenWrapper": true,
+  "maven.terminal.useJavaHome": true,
+  "maven.view": "hierarchical",
+
+  "files.associations": {
+    "application*.properties": "properties",
+    "application*.yml": "yaml",
+    "application*.yaml": "yaml"
+  },
+
+  "java.completion.favoriteStaticMembers": [
+    "org.junit.Assert.*",
+    "org.junit.Assume.*",
+    "org.junit.jupiter.api.Assertions.*",
+    "org.junit.jupiter.api.Assumptions.*",
+    "org.junit.jupiter.api.DynamicContainer.*",
+    "org.junit.jupiter.api.DynamicTest.*",
+    "org.mockito.Mockito.*",
+    "org.mockito.ArgumentMatchers.*",
+    "org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*",
+    "org.springframework.test.web.servlet.result.MockMvcResultMatchers.*"
+  ]
+}
