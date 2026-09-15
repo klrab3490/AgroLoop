@@ -17,33 +17,132 @@ AgroLoop is a Java Spring Boot web application designed to connect households an
 
 ---
 
-## Core Roles & Capabilities
+## Object-Oriented Principles in AgroLoop
 
-| Role | Responsibilities |
-| :--- | :--- |
-| **Household** | Profile management, organic waste submission with photos, pickup tracking, EcoToken balance, marketplace purchases. |
-| **Farmer** | Profile management, pickup request assignment & scheduling, quality and quantity verification upon collection, product listing in marketplace. |
-| **Admin** | System administration, user/role management, verification dispute handling, marketplace order auditing, platform analytics. |
-
----
-
-## Core Entities
-
-| Entity | Description |
-| :--- | :--- |
-| `User` | Authentication credentials, email, password hash, role (`HOUSEHOLD`, `FARMER`, `ADMIN`). |
-| `Household` | Household profile, address, contact information, pickup coordinates/notes. |
-| `Farmer` | Farmer profile, farm location, accepted waste categories, processing capacity. |
-| `WasteSubmission` | Waste classification details, estimated quantity, image attachment, collection status. |
-| `PickupRequest` | Assignment of waste submission to farmer, pickup scheduling, collection status. |
-| `WasteVerification` | Post-collection verification of actual quantity and quality grade by the farmer. |
-| `TokenTransaction` | EcoToken credit/debit audit log (rewards earned from verified waste, spent in marketplace). |
-| `Product` | Sustainable produce and compost items listed by farmers or platform partners. |
-| `Order` | Marketplace checkout records placed by households using EcoTokens or payment. |
+- **Encapsulation:** User identity, token balances, and waste lifecycle states are encapsulated inside model classes. Mutations happen through domain methods (`accept()`, `decline()`, `verifyWaste()`, `calculateTokens()`).
+- **Inheritance:** A polymorphic `User` base entity (`@Inheritance(strategy = InheritanceType.JOINED)`) extended by `Household`, `Farmer`, and `Admin`.
+- **Polymorphism:** Strategy interfaces (`TokenCalculator`, `WasteMatcher`) allowing interchangeable business algorithms.
+- **Abstraction:** Controllers call business services (`UserService`, `WasteSubmissionService`, etc.) rather than manipulating repositories or entities directly.
 
 ---
 
-## Architecture
+## Package Structure
+
+```
+AgroLoop/
+├── src/main/java/com/agroloop/
+│   ├── AgroLoopApplication.java
+│   ├── config/             # Security, beans, and MVC configs
+│   ├── controller/         # Web/Thymeleaf controllers
+│   ├── service/            # Business logic and service interfaces
+│   ├── repository/         # Spring Data JPA repositories
+│   ├── model/              # OOP Domain classes with Inheritance
+│   │   ├── User.java
+│   │   ├── Household.java
+│   │   ├── Farmer.java
+│   │   ├── Admin.java
+│   │   ├── WasteSubmission.java
+│   │   ├── PickupRequest.java
+│   │   ├── WasteVerification.java
+│   │   ├── EcoTokenTransaction.java
+│   │   └── Product.java
+│   ├── dto/                # Validation and form transfer objects
+│   └── exception/          # Custom domain exceptions
+├── src/main/resources/
+│   ├── application.properties
+│   ├── static/             # CSS & JS assets
+│   └── templates/          # Thymeleaf templates
+├── pom.xml
+└── docker-compose.yml
+```
+
+---
+
+## Core Class Relationships
+
+```mermaid
+classDiagram
+    class User {
+        -Long id
+        -String name
+        -String email
+        -String passwordHash
+        +login()
+    }
+
+    class Household {
+        -double tokenBalance
+        +submitWaste()
+        +requestPickup()
+        +cancelPickup()
+        +buyProduct()
+    }
+
+    class Farmer {
+        +acceptPickup()
+        +declinePickup()
+        +schedulePickup()
+        +verifyWaste()
+        +addProduct()
+    }
+
+    class Admin {
+        +manageUsers()
+        +manageWasteRules()
+        +managePickups()
+        +reviewDisputes()
+    }
+
+    class WasteSubmission {
+        -Long id
+        -WasteCategory category
+        -double estimatedWeight
+        -String imageUrl
+    }
+
+    class PickupRequest {
+        -Long id
+        -PickupStatus status
+        +accept()
+        +decline()
+        +cancel()
+    }
+
+    class WasteVerification {
+        -double verifiedWeight
+        -VerificationStatus status
+        +calculateTokens()
+    }
+
+    class EcoTokenTransaction {
+        -Long id
+        -BigDecimal amount
+        -TransactionType type
+    }
+
+    class Product {
+        -Long id
+        -String name
+        -BigDecimal price
+        -int stock
+    }
+
+    User <|-- Household
+    User <|-- Farmer
+    User <|-- Admin
+
+    Household "1" --> "*" WasteSubmission
+    Household "1" --> "*" EcoTokenTransaction
+    Farmer "1" --> "*" PickupRequest
+    Farmer "1" --> "*" Product
+
+    WasteSubmission "1" --> "*" PickupRequest
+    PickupRequest "1" --> "0..1" WasteVerification
+```
+
+---
+
+## Architecture Flow
 
 ```
                        Browser (Thymeleaf Templates)
@@ -52,13 +151,13 @@ AgroLoop is a Java Spring Boot web application designed to connect households an
                     Spring Boot Controllers (Web / MVC)
                                      │
                                      ▼
-                          Service Layer (Business Logic)
+                      Service Layer (Abstraction & OOP)
                                      │
                                      ▼
                       Repositories (Spring Data JPA)
                                      │
                                      ▼
-                         PostgreSQL Database (Docker)
+                   PostgreSQL Database (Docker / Joined Tables)
 ```
 
 ---
@@ -80,20 +179,16 @@ All development follows feature branches aligned with the project roadmap:
 ```
 main
 ├── feature/project-setup
-├── feature/authentication
-├── feature/profiles
-├── feature/waste-submission-images
-├── feature/pickup-management
-├── feature/waste-verification
-├── feature/ecotoken-system
+├── feature/user-management
+├── feature/waste-submission
+├── feature/pickup-verification
+├── feature/ecotokens
 ├── feature/marketplace
-├── feature/route-planning
-├── feature/admin
-├── feature/testing-deployment
-└── feature/ai-classification
+└── feature/admin-testing
 ```
 
 For detailed phase tracking and implementation milestones, see [ROADMAP.md](./ROADMAP.md).
+
 
 ---
 
