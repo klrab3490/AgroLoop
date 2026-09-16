@@ -144,6 +144,61 @@ body {
     box-shadow: 0 0 8px var(--accent-red);
 }
 
+/* Button & Nav Action Styles */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    line-height: 1.4;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #ffffff;
+    box-shadow: 0 4px 12px var(--accent-emerald-glow);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #047857, #059669);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    color: #ffffff;
+}
+
+.btn-outline {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
 /* Hero Section */
 .hero-section {
     padding: 4.5rem 0 3.5rem;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +21,7 @@
                     <span class="brand-subtitle">Circular Economy Platform</span>
                 </div>
             </div>
+
             <div class="nav-badges">
                 <span class="badge phase-badge" th:text="${currentPhase}">Phase 1: Project Setup</span>
                 <span th:if="${dbConnected}" class="badge db-badge db-success">
@@ -29,6 +30,21 @@
                 <span th:unless="${dbConnected}" class="badge db-badge db-error">
                     <span class="indicator-dot offline"></span> DB Disconnected
                 </span>
+            </div>
+
+            <!-- User Authentication Navigation Actions -->
+            <div class="nav-actions">
+                <div sec:authorize="isAnonymous()" style="display: flex; gap: 0.6rem;">
+                    <a th:href="@{/login}" class="btn btn-outline">Login</a>
+                    <a th:href="@{/register}" class="btn btn-primary">Register</a>
+                </div>
+                <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);" sec:authentication="name">User</span>
+                    <a th:href="@{/dashboard}" class="btn btn-primary">Dashboard</a>
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-outline">Sign Out</button>
+                    </form>
+                </div>
             </div>
         </div>
     </header>
@@ -41,6 +57,12 @@
             <p class="hero-desc">
                 AgroLoop transforms household organic waste into agricultural value. Farmers collect and verify waste, households earn EcoTokens, and everyone participates in a transparent, sustainable marketplace.
             </p>
+
+            <!-- Hero Action Buttons -->
+            <div class="hero-actions">
+                <a th:href="@{/login}" class="btn btn-primary">Login to Portal</a>
+                <a th:href="@{/register}" class="btn btn-outline">Register Account</a>
+            </div>
 
             <!-- Quick System Diagnostics Banner -->
             <div class="system-status-card">

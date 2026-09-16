@@ -25,6 +25,7 @@ class HomeControllerTest {
                 .andExpect(model().attributeExists("appName", "currentPhase", "dbConnected", "dbInfo"))
                 .andExpect(model().attribute("dbConnected", true))
                 .andExpect(content().string(containsString("AgroLoop")))
-                .andExpect(content().string(containsString("PostgreSQL Connected")));
+                .andExpect(content().string(containsString("PostgreSQL Connected")))
+                .andExpect(content().string(containsString("Login")));
     }
 }
