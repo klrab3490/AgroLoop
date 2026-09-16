@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — AgroLoop</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.08) 0%, var(--bg-primary) 70%);
+        }
+
+        .auth-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #059669, #10b981);
+            border-radius: 14px;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 6px 18px var(--accent-emerald-glow);
+        }
+
+        .auth-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #fff;
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.45rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: var(--font-sans);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-emerald);
+            box-shadow: 0 0 0 3px var(--accent-emerald-glow);
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        .alert {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .demo-credentials {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .demo-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .demo-pills {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .demo-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .demo-pill:hover {
+            border-color: var(--accent-emerald);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .demo-role {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .demo-email {
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .back-link a:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <a th:href="@{/}" style="text-decoration: none;">
+                    <div class="auth-logo">🌱</div>
+                </a>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Sign in to access your AgroLoop portal</p>
+            </div>
+
+            <!-- Error Notification -->
+            <div th:if="${errorMessage}" class="alert alert-error">
+                <span>⚠️</span>
+                <span th:text="${errorMessage}">Invalid credentials.</span>
+            </div>
+
+            <!-- Logout Notification -->
+            <div th:if="${logoutMessage}" class="alert alert-success">
+                <span>✓</span>
+                <span th:text="${logoutMessage}">Logged out successfully.</span>
+            </div>
+
+            <!-- Login Form -->
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input class="form-input" type="email" id="email" name="email" placeholder="name@example.com" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
+
+            <!-- Quick Demo Helper -->
+            <div class="demo-credentials">
+                <div class="demo-title">Quick Fill Demo Accounts</div>
+                <div class="demo-pills">
+                    <div class="demo-pill" onclick="fillCredentials('admin@agroloop.com', 'admin123')">
+                        <span class="demo-role">🛡️ Admin</span>
+                        <span class="demo-email">admin@agroloop.com</span>
+                    </div>
+                    <div class="demo-pill" onclick="fillCredentials('household@agroloop.com', 'household123')">
+                        <span class="demo-role">🏡 Household</span>
+                        <span class="demo-email">household@agroloop.com</span>
+                    </div>
+                    <div class="demo-pill" onclick="fillCredentials('farmer@agroloop.com', 'farmer123')">
+                        <span class="demo-role">🚜 Farmer</span>
+                        <span class="demo-email">farmer@agroloop.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="back-link">
+                <a th:href="@{/}">← Return to Homepage</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fillCredentials(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+    </script>
+
+</body>
+</html>

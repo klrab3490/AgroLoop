@@ -21,7 +21,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login/**", "/register/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/login/**", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/farmer/**").hasAuthority("ROLE_FARMER")
                 .requestMatchers("/household/**").hasAuthority("ROLE_HOUSEHOLD")
@@ -29,6 +29,8 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
                 .defaultSuccessUrl("/", true)
                 .permitAll()
             )
