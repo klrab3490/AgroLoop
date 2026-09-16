@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Local Docker Compose for AgroLoop
 # Builds and starts both PostgreSQL and the Spring Boot web application
 

@@ -300,4 +300,40 @@ Run the test suite locally to verify database connectivity and web routes:
   mvnw.cmd test
   ```
 
+---
+
+### Git & Pull Request (PR) Workflow
+
+AgroLoop uses a multi-tier branch flow where **all changes merge via Pull Request (PR)**:
+
+```
+main (Production / Releases)
+  ▲
+  │ Release PR (dev ➔ main)
+  │
+dev (Active QA / Continuous Integration)
+  ▲
+  │ Feature PR (feature/* ➔ dev)
+  │
+feature/<name> (Local Feature Branch)
+```
+
+1. **Create Feature Branch**:
+   ```bash
+   git checkout dev && git pull origin dev
+   git checkout -b feature/<feature-name>
+   ```
+2. **Implement, Test, and Commit**:
+   ```bash
+   ./mvnw clean test
+   git commit -m "feat(scope): describe changes"
+   git push -u origin feature/<feature-name>
+   ```
+3. **Open PR targeting `dev`**:
+   👉 [Create Pull Request to `dev`](https://github.com/AgnaMariya/AgroLoop/compare/dev...feature/<feature-name>?expand=1)  
+   Complete the PR checklist in `.github/pull_request_template.md`. GitHub Actions runs automated tests on Java 21.
+4. **Release PR to `main`**:
+   👉 [Create Release PR to `main`](https://github.com/AgnaMariya/AgroLoop/compare/main...dev?expand=1)
+
+
 

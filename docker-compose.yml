@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   # ==========================================================
   # PostgreSQL Database Service
   # ==========================================================
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg18
     container_name: agroloop-postgres
     restart: unless-stopped
     environment:
@@ -15,12 +13,13 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - agroloop_pgdata:/var/lib/postgresql/data
+      - agroloop_pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-agroloop}"]
-      interval: 5s
+      test: pg_isready -U postgres
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     networks:
       - agroloop-network
 

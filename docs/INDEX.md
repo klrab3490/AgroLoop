@@ -404,6 +404,8 @@ The table below catalogs every key file in the AgroLoop codebase, providing a di
 | File Path | Component Layer | Core Classes / Interfaces | Key Functions & Responsibilities | Mapped Module |
 | :--- | :--- | :--- | :--- | :--- |
 | **[`pom.xml`](../pom.xml)** | Build & Dependencies | Maven POM | Declares project dependencies: Spring Boot 3.3.4, Security, JPA, PostgreSQL, Flyway, H2 (test), Thymeleaf. | [01. Setup](../docs/modules/01_project_setup.md) |
+| **[`.github/workflows/ci.yml`](../.github/workflows/ci.yml)** | CI / Automation | GitHub Actions | Automated continuous integration running Java 21 test suites on all PRs targeting `dev` and `main`. | [01. Setup](../docs/modules/01_project_setup.md) |
+| **[`.github/pull_request_template.md`](../.github/pull_request_template.md)** | Code Review | PR Template | Standardized Pull Request template enforcing OOP principles, documentation updates, and test verification. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`run.sh`](../run.sh)** | Dev Runner | Shell Script | Automates local execution on macOS/Linux with environment checks and PostgreSQL readiness verification. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`run.bat`](../run.bat)** | Dev Runner | Batch Script | Automates local execution on Windows Command Prompt. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`docker-compose.yml`](../docker-compose.yml)** | Infrastructure | Compose Config | Orchestrates PostgreSQL container and full application stack with healthchecks and volumes. | [01. Setup](../docs/modules/01_project_setup.md) |
@@ -466,25 +468,51 @@ Each feature and integration in AgroLoop has its own dedicated documentation fil
 
 ---
 
-## 6. Git & Release Strategy
+## 6. Git & Pull Request (PR) Workflow
 
-We follow a multi-tier branch progression to maintain stability:
+We enforce a strict multi-tier branch progression and Pull Request (PR) review flow to guarantee repository stability:
 
 ```
 main (Production / Stable Releases)
   ▲
-  │ (After thorough review & signoff)
+  │ Pull Request (from dev to main, reviewed & signed off)
   │
-dev (Active Integration & QA)
+dev (Active Integration & Continuous Integration)
   ▲
-  │ (Features pushed here upon completion)
+  │ Pull Request (from feature/<name> to dev, passing automated CI)
   │
-feature/<phase-name> (Individual feature development)
+feature/<phase-name> (Individual feature branch)
 ```
 
-1. Create and work on your feature branch: `git checkout -b feature/<name>`.
-2. Commit and push feature branch to remote.
-3. Merge feature branch into `dev` and push to `origin/dev`.
-4. Review and test on `dev`.
-5. Merge `dev` into `main` for release milestones.
+### Development & Pull Request Rules
+
+1. **Feature Branch Creation:**
+   - Always branch off `dev`:
+     ```bash
+     git checkout dev
+     git pull origin dev
+     git checkout -b feature/<feature-name>
+     ```
+2. **Local Verification:**
+   - Ensure all tests compile and pass with Java 21:
+     ```bash
+     ./mvnw clean test
+     ```
+3. **Commit & Push:**
+   - Commit following Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`).
+   - Push to remote:
+     ```bash
+     git push -u origin feature/<feature-name>
+     ```
+4. **Open Pull Request Targeting `dev`:**
+   - Direct CLI merges to `dev` or `main` are strictly forbidden.
+   - Open a Pull Request on GitHub targeting **base: `dev`**:
+     👉 **[Create PR to dev](https://github.com/AgnaMariya/AgroLoop/compare/dev...feature/<feature-name>?expand=1)**
+   - Fill out the automated checklist in [`.github/pull_request_template.md`](../.github/pull_request_template.md).
+   - GitHub Actions CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) automatically runs the test suite against the PR.
+5. **Release Promotion to `main` via PR:**
+   - When a phase/milestone is ready for release, open a PR from `dev` to `main`:
+     👉 **[Create PR from dev to main](https://github.com/AgnaMariya/AgroLoop/compare/main...dev?expand=1)**
+   - Review, approve, and merge into `main`.
+
 
