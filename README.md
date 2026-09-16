@@ -257,6 +257,16 @@ Once started, navigate to:
 
 You will see the AgroLoop homepage with a green **PostgreSQL Connected** status badge, overview of stakeholder portals (Household, Farmer, Admin), and the 12-phase roadmap progress tracker.
 
+#### Default Credentials Reference
+
+| Service / Role | Username / Email | Password | URL / Port | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **PostgreSQL** | `postgres` | `7200` | `localhost:5432` / `agroloop` | Core relational database |
+| **pgAdmin (Optional)** | `admin@agroloop.local` | `admin` | `http://localhost:5055` | DB Admin UI (`--profile tools`) |
+| **App: Admin** | `admin@agroloop.com` | `admin123` | `http://localhost:8080/login` | System administrator dashboard |
+| **App: Household** | `household@agroloop.com` | `household123` | `http://localhost:8080/login` | Household waste submission & wallet |
+| **App: Farmer** | `farmer@agroloop.com` | `farmer123` | `http://localhost:8080/login` | Farmer pickup & verification portal |
+
 ---
 
 ### Method 2: Running Everything in Docker (App + Database)

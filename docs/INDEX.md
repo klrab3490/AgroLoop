@@ -130,6 +130,18 @@ Stop: `docker compose down`
 
 ---
 
+### Step 4: Default Credentials Reference
+
+| Service / Role | Username / Email | Password | Port / URL | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **PostgreSQL Database** | `postgres` | `7200` | `localhost:5432` / `agroloop` | Pre-configured in `.env` & Docker |
+| **pgAdmin (Optional)** | `admin@agroloop.local` | `admin` | `http://localhost:5055` | Run with `--profile tools` |
+| **App: Admin (Seeded)** | `admin@agroloop.com` | `admin123` | `http://localhost:8080/login` | Full system administration |
+| **App: Household (Demo)** | `household@agroloop.com` | `household123` | `http://localhost:8080/login` | Waste submission & token spending |
+| **App: Farmer (Demo)** | `farmer@agroloop.com` | `farmer123` | `http://localhost:8080/login` | Pickup verification & marketplace |
+
+---
+
 ## 2. Object-Oriented Architecture Master Guide
 
 AgroLoop is strictly designed around Object-Oriented Programming (OOP) principles. Domain classes are responsible for their internal state and business validation.
