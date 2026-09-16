@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Dashboard — AgroLoop</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="brand">
+                <div class="logo-icon">🌱</div>
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Household Portal</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <span class="badge phase-badge">Household Member</span>
+                <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Household User</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="margin-bottom: 2.5rem;">
+            <span class="section-tag">Household Account</span>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Alice</span></h2>
+            <p style="color: var(--text-secondary);">Manage waste collections, track pickup statuses, and spend EcoTokens.</p>
+        </div>
+
+        <div class="cards-grid" style="margin-bottom: 3rem;">
+            <div class="role-card">
+                <div class="card-icon household-icon">🪙</div>
+                <h4>EcoToken Balance</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #10b981; margin-bottom: 0.5rem;">
+                    <span th:text="${user?.tokenBalance}">150.00</span> <span style="font-size: 1rem; color: var(--text-secondary);">TOKENS</span>
+                </div>
+                <p>Earned from verified organic waste collections. Redeemable in the marketplace.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon household-icon">📍</div>
+                <h4>Pickup Address</h4>
+                <p style="font-weight: 600; color: #fff; margin-bottom: 0.5rem;" th:text="${user?.address}">Green View Residency, Kochi</p>
+                <p>Default collection address used for scheduling door-to-door pickups.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon household-icon">📦</div>
+                <h4>Waste Submissions</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa; margin-bottom: 0.5rem;">0</div>
+                <p>Ready for Phase 3: Submit waste with photos and schedule pickup runs.</p>
+            </div>
+        </div>
+
+        <div class="system-status-card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Household Actions (Coming in Phases 3–6)</h3>
+            <ul class="card-features">
+                <li>Submit organic waste batches with image attachments</li>
+                <li>Track collection progress in real time (`PENDING` ➔ `COLLECTED` ➔ `VERIFIED`)</li>
+                <li>Review farmer quality grading and token rewards credited to your wallet</li>
+                <li>Browse organic farmer produce and compost in the marketplace</li>
+            </ul>
+        </div>
+    </main>
+
+</body>
+</html>

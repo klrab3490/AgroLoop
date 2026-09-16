@@ -104,4 +104,32 @@ AgroLoop utilizes **Flyway** for database versioning and migrations located in `
 
 ---
 
+## 6. User Data Seeding & Default Credentials
+
+AgroLoop automatically seeds default demo users upon application startup using [`DataInitializer.java`](file:///Users/rahul/Desktop/Projects/Personal/AgroLoop/src/main/java/com/agroloop/config/DataInitializer.java) which implements Spring Boot's `CommandLineRunner`.
+
+### How It Works:
+1. When the Spring Boot application boots up and Flyway applies migrations, `DataInitializer.run()` is invoked.
+2. It checks `userRepository.existsByEmail(...)` for each role to prevent duplicate seeding.
+3. It creates domain entity instances (`Admin`, `Household`, `Farmer`) and dynamically hashes passwords with BCrypt before persisting through their respective repositories.
+
+### Default Seeded Accounts:
+
+| Role | Email | Password | Initial State / Details |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin@agroloop.com` | `admin123` | System Administrator (ROLE_ADMIN) |
+| **Household** | `household@agroloop.com` | `household123` | Alice Green (ROLE_HOUSEHOLD, 150.00 EcoTokens, Kochi address) |
+| **Farmer** | `farmer@agroloop.com` | `farmer123` | Bob Farmer (ROLE_FARMER, Green Valley Organic Farm, Wayanad) |
+
+### Manual Database Seeding (Alternative via Docker / psql)
+If you ever wipe the database and prefer manual SQL seeding instead of running Spring Boot:
+```bash
+# Connect to PostgreSQL inside Docker
+docker exec -it agroloop_postgres psql -U postgres -d agroloop
+```
+*(Note: Spring Boot's `DataInitializer` will automatically seed the accounts on next startup if the tables are empty.)*
+
+---
+
 [← Back to Master Documentation Hub](../INDEX.md)
+

@@ -61,6 +61,8 @@ public abstract class User {
         this.passwordHash = requireText(passwordHash, "Password hash");
         this.role = requireRole(role);
         this.enabled = true;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     @PrePersist

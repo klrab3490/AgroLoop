@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard — AgroLoop</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="brand">
+                <div class="logo-icon">🌱</div>
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Farmer Portal</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <span class="badge phase-badge">Farmer Partner</span>
+                <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Farmer Partner</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="margin-bottom: 2.5rem;">
+            <span class="section-tag">Farmer Agro Portal</span>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Bob</span></h2>
+            <p style="color: var(--text-secondary);">Claim nearby organic waste collections, verify incoming biomass, and list fresh produce.</p>
+        </div>
+
+        <div class="cards-grid" style="margin-bottom: 3rem;">
+            <div class="role-card">
+                <div class="card-icon farmer-icon">🚜</div>
+                <h4>Farm Profile</h4>
+                <div style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem;" th:text="${user?.farmName}">Green Valley Organic Farm</div>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;" th:text="${user?.farmAddress}">Wayanad, Kerala</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon farmer-icon">📋</div>
+                <h4>Pickup Queue</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;">0</div>
+                <p>Pending pickups ready to accept and schedule for collection in Phase 4.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon farmer-icon">🍎</div>
+                <h4>Marketplace Listings</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem;">0</div>
+                <p>Produce and organic compost products listed for sale in Phase 6.</p>
+            </div>
+        </div>
+
+        <div class="system-status-card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Farmer Operations (Coming in Phases 4–6)</h3>
+            <ul class="card-features">
+                <li>Discover household waste submissions nearby and claim pickups (`acceptPickup()`)</li>
+                <li>Optimize daily pickup route sequences across neighborhoods</li>
+                <li>Conduct post-collection weight and quality verification (`verifyWaste()`)</li>
+                <li>List farm produce, fruits, vegetables, and compost for EcoTokens in the marketplace</li>
+            </ul>
+        </div>
+    </main>
+
+</body>
+</html>

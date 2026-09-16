@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — AgroLoop</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="brand">
+                <div class="logo-icon">🌱</div>
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Administrator Portal</span>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <span class="badge phase-badge">Admin Role</span>
+                <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Administrator</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="margin-bottom: 2.5rem;">
+            <span class="section-tag">System Administration</span>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Admin</span></h2>
+            <p style="color: var(--text-secondary);">Manage users, oversee circular waste collections, and inspect platform analytics.</p>
+        </div>
+
+        <div class="cards-grid" style="margin-bottom: 3rem;">
+            <div class="role-card">
+                <div class="card-icon admin-icon">👥</div>
+                <h4>Total Registered Users</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;" th:text="${totalUsers}">3</div>
+                <p>Total active accounts across all ecosystem roles in PostgreSQL.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon household-icon">🏡</div>
+                <h4>Households</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa; margin-bottom: 0.5rem;" th:text="${totalHouseholds}">1</div>
+                <p>Citizen households submitting organic waste for collection.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon farmer-icon">🚜</div>
+                <h4>Farmers</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;" th:text="${totalFarmers}">1</div>
+                <p>Agro partners collecting compost and listing products.</p>
+            </div>
+        </div>
+
+        <div class="system-status-card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Administrator Capabilities</h3>
+            <ul class="card-features">
+                <li>User management & account status moderation (Enabled / Disabled)</li>
+                <li>Waste category taxonomy & EcoToken reward multipliers</li>
+                <li>Dispute resolution for collected & verified pickups</li>
+                <li>System-wide circular economy metrics & transaction ledger audit</li>
+            </ul>
+        </div>
+    </main>
+
+</body>
+</html>
