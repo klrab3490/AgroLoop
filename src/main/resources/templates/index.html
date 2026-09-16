@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${appName} + ' — Sustainable Waste & Reward Ecosystem'">AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,16 +15,16 @@
     <!-- Header / Navigation -->
     <header class="navbar">
         <div class="container nav-container">
-            <div class="brand">
-                <div class="logo-icon">🌱</div>
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
                 <div>
                     <h1 class="brand-title" th:text="${appName}">AgroLoop</h1>
                     <span class="brand-subtitle">Circular Economy Platform</span>
                 </div>
-            </div>
+            </a>
 
             <div class="nav-badges">
-                <span class="badge phase-badge" th:text="${currentPhase}">Phase 1: Project Setup</span>
+                <span class="badge phase-badge" th:text="${currentPhase}">Phase 2: User Management</span>
                 <span th:if="${dbConnected}" class="badge db-badge db-success">
                     <span class="indicator-dot online"></span> PostgreSQL Connected
                 </span>
@@ -34,8 +35,9 @@
 
             <!-- User Authentication Navigation Actions -->
             <div class="nav-actions">
-                <div sec:authorize="isAnonymous()">
-                    <a th:href="@{/login}" class="btn btn-primary">Login</a>
+                <div sec:authorize="isAnonymous()" style="display: flex; gap: 0.75rem; align-items: center;">
+                    <a th:href="@{/login}" class="btn btn-outline">Login</a>
+                    <a th:href="@{/register}" class="btn btn-primary">Register</a>
                 </div>
                 <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 0.75rem;">
                     <span style="font-size: 0.85rem; color: var(--text-secondary);" sec:authentication="name">User</span>
@@ -51,15 +53,16 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container hero-container">
-            <div class="hero-badge">Phase 1 Milestone Complete</div>
+            <div class="hero-badge">Phase 2: Authentication & User Management</div>
             <h2 class="hero-heading">Bridging Waste Management, Agriculture & Sustainable Commerce</h2>
             <p class="hero-desc">
                 AgroLoop transforms household organic waste into agricultural value. Farmers collect and verify waste, households earn EcoTokens, and everyone participates in a transparent, sustainable marketplace.
             </p>
 
             <!-- Hero Action Buttons -->
-            <div class="hero-actions">
-                <a th:href="@{/login}" class="btn btn-primary">Login to Portal</a>
+            <div class="hero-actions" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a th:href="@{/register}" class="btn btn-primary">Register as Household</a>
+                <a th:href="@{/login}" class="btn btn-outline">Login to Portal</a>
             </div>
 
             <!-- Quick System Diagnostics Banner -->

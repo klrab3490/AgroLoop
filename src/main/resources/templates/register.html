@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1.5rem;
+            background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.08) 0%, var(--bg-primary) 70%);
+        }
+
+        .auth-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo-img {
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            border-radius: 20px;
+            background: #ffffff;
+            padding: 6px;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            transition: transform 0.25s ease;
+        }
+
+        .auth-logo-img:hover {
+            transform: scale(1.05);
+        }
+
+        .auth-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #fff;
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .role-notice {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            font-size: 0.84rem;
+            color: #d1fae5;
+            margin-bottom: 1.5rem;
+            line-height: 1.45;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.45rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-emerald);
+            box-shadow: 0 0 0 3px var(--accent-emerald-glow);
+        }
+
+        .field-error {
+            color: #f87171;
+            font-size: 0.78rem;
+            margin-top: 0.35rem;
+            display: block;
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 0.95rem;
+            margin-top: 0.75rem;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-link a {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .back-link a:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <a th:href="@{/}" style="text-decoration: none; display: inline-block;">
+                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="auth-logo-img">
+                </a>
+                <h1 class="auth-title">Create an Account</h1>
+                <p class="auth-subtitle">Join the circular bio-economy network</p>
+            </div>
+
+            <!-- Global Error Notification -->
+            <div th:if="${errorMessage}" class="alert-error">
+                <span>⚠️</span>
+                <span th:text="${errorMessage}">Registration error occurred.</span>
+            </div>
+
+            <!-- Default Role Explanatory Banner -->
+            <div class="role-notice">
+                🌿 <strong>Default Account:</strong> New accounts register as a <strong>Household Member</strong> to submit organic waste and earn EcoTokens. You can easily request to convert your account to a verified <strong>Farmer Partner</strong> from your dashboard at any time.
+            </div>
+
+            <!-- Registration Form -->
+            <form th:action="@{/register}" th:object="${registerRequest}" method="post">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input class="form-input" type="text" id="name" th:field="*{name}" placeholder="Alice Green" required autofocus>
+                    <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input class="form-input" type="email" id="email" th:field="*{email}" placeholder="alice@example.com" required>
+                    <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="address">Pickup / Residential Address</label>
+                    <input class="form-input" type="text" id="address" th:field="*{address}" placeholder="123 Green Valley, Kochi, Kerala" required>
+                    <span class="field-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-input" type="password" id="password" th:field="*{password}" placeholder="At least 6 characters" required>
+                    <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Confirm Password</label>
+                    <input class="form-input" type="password" id="confirmPassword" th:field="*{confirmPassword}" placeholder="Re-type your password" required>
+                    <span class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Complete Registration</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-secondary);">
+                Already have an account? <a th:href="@{/login}" style="color: var(--accent-emerald); font-weight: 700; text-decoration: none;">Sign In here</a>
+            </div>
+
+            <div class="back-link">
+                <a th:href="@{/}">← Return to Homepage</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

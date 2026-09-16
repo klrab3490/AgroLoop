@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Household Dashboard — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,13 +15,13 @@
     <!-- Header / Navigation -->
     <header class="navbar">
         <div class="container nav-container">
-            <div class="brand">
-                <div class="logo-icon">🌱</div>
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
                 <div>
                     <h1 class="brand-title">AgroLoop</h1>
                     <span class="brand-subtitle">Household Portal</span>
                 </div>
-            </div>
+            </a>
 
             <div class="nav-actions">
                 <span class="badge phase-badge">Household Member</span>
@@ -37,6 +38,41 @@
             <span class="section-tag">Household Account</span>
             <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Alice</span></h2>
             <p style="color: var(--text-secondary);">Manage waste collections, track pickup statuses, and spend EcoTokens.</p>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <!-- Farmer Conversion Status Banner (If Applied) -->
+        <div th:if="${latestApplication != null and latestApplication.status.name() == 'PENDING'}" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="font-size: 2rem;">⏳</div>
+                <div>
+                    <h4 style="font-size: 1.15rem; font-weight: 700; color: #93c5fd; margin-bottom: 0.35rem;">Farmer Conversion Application Pending Review</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        You applied to become a verified Farmer Partner for <strong style="color: #fff;" th:text="${latestApplication.farmName}">Farm</strong> (<span th:text="${latestApplication.farmAddress}">Location</span>).
+                    </p>
+                    <span style="display: inline-block; font-size: 0.8rem; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 0.25rem 0.65rem; border-radius: 6px;">Status: PENDING ADMIN APPROVAL</span>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${latestApplication != null and latestApplication.status.name() == 'REJECTED'}" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 14px; padding: 1.5rem; margin-bottom: 2.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div style="font-size: 2rem;">⚠️</div>
+                <div>
+                    <h4 style="font-size: 1.15rem; font-weight: 700; color: #fca5a5; margin-bottom: 0.35rem;">Farmer Application Not Approved</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                        Reason: <span th:text="${latestApplication.rejectionReason}">Does not meet criteria</span>
+                    </p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">You may update your details and submit a new application below.</p>
+                </div>
+            </div>
         </div>
 
         <div class="cards-grid" style="margin-bottom: 3rem;">
@@ -62,6 +98,38 @@
                 <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa; margin-bottom: 0.5rem;">0</div>
                 <p>Ready for Phase 3: Submit waste with photos and schedule pickup runs.</p>
             </div>
+        </div>
+
+        <!-- Apply to Become a Farmer Form (Show if no pending application) -->
+        <div th:if="${latestApplication == null or latestApplication.status.name() == 'REJECTED'}" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <span class="section-tag" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">Role Upgrade</span>
+                <h3 style="font-size: 1.4rem; font-weight: 800; margin-top: 0.3rem;">🚜 Apply to Become a Farmer Partner</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    Are you an agricultural grower, urban farmer, or composting enterprise? Request to convert your household account into a Farmer account. Once approved by an Admin, you will be able to claim household waste and sell produce.
+                </p>
+            </div>
+
+            <form th:action="@{/household/apply-farmer}" th:object="${farmerApplicationRequest}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div style="grid-column: span 1;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.4rem;" for="farmName">Farm / Organization Name *</label>
+                    <input class="form-input" type="text" id="farmName" th:field="*{farmName}" placeholder="e.g. Green Valley Agro" required style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff;">
+                </div>
+
+                <div style="grid-column: span 1;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.4rem;" for="farmAddress">Farm Location / Land Address *</label>
+                    <input class="form-input" type="text" id="farmAddress" th:field="*{farmAddress}" placeholder="e.g. Survey 42, Wayanad Agro Zone" required style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff;">
+                </div>
+
+                <div style="grid-column: span 2;">
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.4rem;" for="notes">Agricultural Activities & Composting Notes</label>
+                    <textarea id="notes" th:field="*{notes}" rows="3" placeholder="Describe crops grown, composting capacity, or intended use of organic waste biomass..." style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+
+                <div style="grid-column: span 2;">
+                    <button type="submit" class="btn btn-primary">Submit Application for Admin Approval</button>
+                </div>
+            </form>
         </div>
 
         <div class="system-status-card">

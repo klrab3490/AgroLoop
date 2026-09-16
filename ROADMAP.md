@@ -137,7 +137,7 @@ classDiagram
 | # | Phase | Focus | Status | Milestone / Key Deliverables |
 | :---: | :--- | :--- | :---: | :--- |
 | **1** | **Project Setup** | Foundation | ✅ Completed | Spring Boot 3.3.4, PostgreSQL Docker setup, cross-platform scripts (`run.sh`, `run.bat`), Thymeleaf initial view, and test suite. |
-| **2** | **User Management** | OOP Domain & Security | 🟡 In Progress | Implement `User`, `Household`, `Farmer`, and `Admin` using JPA inheritance, Spring Security, BCrypt, registration/login flows, and role segregation. |
+| **2** | **User Management & Security** | OOP Domain & Security | ✅ Completed | JPA Joined Inheritance (`User`, `Household`, `Farmer`, `Admin`), Spring Security, BCrypt hashing, public registration defaulting to Household, Farmer conversion request workflow with Admin review/approval, brand logo integration, Flyway migrations (`V1`, `V2`), and 22 passing automated tests. |
 | **3** | **Waste Submission** | Domain & Uploads | ⚪ Planned | `WasteSubmission`, category taxonomy, `MultipartFile` photo upload with validation, and household submission dashboards. |
 | **4** | **Pickup & Verification** | State Machine & Rules | ⚪ Planned | `PickupRequest` lifecycle (`accept()`, `decline()`, `cancel()`), `WasteVerification` (`verifiedWeight`, quality grading, photo inspection). |
 | **5** | **Eco-Tokens** | Polymorphism & Rewards | ⚪ Planned | `TokenCalculator` polymorphic strategy, atomic `EcoTokenTransaction` logging, household balance updates. |
@@ -146,10 +146,16 @@ classDiagram
 
 ---
 
-## 5. Critical Business & OOP Rules
+## 5. Critical Business & Development Policies
 
-1. **Strict Encapsulation:** Entities must not expose raw mutable collections or direct state updates without validation. State mutations must occur through domain methods (e.g. `accept()`, `verifyWaste()`).
-2. **Inheritance Integrity:** Common identity, credential checking, and authorization live in `User`. Role-specific attributes and behaviors reside strictly in `Household`, `Farmer`, or `Admin`.
-3. **Transactional Preconditions:** A verification must pass before tokens can be minted.
-4. **Idempotent Rewards:** Each verified pickup triggers exactly one token award transaction.
-5. **Solvency & Stock Isolation:** Marketplace purchases require sufficient token balance and concurrent stock safety.
+1. **Mandatory Living Documentation & File Mapping Policy:**
+   - **Continuous Documentation Updates:** After each feature or change is implemented, the documentation hub (`docs/INDEX.md`) and the relevant integration module document must be updated immediately.
+   - **Clickable File Structure:** Every document must maintain an exhaustive, clickable repository file tree linking directly to the code files.
+   - **Function-Level Transparency:** Documentation must explain the exact responsibilities, classes, and methods within each file so any developer or fresher can understand the architecture without reverse-engineering.
+   - **Visual System Mappings:** Include architecture and sequence diagrams demonstrating how data flows from UI views through controllers, services, repositories, and database tables.
+2. **Strict Encapsulation:** Entities must not expose raw mutable collections or direct state updates without validation. State mutations must occur through domain methods (e.g. `accept()`, `verifyWaste()`, `addTokens()`, `spendTokens()`).
+3. **Inheritance Integrity:** Common identity, credential checking, and authorization live in `User`. Role-specific attributes and behaviors reside strictly in `Household`, `Farmer`, or `Admin`.
+4. **Transactional Preconditions:** A verification must pass before tokens can be minted.
+5. **Idempotent Rewards:** Each verified pickup triggers exactly one token award transaction.
+6. **Solvency & Stock Isolation:** Marketplace purchases require sufficient token balance and concurrent stock safety.
+

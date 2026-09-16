@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,13 +15,13 @@
     <!-- Header / Navigation -->
     <header class="navbar">
         <div class="container nav-container">
-            <div class="brand">
-                <div class="logo-icon">🌱</div>
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
                 <div>
                     <h1 class="brand-title">AgroLoop</h1>
                     <span class="brand-subtitle">Administrator Portal</span>
                 </div>
-            </div>
+            </a>
 
             <div class="nav-actions">
                 <span class="badge phase-badge">Admin Role</span>
@@ -37,6 +38,14 @@
             <span class="section-tag">System Administration</span>
             <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Admin</span></h2>
             <p style="color: var(--text-secondary);">Manage users, oversee circular waste collections, and inspect platform analytics.</p>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
         </div>
 
         <div class="cards-grid" style="margin-bottom: 3rem;">
@@ -59,6 +68,61 @@
                 <h4>Farmers</h4>
                 <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;" th:text="${totalFarmers}">1</div>
                 <p>Agro partners collecting compost and listing products.</p>
+            </div>
+        </div>
+
+        <!-- Pending Farmer Applications Moderation -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <span class="section-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">Moderation Queue</span>
+                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-top: 0.3rem;">🚜 Farmer Conversion Applications</h3>
+                </div>
+                <span class="badge phase-badge" th:text="${pendingApplications != null ? #lists.size(pendingApplications) + ' Pending' : '0 Pending'}">0 Pending</span>
+            </div>
+
+            <div th:if="${pendingApplications != null and !pendingApplications.isEmpty()}">
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">
+                                <th style="padding: 0.8rem 1rem;">Applicant</th>
+                                <th style="padding: 0.8rem 1rem;">Farm Name</th>
+                                <th style="padding: 0.8rem 1rem;">Farm Address</th>
+                                <th style="padding: 0.8rem 1rem;">Notes</th>
+                                <th style="padding: 0.8rem 1rem;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="app : ${pendingApplications}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 700; color: #fff;" th:text="${app.user.name}">John Doe</div>
+                                    <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary);" th:text="${app.user.email}">john@example.com</div>
+                                </td>
+                                <td style="padding: 1rem; font-weight: 600; color: #34d399;" th:text="${app.farmName}">Green Acres</td>
+                                <td style="padding: 1rem; color: var(--text-secondary);" th:text="${app.farmAddress}">Plot 14, Agri Zone</td>
+                                <td style="padding: 1rem; color: var(--text-muted); max-width: 250px;" th:text="${app.notes != null ? app.notes : '—'}">No notes</td>
+                                <td style="padding: 1rem;">
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <form th:action="@{/admin/applications/{id}/approve(id=${app.id})}" method="post" style="display: inline;">
+                                            <button type="submit" class="btn btn-primary btn-sm" style="background: #10b981; border: none; padding: 0.45rem 0.8rem; font-size: 0.8rem;">Approve</button>
+                                        </form>
+                                        <form th:action="@{/admin/applications/{id}/reject(id=${app.id})}" method="post" style="display: inline;">
+                                            <input type="hidden" name="reason" value="Application details could not be verified.">
+                                            <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); padding: 0.45rem 0.8rem; font-size: 0.8rem;">Reject</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:if="${pendingApplications == null or pendingApplications.isEmpty()}" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+                <p style="font-weight: 600; color: #fff;">Queue is clear!</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">No pending farmer conversion requests requiring administrative review.</p>
             </div>
         </div>
 

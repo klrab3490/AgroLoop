@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,17 +34,20 @@
             margin-bottom: 2rem;
         }
 
-        .auth-logo {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 52px;
-            height: 52px;
-            background: linear-gradient(135deg, #059669, #10b981);
-            border-radius: 14px;
-            font-size: 1.75rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 6px 18px var(--accent-emerald-glow);
+        .auth-logo-img {
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            border-radius: 20px;
+            background: #ffffff;
+            padding: 6px;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+            transition: transform 0.25s ease;
+        }
+
+        .auth-logo-img:hover {
+            transform: scale(1.05);
         }
 
         .auth-title {
@@ -75,14 +79,15 @@
 
         .form-input {
             width: 100%;
-            padding: 0.75rem 1rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            padding: 0.8rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
             border-radius: 10px;
-            color: var(--text-primary);
+            color: #fff;
             font-size: 0.95rem;
-            font-family: var(--font-sans);
+            font-family: inherit;
             transition: all 0.2s ease;
+            box-sizing: border-box;
         }
 
         .form-input:focus {
@@ -193,11 +198,17 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <a th:href="@{/}" style="text-decoration: none;">
-                    <div class="auth-logo">🌱</div>
+                <a th:href="@{/}" style="text-decoration: none; display: inline-block;">
+                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="auth-logo-img">
                 </a>
                 <h1 class="auth-title">Welcome Back</h1>
                 <p class="auth-subtitle">Sign in to access your AgroLoop portal</p>
+            </div>
+
+            <!-- Registration Success Notification -->
+            <div th:if="${param.registered}" class="alert alert-success">
+                <span>✓</span>
+                <span>Registration successful! You can now log in with your email and password.</span>
             </div>
 
             <!-- Error Notification -->
@@ -226,6 +237,11 @@
 
                 <button type="submit" class="btn btn-primary btn-block">Sign In</button>
             </form>
+
+            <!-- Registration Link -->
+            <div style="text-align: center; margin-top: 1.25rem; font-size: 0.88rem; color: var(--text-secondary);">
+                Don't have an account? <a th:href="@{/register}" style="color: var(--accent-emerald); font-weight: 700; text-decoration: none;">Register as Household</a>
+            </div>
 
             <!-- Quick Demo Helper -->
             <div class="demo-credentials">
