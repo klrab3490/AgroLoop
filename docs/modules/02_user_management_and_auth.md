@@ -92,4 +92,16 @@ AgroLoop unites three distinct ecosystem stakeholders: **Households**, **Farmers
 
 ---
 
+## 5. Database Migration Scripts (Flyway)
+
+AgroLoop utilizes **Flyway** for database versioning and migrations located in `src/main/resources/db/migration/`:
+
+- **[`V1__create_user_tables.sql`](file:///Users/rahul/Desktop/Projects/Personal/AgroLoop/src/main/resources/db/migration/V1__create_user_tables.sql)**:
+  - Generates the `users` base table with constraints and an index on `email`.
+  - Generates the joined subtype tables (`households`, `farmers`, `admins`) with foreign keys referencing `users(id)` and cascading deletes.
+- **[`docker/init.sql`](file:///Users/rahul/Desktop/Projects/Personal/AgroLoop/docker/init.sql)**:
+  - Standalone SQL script for initial Docker setup or manual database initialization.
+
+---
+
 [← Back to Master Documentation Hub](../INDEX.md)
