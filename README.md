@@ -212,6 +212,11 @@ For detailed phase tracking and implementation milestones, see [ROADMAP.md](./RO
 - **Docker & Docker Compose:** For running PostgreSQL (and optional containerized app)
 - **Git**
 
+> **💡 Quick Environment Setup & Health Check:**  
+> Run the automated setup script to verify, install, and update all required packages on your system:
+> - **macOS / Linux:** `./setup.sh` *(or `./setup.sh --check-only` for dry-run inspection)*
+> - **Windows:** `setup.bat`
+
 ---
 
 ### Method 1: Running the Application Locally (Recommended for Development)
