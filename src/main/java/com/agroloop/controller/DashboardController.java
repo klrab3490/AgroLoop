@@ -10,7 +10,6 @@ import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.UserRepository;
 import com.agroloop.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
@@ -29,7 +28,6 @@ public class DashboardController {
     private final FarmerRepository farmerRepository;
     private final UserService userService;
 
-    @Autowired
     public DashboardController(
             UserRepository userRepository,
             HouseholdRepository householdRepository,

@@ -1,6 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
-  "java.compile.nullAnalysis.mode": "automatic",
+  "java.compile.nullAnalysis.mode": "disabled",
   "java.format.enabled": true,
   "java.format.onType.enabled": true,
   "java.saveActions.organizeImports": true,
@@ -20,6 +20,13 @@
 
   "spring-boot.ls.checkJdk": true,
   "boot-java.rewrite.reconcile": true,
+  "boot-java.validation.java.version-validation": "OFF",
+  "spring-boot.ls.problem.version-validation.UNSUPPORTED_OSS_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.UNSUPPORTED_COMMERCIAL_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.UPDATE_LATEST_PATCH_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.UPDATE_LATEST_MINOR_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.NEWER_MINOR_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.NEWER_PATCH_VERSION": "IGNORE",
 
   "maven.executable.preferMavenWrapper": true,
   "maven.terminal.useJavaHome": true,

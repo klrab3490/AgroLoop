@@ -1,6 +1,5 @@
 package com.agroloop.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +15,6 @@ public class HomeController {
 
     private final DataSource dataSource;
 
-    @Autowired
     public HomeController(DataSource dataSource) {
         this.dataSource = dataSource;
     }
