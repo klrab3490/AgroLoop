@@ -241,7 +241,92 @@
             </div>
         </div>
 
+        <!-- EcoToken Reward Ledger Card (Phase 5) -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <span class="section-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">Circular Rewards</span>
+                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-top: 0.3rem;">🪙 EcoToken Reward Ledger</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Immutable ledger record of platform tokens earned through verified organic waste recycling.
+                    </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); padding: 0.6rem 1.25rem; border-radius: 12px;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Current Balance:</span>
+                    <span style="font-size: 1.3rem; font-weight: 800; color: #10b981;">
+                        <span th:text="${user?.tokenBalance}">0.00</span> TOKENS
+                    </span>
+                </div>
+            </div>
+
+            <!-- Ledger Table -->
+            <div th:if="${tokenTransactions != null and !tokenTransactions.isEmpty()}" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle); font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted);">
+                            <th style="padding: 0.75rem 1rem;">Transaction ID</th>
+                            <th style="padding: 0.75rem 1rem;">Type</th>
+                            <th style="padding: 0.75rem 1rem;">Description / Details</th>
+                            <th style="padding: 0.75rem 1rem;">Date & Time</th>
+                            <th style="padding: 0.75rem 1rem; text-align: right;">Amount</th>
+                            <th style="padding: 0.75rem 1rem; text-align: right;">Balance After</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tx : ${tokenTransactions}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.9rem;">
+                            <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+                                #<span th:text="${tx.id}">1</span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span th:if="${tx.transactionType.name() == 'REWARD_MINTED'}" style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    REWARD MINTED
+                                </span>
+                                <span th:if="${tx.transactionType.name() == 'MARKETPLACE_PURCHASE'}" style="background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                    PURCHASE
+                                </span>
+                                <span th:if="${tx.transactionType.name() == 'ADMIN_ADJUSTMENT'}" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.3);">
+                                    ADJUSTMENT
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-secondary); max-width: 320px;">
+                                <div style="color: #fff; font-weight: 500;" th:text="${tx.description}">Verified waste reward</div>
+                                <div th:if="${tx.wasteVerification != null}" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                    Verification #<span th:text="${tx.wasteVerification.id}">1</span> &bull;
+                                    Grade: <span th:text="${tx.wasteVerification.qualityGrade.displayName}">Grade A</span> &bull;
+                                    Weight: <span th:text="${tx.wasteVerification.verifiedWeight}">5.00</span> kg
+                                </div>
+                            </td>
+                            <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);" th:text="${#temporals.format(tx.createdAt, 'yyyy-MM-dd HH:mm')}">
+                                2026-09-19 14:00
+                            </td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 700;">
+                                <span th:if="${tx.amount.compareTo(T(java.math.BigDecimal).ZERO) > 0}" style="color: #34d399;">
+                                    +<span th:text="${tx.amount}">9.00</span>
+                                </span>
+                                <span th:if="${tx.amount.compareTo(T(java.math.BigDecimal).ZERO) == 0}" style="color: var(--text-muted);">
+                                    <span th:text="${tx.amount}">0.00</span>
+                                </span>
+                                <span th:if="${tx.amount.compareTo(T(java.math.BigDecimal).ZERO) < 0}" style="color: #f87171;">
+                                    <span th:text="${tx.amount}">-5.00</span>
+                                </span>
+                            </td>
+                            <td style="padding: 1rem; text-align: right; font-weight: 700; color: #fff;">
+                                <span th:text="${tx.balanceAfter}">159.00</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${tokenTransactions == null or tokenTransactions.isEmpty()}" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🪙</div>
+                <p style="font-weight: 600; color: #fff;">No EcoToken transactions yet</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Once your organic waste batches are collected and verified by local farmers, your rewards will be credited here automatically.</p>
+            </div>
+        </div>
+
         <!-- Apply to Become a Farmer Form (Show if no pending application) -->
+
         <div th:if="${latestApplication == null or latestApplication.status.name() == 'REJECTED'}" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
             <div style="margin-bottom: 1.5rem;">
                 <span class="section-tag" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);">Role Upgrade</span>

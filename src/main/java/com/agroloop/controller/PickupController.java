@@ -125,8 +125,14 @@ public class PickupController {
         try {
             Farmer farmer = getAuthenticatedFarmer(authentication);
             pickupService.verifyPickup(id, farmer.getId(), request);
-            redirectAttributes.addFlashAttribute("successMessage", "Waste batch for Pickup #" + id + " verified successfully (" + request.getQualityGrade().getDisplayName() + ")!");
+            if (request.getQualityGrade().isAcceptable()) {
+                redirectAttributes.addFlashAttribute("successMessage", "Waste batch for Pickup #" + id + " verified successfully (" + request.getQualityGrade().getDisplayName() + ")! EcoTokens have been credited to the household wallet.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Waste batch for Pickup #" + id + " recorded as " + request.getQualityGrade().getDisplayName() + ". Zero tokens were credited due to contamination.");
+            }
         } catch (Exception ex) {
+
+
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to verify waste: " + ex.getMessage());
         }
         return "redirect:/farmer/dashboard";

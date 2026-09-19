@@ -24,16 +24,20 @@ public class PickupServiceImpl implements PickupService {
     private final PickupRequestRepository pickupRequestRepository;
     private final WasteVerificationRepository wasteVerificationRepository;
     private final FarmerRepository farmerRepository;
+    private final TokenRewardService tokenRewardService;
 
     public PickupServiceImpl(
             PickupRequestRepository pickupRequestRepository,
             WasteVerificationRepository wasteVerificationRepository,
-            FarmerRepository farmerRepository
+            FarmerRepository farmerRepository,
+            TokenRewardService tokenRewardService
     ) {
         this.pickupRequestRepository = pickupRequestRepository;
         this.wasteVerificationRepository = wasteVerificationRepository;
         this.farmerRepository = farmerRepository;
+        this.tokenRewardService = tokenRewardService;
     }
+
 
     @Override
     @Transactional
@@ -122,10 +126,15 @@ public class PickupServiceImpl implements PickupService {
         );
 
         pickup.recordVerification(verification);
-        wasteVerificationRepository.save(verification);
+        WasteVerification savedVerification = wasteVerificationRepository.save(verification);
         pickupRequestRepository.save(pickup);
-        return verification;
+
+        // Phase 5: Automatically mint and credit EcoTokens within the same transaction boundary
+        tokenRewardService.mintRewardForVerification(savedVerification);
+
+        return savedVerification;
     }
+
 
     @Override
     @Transactional

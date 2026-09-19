@@ -48,8 +48,12 @@ class PickupServiceTest {
     @Mock
     private FarmerRepository farmerRepository;
 
+    @Mock
+    private TokenRewardService tokenRewardService;
+
     @InjectMocks
     private PickupServiceImpl pickupService;
+
 
     private Household household;
     private Farmer farmer;
@@ -152,7 +156,9 @@ class PickupServiceTest {
         assertEquals(PickupStatus.VERIFIED, pickupRequest.getStatus());
         verify(wasteVerificationRepository).save(verification);
         verify(pickupRequestRepository).save(pickupRequest);
+        verify(tokenRewardService).mintRewardForVerification(verification);
     }
+
 
     @Test
     @DisplayName("declinePickup resets status to REQUESTED and unassigns farmer")

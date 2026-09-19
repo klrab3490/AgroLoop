@@ -22,6 +22,7 @@ import com.agroloop.dto.SchedulePickupRequest;
 import com.agroloop.dto.WasteVerificationRequest;
 import com.agroloop.model.PickupRequest;
 import com.agroloop.service.PickupService;
+import com.agroloop.service.TokenRewardService;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class DashboardController {
     private final UserService userService;
     private final WasteSubmissionService wasteSubmissionService;
     private final PickupService pickupService;
+    private final TokenRewardService tokenRewardService;
 
     public DashboardController(
             UserRepository userRepository,
@@ -43,7 +45,8 @@ public class DashboardController {
             FarmerRepository farmerRepository,
             UserService userService,
             WasteSubmissionService wasteSubmissionService,
-            PickupService pickupService
+            PickupService pickupService,
+            TokenRewardService tokenRewardService
     ) {
         this.userRepository = userRepository;
         this.householdRepository = householdRepository;
@@ -51,7 +54,9 @@ public class DashboardController {
         this.userService = userService;
         this.wasteSubmissionService = wasteSubmissionService;
         this.pickupService = pickupService;
+        this.tokenRewardService = tokenRewardService;
     }
+
 
     @GetMapping("/dashboard")
     public String dashboardRedirect(Authentication authentication) {
@@ -128,11 +133,16 @@ public class DashboardController {
                     .filter(p -> p.getWasteSubmission() != null)
                     .collect(Collectors.toMap(p -> p.getWasteSubmission().getId(), p -> p, (existing, replacement) -> existing));
             model.addAttribute("pickupMap", pickupMap);
+
+            List<EcoTokenTransaction> tokenTransactions = tokenRewardService.getHouseholdLedger(household.getId());
+            model.addAttribute("tokenTransactions", tokenTransactions);
         } else {
             model.addAttribute("submissions", List.of());
             model.addAttribute("submissionsCount", 0);
             model.addAttribute("pickupMap", Map.of());
+            model.addAttribute("tokenTransactions", List.of());
         }
+
 
         if (!model.containsAttribute("farmerApplicationRequest")) {
             model.addAttribute("farmerApplicationRequest", new FarmerApplicationRequest());

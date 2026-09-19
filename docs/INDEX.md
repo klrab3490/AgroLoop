@@ -482,8 +482,23 @@ The table below catalogs every key file in the AgroLoop codebase, providing a di
 | **[`PickupRequestRepositoryTest.java`](../../src/test/java/com/agroloop/repository/PickupRequestRepositoryTest.java)** | Test | DataJpaTest | Database slice tests verifying repository queries, status filters, and foreign key cascades. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
 | **[`PickupServiceTest.java`](../../src/test/java/com/agroloop/service/PickupServiceTest.java)** | Test | Mockito Test | Unit tests verifying service orchestration and role authorization guards. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
 | **[`PickupIntegrationTest.java`](../../src/test/java/com/agroloop/controller/PickupIntegrationTest.java)** | Test | MockMvc Test | Integration tests verifying claim ➔ schedule ➔ collect ➔ verify lifecycle and household cancellation. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
+| **[`TransactionType.java`](../../src/main/java/com/agroloop/model/TransactionType.java)** | Domain Model | `enum TransactionType` | Ledger transaction types (`REWARD_MINTED` for Phase 5 rewards). | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`EcoTokenTransaction.java`](../../src/main/java/com/agroloop/model/EcoTokenTransaction.java)** | Domain Model | `class EcoTokenTransaction` | Immutable audit entity recording token amounts, balance snapshots, and verification references. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`TokenCalculator.java`](../../src/main/java/com/agroloop/service/token/TokenCalculator.java)** | Strategy Interface | `interface TokenCalculator` | Polymorphic contract for reward calculation strategies. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`StandardTokenCalculator.java`](../../src/main/java/com/agroloop/service/token/StandardTokenCalculator.java)** | Strategy Implementation | `class StandardTokenCalculator` | Standard algorithm (`weight * categoryMultiplier * qualityMultiplier`). | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`PromotionalTokenCalculator.java`](../../src/main/java/com/agroloop/service/token/PromotionalTokenCalculator.java)** | Strategy Implementation | `class PromotionalTokenCalculator` | Promotional surge campaign reward calculation strategy. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`V5__create_ecotoken_transactions_table.sql`](../../src/main/resources/db/migration/V5__create_ecotoken_transactions_table.sql)** | Migration | SQL Migration | Flyway DDL creating `ecotoken_transactions` table with unique constraint on `waste_verification_id`. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`EcoTokenTransactionRepository.java`](../../src/main/java/com/agroloop/repository/EcoTokenTransactionRepository.java)** | Persistence | `EcoTokenTransactionRepository` | Spring Data JPA queries for ledger history and idempotency verification. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`TokenRewardService.java`](../../src/main/java/com/agroloop/service/TokenRewardService.java)** | Service Contract | `interface TokenRewardService` | Business contract for reward minting, idempotency checks, and household ledger auditing. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`TokenRewardServiceImpl.java`](../../src/main/java/com/agroloop/service/TokenRewardServiceImpl.java)** | Service Logic | `class TokenRewardServiceImpl` | Transactional coordinator executing strategy calculations, pessimistic locking, and ledger persistence. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`TokenCalculatorTest.java`](../../src/test/java/com/agroloop/service/TokenCalculatorTest.java)** | Test | JUnit 5 Test | Strategy unit tests verifying standard and promotional reward calculations and rejection zero-rewards. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`EcoTokenTransactionTest.java`](../../src/test/java/com/agroloop/model/EcoTokenTransactionTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying entity immutability, non-negative balance invariants, and scale normalization. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`TokenRewardServiceTest.java`](../../src/test/java/com/agroloop/service/TokenRewardServiceTest.java)** | Test | Mockito Test | Unit tests verifying reward minting, pessimistic write lock acquisition, idempotency, and rejection audit entries. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`TokenRewardServiceIntegrationTest.java`](../../src/test/java/com/agroloop/service/TokenRewardServiceIntegrationTest.java)** | Test | SpringBootTest | Multithreaded concurrency tests asserting pessimistic write locking, idempotency, and lost-update prevention with the default test profile (in-memory H2 and Flyway disabled). |
+| **[`DashboardIntegrationTest.java`](../../src/test/java/com/agroloop/controller/DashboardIntegrationTest.java)** | Test | MockMvc Test | Controller integration tests verifying populated EcoToken ledger rendering and eager fetch resolution with `open-in-view=false`. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
 
 ---
+
 
 ## 5. Dedicated Integration Modules
 
@@ -495,8 +510,9 @@ Each feature and integration in AgroLoop has its own dedicated documentation fil
 | **[02. User Management & Security](../docs/modules/02_user_management_and_auth.md)** | Phase 2: Auth | ✅ Completed | JPA Joined Inheritance (`User`, `Household`, `Farmer`, `Admin`), Spring Security, BCrypt hashing, public registration defaulting to Household, Farmer conversion request workflow with Admin review/approval, and logo branding. |
 | **[03. Waste Submission & Media](../docs/modules/03_waste_submission.md)** | Phase 3: Submissions | ✅ Completed | Multipart photo uploads, category classification taxonomy, address inheritance, UUID storage with traversal defense, and household dashboard tracking. |
 | **[04. Pickup & Verification Engine](../docs/modules/04_pickup_and_verification.md)** | Phase 4: Pickups | ✅ Completed | Farmer pickup claims, collection state machine, quality grading, decline re-queuing, and post-collection verification. |
-| **[05. EcoTokens & Rewards](../docs/modules/05_ecotokens.md)** | Phase 5: Rewards | ⚪ Planned | Polymorphic `TokenCalculator`, atomic wallet updates, transaction logs, and reward rules. |
+| **[05. EcoTokens & Rewards](../docs/modules/05_ecotokens.md)** | Phase 5: Rewards | ✅ Completed | Polymorphic `TokenCalculator` strategy, atomic wallet updates, pessimistic locking, idempotent reward minting, and household ledger. |
 | **[06. Marketplace & Commerce](../docs/modules/06_marketplace.md)** | Phase 6: Commerce | ⚪ Planned | Farmer produce catalog, inventory stock validation, and checkout using EcoTokens. |
+
 | **[07. Admin Governance & Testing](../docs/modules/07_admin_and_testing.md)** | Phase 7: Governance | ⚪ Planned | Audit dashboards, dispute reviews, test automation (JUnit 5 & MockMvc), and production hardening. |
 
 ---
@@ -547,5 +563,4 @@ feature/<phase-name> (Individual feature branch)
    - When a phase/milestone is ready for release, open a PR from `dev` to `main`:
      👉 **[Create PR from dev to main](https://github.com/AgnaMariya/AgroLoop/compare/main...dev?expand=1)**
    - Review, approve, and merge into `main`.
-
 
