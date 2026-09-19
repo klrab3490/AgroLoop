@@ -1,14 +1,13 @@
 package com.agroloop.controller;
 
 import com.agroloop.dto.FarmerApplicationRequest;
-import com.agroloop.model.Farmer;
-import com.agroloop.model.FarmerApplication;
-import com.agroloop.model.Household;
-import com.agroloop.model.User;
+import com.agroloop.dto.WasteSubmissionRequest;
+import com.agroloop.model.*;
 import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.UserRepository;
 import com.agroloop.service.UserService;
+import com.agroloop.service.WasteSubmissionService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -27,17 +26,20 @@ public class DashboardController {
     private final HouseholdRepository householdRepository;
     private final FarmerRepository farmerRepository;
     private final UserService userService;
+    private final WasteSubmissionService wasteSubmissionService;
 
     public DashboardController(
             UserRepository userRepository,
             HouseholdRepository householdRepository,
             FarmerRepository farmerRepository,
-            UserService userService
+            UserService userService,
+            WasteSubmissionService wasteSubmissionService
     ) {
         this.userRepository = userRepository;
         this.householdRepository = householdRepository;
         this.farmerRepository = farmerRepository;
         this.userService = userService;
+        this.wasteSubmissionService = wasteSubmissionService;
     }
 
     @GetMapping("/dashboard")
@@ -106,13 +108,52 @@ public class DashboardController {
             userService.getLatestApplicationForUser(household.getId()).ifPresent(app -> {
                 model.addAttribute("latestApplication", app);
             });
+            List<WasteSubmission> submissions = wasteSubmissionService.getSubmissionsByHousehold(authentication.getName());
+            model.addAttribute("submissions", submissions);
+            model.addAttribute("submissionsCount", submissions.size());
+        } else {
+            model.addAttribute("submissions", List.of());
+            model.addAttribute("submissionsCount", 0);
         }
 
         if (!model.containsAttribute("farmerApplicationRequest")) {
             model.addAttribute("farmerApplicationRequest", new FarmerApplicationRequest());
         }
 
+        if (!model.containsAttribute("wasteSubmissionRequest")) {
+            model.addAttribute("wasteSubmissionRequest", new WasteSubmissionRequest());
+        }
+
+        model.addAttribute("categories", WasteCategory.values());
+
         return "dashboard/household";
+    }
+
+    @PostMapping("/household/waste/submit")
+    public String submitWaste(
+            @Valid @ModelAttribute("wasteSubmissionRequest") WasteSubmissionRequest request,
+            BindingResult bindingResult,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            String firstError = bindingResult.getAllErrors().isEmpty()
+                    ? "Please check the input values."
+                    : bindingResult.getAllErrors().get(0).getDefaultMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", firstError);
+            redirectAttributes.addFlashAttribute("wasteSubmissionRequest", request);
+            return "redirect:/household/dashboard";
+        }
+
+        try {
+            wasteSubmissionService.submitWaste(authentication.getName(), request);
+            redirectAttributes.addFlashAttribute("successMessage", "Organic waste batch submitted successfully! Local farmers can now schedule a collection run.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to submit waste: " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("wasteSubmissionRequest", request);
+        }
+
+        return "redirect:/household/dashboard";
     }
 
     @PostMapping("/household/apply-farmer")

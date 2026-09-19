@@ -50,7 +50,7 @@ public class SecurityConfig {
         http
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/farmer/**").hasAuthority("ROLE_FARMER")
                 .requestMatchers("/household/**").hasAuthority("ROLE_HOUSEHOLD")

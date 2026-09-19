@@ -67,4 +67,29 @@ public class Household extends User {
             );
         }
     }
+
+    /**
+     * Domain business method: Submits organic waste originating from this Household,
+     * defaulting to the household's registered address if no custom pickup address is provided.
+     */
+    public WasteSubmission submitWaste(
+            WasteCategory category,
+            BigDecimal estimatedWeight,
+            String customPickupAddress,
+            String imagePath,
+            String notes
+    ) {
+        String resolvedAddress = (customPickupAddress != null && !customPickupAddress.isBlank())
+                ? customPickupAddress.trim()
+                : this.address;
+
+        return new WasteSubmission(
+                this,
+                category,
+                estimatedWeight,
+                resolvedAddress,
+                imagePath,
+                notes
+        );
+    }
 }
