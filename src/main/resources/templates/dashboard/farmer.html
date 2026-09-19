@@ -19,7 +19,7 @@
                 <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
                 <div>
                     <h1 class="brand-title">AgroLoop</h1>
-                    <span class="brand-subtitle">Farmer Portal</span>
+                    <span class="brand-subtitle">Farmer Agro Portal</span>
                 </div>
             </a>
 
@@ -34,43 +34,252 @@
     </header>
 
     <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <!-- Welcome Banner -->
         <div style="margin-bottom: 2.5rem;">
-            <span class="section-tag">Farmer Agro Portal</span>
+            <span class="section-tag" style="background: rgba(52, 211, 153, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Phase 4 Active</span>
             <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Bob</span></h2>
-            <p style="color: var(--text-secondary);">Claim nearby organic waste collections, verify incoming biomass, and list fresh produce.</p>
+            <p style="color: var(--text-secondary);">Claim nearby organic waste collections, schedule collection appointments, and record post-collection verification.</p>
         </div>
 
-        <div class="cards-grid" style="margin-bottom: 3rem;">
+        <!-- Flash Alerts -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;">
+            <span th:text="${successMessage}">Operation successful!</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+            <span th:text="${errorMessage}">Error occurred.</span>
+        </div>
+
+        <!-- Metrics Cards Grid -->
+        <div class="cards-grid" style="margin-bottom: 3rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
             <div class="role-card">
                 <div class="card-icon farmer-icon">🚜</div>
                 <h4>Farm Profile</h4>
-                <div style="font-size: 1.3rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem;" th:text="${user?.farmName}">Green Valley Organic Farm</div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem;" th:text="${user?.farmName}">Green Valley Farm</div>
                 <p style="color: var(--text-secondary); font-size: 0.85rem;" th:text="${user?.farmAddress}">Wayanad, Kerala</p>
             </div>
 
             <div class="role-card">
-                <div class="card-icon farmer-icon">📋</div>
-                <h4>Pickup Queue</h4>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;">0</div>
-                <p>Pending pickups ready to accept and schedule for collection in Phase 4.</p>
+                <div class="card-icon farmer-icon">📦</div>
+                <h4>Available Pickups</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.5rem;" th:text="${availablePickups != null ? availablePickups.size() : 0}">0</div>
+                <p>Unclaimed organic waste submissions waiting in your community.</p>
             </div>
 
             <div class="role-card">
-                <div class="card-icon farmer-icon">🍎</div>
-                <h4>Marketplace Listings</h4>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem;">0</div>
-                <p>Produce and organic compost products listed for sale in Phase 6.</p>
+                <div class="card-icon farmer-icon">🚚</div>
+                <h4>Active Collections</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa; margin-bottom: 0.5rem;" th:text="${activePickups != null ? activePickups.size() : 0}">0</div>
+                <p>Pickups claimed, scheduled, or en route for inspection.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon farmer-icon">✅</div>
+                <h4>Verified Batches</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;" th:text="${verifiedPickups != null ? verifiedPickups.size() : 0}">0</div>
+                <p>Compostable biomass inspected, graded, and token-approved.</p>
             </div>
         </div>
 
-        <div class="system-status-card">
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Farmer Operations (Coming in Phases 4–6)</h3>
-            <ul class="card-features">
-                <li>Discover household waste submissions nearby and claim pickups (`acceptPickup()`)</li>
-                <li>Optimize daily pickup route sequences across neighborhoods</li>
-                <li>Conduct post-collection weight and quality verification (`verifyWaste()`)</li>
-                <li>List farm produce, fruits, vegetables, and compost for EcoTokens in the marketplace</li>
-            </ul>
+        <!-- Section 1: Available Pickups Queue (REQUESTED) -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.3rem;">📋 Available Pickups Queue</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Freshly submitted organic waste batches available for your farm to claim and compost.</p>
+                </div>
+                <span class="badge phase-badge" th:text="${(availablePickups != null ? availablePickups.size() : 0) + ' Available'}">0 Available</span>
+            </div>
+
+            <div th:if="${availablePickups != null and !availablePickups.isEmpty()}" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
+                            <th style="padding: 0.8rem 1rem;">Photo</th>
+                            <th style="padding: 0.8rem 1rem;">Category</th>
+                            <th style="padding: 0.8rem 1rem;">Est. Weight</th>
+                            <th style="padding: 0.8rem 1rem;">Pickup Address</th>
+                            <th style="padding: 0.8rem 1rem;">Submitted</th>
+                            <th style="padding: 0.8rem 1rem; text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pickup : ${availablePickups}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <td style="padding: 1rem;">
+                                <div th:if="${pickup.wasteSubmission.imagePath != null}">
+                                    <a th:href="@{${'/' + pickup.wasteSubmission.imagePath}}" target="_blank">
+                                        <img th:src="@{${'/' + pickup.wasteSubmission.imagePath}}" alt="Waste Photo" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-subtle);">
+                                    </a>
+                                </div>
+                                <div th:if="${pickup.wasteSubmission.imagePath == null}" style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">
+                                    🍂
+                                </div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 700; color: #fff;" th:text="${pickup.wasteSubmission.category.displayName}">Category</div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);" th:text="${pickup.wasteSubmission.notes != null ? pickup.wasteSubmission.notes : 'No extra notes'}">Notes</div>
+                            </td>
+                            <td style="padding: 1rem; font-weight: 700; color: #34d399;">
+                                <span th:text="${pickup.wasteSubmission.estimatedWeight}">5.00</span> kg
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-secondary); max-width: 250px;" th:text="${pickup.wasteSubmission.pickupAddress}">Address</td>
+                            <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);" th:text="${#temporals.format(pickup.createdAt, 'yyyy-MM-dd HH:mm')}">Date</td>
+                            <td style="padding: 1rem; text-align: right;">
+                                <form th:action="@{${'/farmer/pickups/' + pickup.id + '/claim'}}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.5rem 1rem; font-size: 0.85rem;">🚜 Claim Pickup</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${availablePickups == null or availablePickups.isEmpty()}" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌾</div>
+                <p>No unclaimed waste submissions in your area at the moment.</p>
+            </div>
+        </div>
+
+        <!-- Section 2: Active Collections (ASSIGNED, SCHEDULED, COLLECTED) -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.3rem;">🚚 Active Collections</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Manage schedule slots, mark retrieved waste, and submit quality inspection verifications.</p>
+                </div>
+                <span class="badge phase-badge" th:text="${(activePickups != null ? activePickups.size() : 0) + ' Active'}">0 Active</span>
+            </div>
+
+            <div th:if="${activePickups != null and !activePickups.isEmpty()}" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div th:each="pickup : ${activePickups}" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem;">
+                                <span style="font-size: 1.1rem; font-weight: 700; color: #fff;" th:text="${'Pickup #' + pickup.id + ' — ' + pickup.wasteSubmission.category.displayName}">Pickup #1</span>
+                                <span th:if="${pickup.status.name() == 'ASSIGNED'}" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(59, 130, 246, 0.3);">ASSIGNED</span>
+                                <span th:if="${pickup.status.name() == 'SCHEDULED'}" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(168, 85, 247, 0.3);">SCHEDULED</span>
+                                <span th:if="${pickup.status.name() == 'COLLECTED'}" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.3);">COLLECTED</span>
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                                <span>📍 <strong th:text="${pickup.wasteSubmission.pickupAddress}">Address</strong></span>
+                                <span style="margin-left: 1rem;">⚖️ Est. Weight: <strong style="color: #34d399;" th:text="${pickup.wasteSubmission.estimatedWeight + ' kg'}">5.00 kg</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Badge if already set -->
+                        <div th:if="${pickup.scheduledTime != null}" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.85rem; color: #c084fc;">
+                            ⏰ Scheduled: <strong th:text="${#temporals.format(pickup.scheduledTime, 'yyyy-MM-dd HH:mm')}">2026-09-20 10:00</strong>
+                        </div>
+                    </div>
+
+                    <!-- Actions Bar depending on lifecycle status -->
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                        <!-- State 1: ASSIGNED (Needs Scheduling) -->
+                        <div th:if="${pickup.status.name() == 'ASSIGNED'}" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; width: 100%;">
+                            <form th:action="@{${'/farmer/pickups/' + pickup.id + '/schedule'}}" method="post" style="display: flex; gap: 0.5rem; align-items: center; flex: 1;">
+                                <input type="datetime-local" name="scheduledTime" required class="form-input" style="padding: 0.5rem 0.8rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                                <button type="submit" class="btn btn-primary btn-sm">📅 Set Schedule</button>
+                            </form>
+                            <form th:action="@{${'/farmer/pickups/' + pickup.id + '/decline'}}" method="post" onsubmit="return confirm('Relinquish this pickup and return it to the community pool?');">
+                                <input type="hidden" name="reason" value="Farmer schedule conflict">
+                                <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4);">Decline</button>
+                            </form>
+                        </div>
+
+                        <!-- State 2: SCHEDULED (En Route to Pickup) -->
+                        <div th:if="${pickup.status.name() == 'SCHEDULED'}" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; width: 100%; justify-content: space-between;">
+                            <div style="display: flex; gap: 0.75rem;">
+                                <form th:action="@{${'/farmer/pickups/' + pickup.id + '/collect'}}" method="post">
+                                    <button type="submit" class="btn btn-primary btn-sm" style="background: #10b981; border-color: #10b981;">📦 Confirm Waste Collected</button>
+                                </form>
+                                <form th:action="@{${'/farmer/pickups/' + pickup.id + '/schedule'}}" method="post" style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <input type="datetime-local" name="scheduledTime" required class="form-input" style="padding: 0.4rem 0.6rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff; font-size: 0.8rem;">
+                                    <button type="submit" class="btn btn-outline btn-sm">Reschedule</button>
+                                </form>
+                            </div>
+                            <form th:action="@{${'/farmer/pickups/' + pickup.id + '/decline'}}" method="post" onsubmit="return confirm('Relinquish this pickup and return it to the community pool?');">
+                                <input type="hidden" name="reason" value="Farmer operational emergency">
+                                <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4);">Decline</button>
+                            </form>
+                        </div>
+
+                        <!-- State 3: COLLECTED (Ready for Inspection & Verification) -->
+                        <div th:if="${pickup.status.name() == 'COLLECTED'}" style="width: 100%;">
+                            <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; padding: 1.25rem;">
+                                <h4 style="font-size: 1rem; font-weight: 700; color: #34d399; margin-bottom: 0.75rem;">🔍 Record Post-Collection Verification</h4>
+                                <form th:action="@{${'/farmer/pickups/' + pickup.id + '/verify'}}" method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 120px; gap: 0.75rem; align-items: end;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.3rem;">Verified Weight (kg) *</label>
+                                        <input type="number" step="0.01" min="0.01" name="verifiedWeight" th:value="${pickup.wasteSubmission.estimatedWeight}" required class="form-input" style="width: 100%; padding: 0.5rem 0.8rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff;">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.3rem;">Quality Grade *</label>
+                                        <select name="qualityGrade" required class="form-input" style="width: 100%; padding: 0.5rem 0.8rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff;">
+                                            <option th:each="grade : ${qualityGrades}" th:value="${grade}" th:text="${grade.displayName + ' (' + grade.multiplier + 'x)'}" th:selected="${grade.name() == 'GRADE_A'}">Grade</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.3rem;">Inspection Notes</label>
+                                        <input type="text" name="notes" placeholder="e.g. Clean organic fruit peelings" class="form-input" style="width: 100%; padding: 0.5rem 0.8rem; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: #fff;">
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn btn-primary btn-sm" style="width: 100%; padding: 0.6rem 0.5rem;">Verify</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${activePickups == null or activePickups.isEmpty()}" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🚜</div>
+                <p>No active pickups in progress. Claim available waste batches above to begin.</p>
+            </div>
+        </div>
+
+        <!-- Section 3: Verified Collections History (VERIFIED) -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.3rem;">✅ Verified Waste Batches</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Inspected organic matter records certified for composting and token rewards.</p>
+                </div>
+                <span class="badge phase-badge" th:text="${(verifiedPickups != null ? verifiedPickups.size() : 0) + ' Records'}">0 Records</span>
+            </div>
+
+            <div th:if="${verifiedPickups != null and !verifiedPickups.isEmpty()}" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">
+                            <th style="padding: 0.8rem 1rem;">Pickup #</th>
+                            <th style="padding: 0.8rem 1rem;">Category</th>
+                            <th style="padding: 0.8rem 1rem;">Est. Weight</th>
+                            <th style="padding: 0.8rem 1rem;">Verified Weight</th>
+                            <th style="padding: 0.8rem 1rem;">Quality Grade</th>
+                            <th style="padding: 0.8rem 1rem;">Notes</th>
+                            <th style="padding: 0.8rem 1rem;">Verified At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pickup : ${verifiedPickups}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <td style="padding: 1rem; font-weight: 700; color: #fff;" th:text="${'#' + pickup.id}">#1</td>
+                            <td style="padding: 1rem;" th:text="${pickup.wasteSubmission.category.displayName}">Food Scraps</td>
+                            <td style="padding: 1rem; color: var(--text-muted);" th:text="${pickup.wasteSubmission.estimatedWeight + ' kg'}">5.00 kg</td>
+                            <td style="padding: 1rem; font-weight: 700; color: #34d399;" th:text="${pickup.verification != null ? pickup.verification.verifiedWeight + ' kg' : 'N/A'}">5.20 kg</td>
+                            <td style="padding: 1rem;">
+                                <span th:if="${pickup.verification != null}" style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);" th:text="${pickup.verification.qualityGrade.displayName}">Grade A</span>
+                            </td>
+                            <td style="padding: 1rem; color: var(--text-secondary);" th:text="${pickup.verification != null && pickup.verification.verificationNotes != null ? pickup.verification.verificationNotes : '-'}">Notes</td>
+                            <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);" th:text="${pickup.verification != null ? #temporals.format(pickup.verification.verifiedAt, 'yyyy-MM-dd HH:mm') : '-'}">Date</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${verifiedPickups == null or verifiedPickups.isEmpty()}" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌱</div>
+                <p>No verified waste batches yet. Complete collection and inspection to verify waste.</p>
+            </div>
         </div>
     </main>
 

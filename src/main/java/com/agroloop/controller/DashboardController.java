@@ -17,7 +17,15 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.agroloop.dto.CancelPickupRequest;
+import com.agroloop.dto.SchedulePickupRequest;
+import com.agroloop.dto.WasteVerificationRequest;
+import com.agroloop.model.PickupRequest;
+import com.agroloop.service.PickupService;
+
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class DashboardController {
@@ -27,19 +35,22 @@ public class DashboardController {
     private final FarmerRepository farmerRepository;
     private final UserService userService;
     private final WasteSubmissionService wasteSubmissionService;
+    private final PickupService pickupService;
 
     public DashboardController(
             UserRepository userRepository,
             HouseholdRepository householdRepository,
             FarmerRepository farmerRepository,
             UserService userService,
-            WasteSubmissionService wasteSubmissionService
+            WasteSubmissionService wasteSubmissionService,
+            PickupService pickupService
     ) {
         this.userRepository = userRepository;
         this.householdRepository = householdRepository;
         this.farmerRepository = farmerRepository;
         this.userService = userService;
         this.wasteSubmissionService = wasteSubmissionService;
+        this.pickupService = pickupService;
     }
 
     @GetMapping("/dashboard")
@@ -111,9 +122,16 @@ public class DashboardController {
             List<WasteSubmission> submissions = wasteSubmissionService.getSubmissionsByHousehold(authentication.getName());
             model.addAttribute("submissions", submissions);
             model.addAttribute("submissionsCount", submissions.size());
+
+            List<PickupRequest> pickups = pickupService.getHouseholdPickups(household.getId());
+            Map<Long, PickupRequest> pickupMap = pickups.stream()
+                    .filter(p -> p.getWasteSubmission() != null)
+                    .collect(Collectors.toMap(p -> p.getWasteSubmission().getId(), p -> p, (existing, replacement) -> existing));
+            model.addAttribute("pickupMap", pickupMap);
         } else {
             model.addAttribute("submissions", List.of());
             model.addAttribute("submissionsCount", 0);
+            model.addAttribute("pickupMap", Map.of());
         }
 
         if (!model.containsAttribute("farmerApplicationRequest")) {
@@ -122,6 +140,10 @@ public class DashboardController {
 
         if (!model.containsAttribute("wasteSubmissionRequest")) {
             model.addAttribute("wasteSubmissionRequest", new WasteSubmissionRequest());
+        }
+
+        if (!model.containsAttribute("cancelPickupRequest")) {
+            model.addAttribute("cancelPickupRequest", new CancelPickupRequest());
         }
 
         model.addAttribute("categories", WasteCategory.values());
@@ -183,6 +205,40 @@ public class DashboardController {
     public String farmerDashboard(Authentication authentication, Model model) {
         Farmer farmer = farmerRepository.findByEmail(authentication.getName()).orElse(null);
         model.addAttribute("user", farmer);
+
+        if (farmer != null) {
+            List<PickupRequest> availablePickups = pickupService.getAvailablePickups();
+            List<PickupRequest> farmerPickups = pickupService.getFarmerPickups(farmer.getId());
+
+            List<PickupRequest> activePickups = farmerPickups.stream()
+                    .filter(p -> p.getStatus() == com.agroloop.model.PickupStatus.ASSIGNED
+                            || p.getStatus() == com.agroloop.model.PickupStatus.SCHEDULED
+                            || p.getStatus() == com.agroloop.model.PickupStatus.COLLECTED)
+                    .toList();
+
+            List<PickupRequest> verifiedPickups = farmerPickups.stream()
+                    .filter(p -> p.getStatus() == com.agroloop.model.PickupStatus.VERIFIED)
+                    .toList();
+
+            model.addAttribute("availablePickups", availablePickups);
+            model.addAttribute("activePickups", activePickups);
+            model.addAttribute("verifiedPickups", verifiedPickups);
+        } else {
+            model.addAttribute("availablePickups", List.of());
+            model.addAttribute("activePickups", List.of());
+            model.addAttribute("verifiedPickups", List.of());
+        }
+
+        if (!model.containsAttribute("schedulePickupRequest")) {
+            model.addAttribute("schedulePickupRequest", new SchedulePickupRequest());
+        }
+
+        if (!model.containsAttribute("wasteVerificationRequest")) {
+            model.addAttribute("wasteVerificationRequest", new WasteVerificationRequest());
+        }
+
+        model.addAttribute("qualityGrades", com.agroloop.model.QualityGrade.values());
+
         return "dashboard/farmer";
     }
 }

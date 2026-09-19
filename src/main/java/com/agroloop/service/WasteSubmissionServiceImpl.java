@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
+import com.agroloop.model.PickupRequest;
+import com.agroloop.repository.PickupRequestRepository;
+
 /**
  * Service implementation managing organic waste submissions.
  */
@@ -22,15 +25,18 @@ public class WasteSubmissionServiceImpl implements WasteSubmissionService {
 
     private final HouseholdRepository householdRepository;
     private final WasteSubmissionRepository wasteSubmissionRepository;
+    private final PickupRequestRepository pickupRequestRepository;
     private final FileStorageService fileStorageService;
 
     public WasteSubmissionServiceImpl(
             HouseholdRepository householdRepository,
             WasteSubmissionRepository wasteSubmissionRepository,
+            PickupRequestRepository pickupRequestRepository,
             FileStorageService fileStorageService
     ) {
         this.householdRepository = Objects.requireNonNull(householdRepository, "HouseholdRepository cannot be null");
         this.wasteSubmissionRepository = Objects.requireNonNull(wasteSubmissionRepository, "WasteSubmissionRepository cannot be null");
+        this.pickupRequestRepository = Objects.requireNonNull(pickupRequestRepository, "PickupRequestRepository cannot be null");
         this.fileStorageService = Objects.requireNonNull(fileStorageService, "FileStorageService cannot be null");
     }
 
@@ -54,7 +60,12 @@ public class WasteSubmissionServiceImpl implements WasteSubmissionService {
                 request.getNotes()
         );
 
-        return wasteSubmissionRepository.save(submission);
+        WasteSubmission savedSubmission = wasteSubmissionRepository.save(submission);
+
+        // Instantiate linked PickupRequest in REQUESTED status for farmer discovery
+        pickupRequestRepository.save(new PickupRequest(savedSubmission));
+
+        return savedSubmission;
     }
 
     @Override

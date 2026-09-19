@@ -141,6 +141,27 @@ public class WasteSubmission {
         this.rejectionReason = requireText(reason, "Rejection reason");
     }
 
+    /**
+     * Cancels the submission when requested by household prior to physical collection.
+     */
+    public void markCancelled(String reason) {
+        if (this.status.isTerminal()) {
+            throw new IllegalStateException("Cannot cancel a submission that is already in terminal state: " + this.status);
+        }
+        this.status = SubmissionStatus.CANCELLED;
+        this.rejectionReason = "Cancelled by household: " + requireText(reason, "Cancellation reason");
+    }
+
+    /**
+     * Reverts status from CLAIMED back to SUBMITTED when a farmer declines an assignment.
+     */
+    public void revertToSubmitted() {
+        if (this.status != SubmissionStatus.CLAIMED) {
+            throw new IllegalStateException("Only CLAIMED submissions can be reverted to SUBMITTED. Current status: " + this.status);
+        }
+        this.status = SubmissionStatus.SUBMITTED;
+    }
+
     // --- Getters ---
 
     public Long getId() {

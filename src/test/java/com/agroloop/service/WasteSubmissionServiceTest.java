@@ -37,6 +37,9 @@ class WasteSubmissionServiceTest {
     private WasteSubmissionRepository wasteSubmissionRepository;
 
     @Mock
+    private com.agroloop.repository.PickupRequestRepository pickupRequestRepository;
+
+    @Mock
     private FileStorageService fileStorageService;
 
     private WasteSubmissionServiceImpl wasteSubmissionService;
@@ -48,6 +51,7 @@ class WasteSubmissionServiceTest {
         wasteSubmissionService = new WasteSubmissionServiceImpl(
                 householdRepository,
                 wasteSubmissionRepository,
+                pickupRequestRepository,
                 fileStorageService
         );
 

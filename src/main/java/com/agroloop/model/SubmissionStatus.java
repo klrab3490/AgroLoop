@@ -2,7 +2,7 @@ package com.agroloop.model;
 
 /**
  * Lifecycle state transitions for organic waste submissions.
- * Follows the flow: SUBMITTED -> CLAIMED -> COLLECTED -> VERIFIED (or REJECTED).
+ * Follows the flow: SUBMITTED -> CLAIMED -> COLLECTED -> VERIFIED (or REJECTED / CANCELLED).
  */
 public enum SubmissionStatus {
 
@@ -27,9 +27,14 @@ public enum SubmissionStatus {
     VERIFIED("Verified", "Quality verified and EcoTokens minted"),
 
     /**
-     * Submission rejected due to contamination, non-compostable contents, or cancellation.
+     * Submission rejected during post-collection inspection due to contamination.
      */
-    REJECTED("Rejected", "Rejected during inspection or cancelled");
+    REJECTED("Rejected", "Rejected during post-collection inspection"),
+
+    /**
+     * Submission cancelled by the submitting household prior to physical collection.
+     */
+    CANCELLED("Cancelled", "Cancelled by household prior to collection");
 
     private final String displayName;
     private final String description;
@@ -52,6 +57,6 @@ public enum SubmissionStatus {
     }
 
     public boolean isTerminal() {
-        return this == VERIFIED || this == REJECTED;
+        return this == VERIFIED || this == REJECTED || this == CANCELLED;
     }
 }
