@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — AgroLoop Marketplace</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/marketplace}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Checkout</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/marketplace/cart}" class="btn btn-outline btn-sm">← Back to Cart</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem; max-width: 900px;">
+
+        <div style="margin-bottom: 2.5rem;">
+            <span class="section-tag">Confirm Order</span>
+            <h2 style="font-size: 2.25rem; font-weight: 800; margin-top: 0.3rem;">Order Checkout</h2>
+            <p style="color: var(--text-secondary);">Verify delivery destination and authorize EcoToken redemption.</p>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start;">
+            
+            <!-- Left: Delivery Form -->
+            <div style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; padding: 2rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem;">Delivery Destination</h3>
+
+                <form th:action="@{/marketplace/checkout}" th:object="${checkoutRequest}" method="post">
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label for="deliveryAddress" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Delivery Address <span style="color: #f87171;">*</span></label>
+                        <textarea id="deliveryAddress" th:field="*{deliveryAddress}" rows="3" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px; resize: vertical;" placeholder="Street address, city, postal code..."></textarea>
+                        <div th:if="${#fields.hasErrors('deliveryAddress')}" th:errors="*{deliveryAddress}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Address error</div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem;">
+                        <label for="notes" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Delivery Notes / Instructions (Optional)</label>
+                        <textarea id="notes" th:field="*{notes}" rows="2" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px; resize: vertical;" placeholder="Drop at doorstep, gate code, special delivery instructions..."></textarea>
+                    </div>
+
+                    <div style="padding: 1rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.9rem; color: var(--text-secondary);">Your Available Balance:</span>
+                            <span style="font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">🪙 <span th:text="${tokenBalance != null ? #numbers.formatDecimal(tokenBalance, 1, 2) : '0.00'}">0.00</span></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem; font-size: 1.05rem;">
+                        Confirm & Redeem <span th:text="${cart != null ? #numbers.formatDecimal(cart.totalTokens, 1, 2) : '0.00'}">0.00</span> EcoTokens
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Order Summary Sidebar -->
+            <div style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; padding: 1.75rem;">
+                <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color, #30363d); padding-bottom: 0.5rem;">Order Review</h4>
+
+                <div th:each="item : ${cart.items}" style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 0.9rem;">
+                    <div>
+                        <span style="color: #fff; font-weight: 600;" th:text="${item.productName}">Product</span>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);" th:text="${item.quantity + ' × 🪙 ' + item.unitPrice}">1 × 10.00</div>
+                    </div>
+                    <div style="font-weight: 700; color: #34d399; font-family: 'JetBrains Mono', monospace;">
+                        🪙 <span th:text="${#numbers.formatDecimal(item.subtotal, 1, 2)}">10.00</span>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color, #30363d); margin-top: 1rem; padding-top: 1rem; display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-weight: 700;">Total Tokens</span>
+                    <span style="font-size: 1.35rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">
+                        🪙 <span th:text="${cart != null ? #numbers.formatDecimal(cart.totalTokens, 1, 2) : '0.00'}">0.00</span>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

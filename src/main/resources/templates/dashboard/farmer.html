@@ -25,6 +25,8 @@
 
             <div class="nav-actions">
                 <span class="badge phase-badge">Farmer Partner</span>
+                <a th:href="@{/farmer/products}" class="btn btn-primary btn-sm">🌱 Manage Produce</a>
+                <a th:href="@{/farmer/products/orders}" class="btn btn-outline btn-sm">Customer Orders</a>
                 <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Farmer Partner</span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>

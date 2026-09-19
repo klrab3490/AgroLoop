@@ -25,6 +25,8 @@
 
             <div class="nav-actions">
                 <span class="badge phase-badge">Household Member</span>
+                <a th:href="@{/marketplace}" class="btn btn-primary btn-sm">🛒 Marketplace</a>
+                <a th:href="@{/marketplace/orders}" class="btn btn-outline btn-sm">My Orders</a>
                 <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Household User</span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
@@ -82,7 +84,8 @@
                 <div style="font-size: 2.2rem; font-weight: 800; color: #10b981; margin-bottom: 0.5rem;">
                     <span th:text="${user?.tokenBalance}">150.00</span> <span style="font-size: 1rem; color: var(--text-secondary);">TOKENS</span>
                 </div>
-                <p>Earned from verified organic waste collections. Redeemable in the marketplace.</p>
+                <p style="margin-bottom: 0.75rem;">Earned from verified organic waste collections. Redeemable in the marketplace.</p>
+                <a th:href="@{/marketplace}" class="btn btn-outline btn-sm" style="color: #34d399; border-color: rgba(16, 185, 129, 0.4);">Redeem for Produce →</a>
             </div>
 
             <div class="role-card">

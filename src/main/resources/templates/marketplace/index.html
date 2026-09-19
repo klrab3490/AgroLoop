@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustainable Marketplace — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Circular Marketplace</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/marketplace/cart}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span>🛒 Cart</span>
+                    <span class="badge phase-badge" style="background: var(--accent-green); color: #000; font-weight: 700;" th:text="${cart != null ? cart.totalQuantity : 0}">0</span>
+                </a>
+
+                <div sec:authorize="isAuthenticated()" style="display: inline-flex; align-items: center; gap: 0.75rem;">
+                    <div th:if="${tokenBalance != null}" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.35rem 0.75rem; border-radius: 9999px; font-weight: 700; color: #34d399;">
+                        <span>🪙</span>
+                        <span th:text="${#numbers.formatDecimal(tokenBalance, 1, 2)}">0.00</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Tokens</span>
+                    </div>
+
+                    <a sec:authorize="hasRole('HOUSEHOLD')" th:href="@{/household/dashboard}" class="btn btn-outline btn-sm">Dashboard</a>
+                    <a sec:authorize="hasRole('HOUSEHOLD')" th:href="@{/marketplace/orders}" class="btn btn-outline btn-sm">My Orders</a>
+                    <a sec:authorize="hasRole('FARMER')" th:href="@{/farmer/dashboard}" class="btn btn-outline btn-sm">Farmer Portal</a>
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}" class="btn btn-outline btn-sm">Admin</a>
+
+                    <form th:action="@{/logout}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                    </form>
+                </div>
+
+                <div sec:authorize="isAnonymous()" style="display: inline-flex; gap: 0.5rem;">
+                    <a th:href="@{/login}" class="btn btn-outline btn-sm">Sign In</a>
+                    <a th:href="@{/register}" class="btn btn-primary btn-sm">Register</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+        <!-- Hero Banner -->
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <span class="section-tag">Circular Rewards In Action</span>
+            <h2 style="font-size: 2.75rem; font-weight: 800; margin-top: 0.5rem; letter-spacing: -0.02em;">Farm-Fresh Produce & Rich Compost</h2>
+            <p style="color: var(--text-secondary); max-width: 650px; margin: 0.75rem auto 0; font-size: 1.1rem;">
+                Cultivated by verified local farmers using compost from collected household organic waste. Redeem your earned EcoTokens for fresh organic harvests.
+            </p>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <div style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; padding: 1.5rem; margin-bottom: 2.5rem;">
+            <form th:action="@{/marketplace}" method="get" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 260px;">
+                    <input type="text" name="search" th:value="${search}" placeholder="Search organic produce, compost, herbs..." class="form-control" style="background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.65rem 1rem; border-radius: 8px; width: 100%;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">Search</button>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <a th:href="@{/marketplace}" class="btn btn-sm" th:classappend="${selectedCategory == null ? 'btn-primary' : 'btn-outline'}">All Items</a>
+                    <a th:each="cat : ${categories}" 
+                       th:href="@{/marketplace(category=${cat.name()})}" 
+                       class="btn btn-sm" 
+                       th:classappend="${selectedCategory == cat ? 'btn-primary' : 'btn-outline'}" 
+                       th:text="${cat.displayName}">Category</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(products)}" style="text-align: center; padding: 4rem 2rem; background: var(--card-bg, #161b22); border: 1px dashed var(--border-color, #30363d); border-radius: 16px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🌱</div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">No Products Found</h3>
+            <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+                No active listings match your current criteria. Check back soon as our farmer partners list seasonal harvests.
+            </p>
+            <a th:href="@{/marketplace}" class="btn btn-outline">Clear Filters</a>
+        </div>
+
+        <!-- Products Grid -->
+        <div th:if="${not #lists.isEmpty(products)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div th:each="p : ${products}" style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease, border-color 0.2s ease;">
+                
+                <!-- Product Image -->
+                <div style="height: 180px; width: 100%; background: #0d1117; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                    <img th:if="${p.imageUrl != null and !p.imageUrl.isBlank()}" th:src="@{'/uploads/' + ${p.imageUrl}}" th:alt="${p.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div th:if="${p.imageUrl == null or p.imageUrl.isBlank()}" style="font-size: 3.5rem;">
+                        <span th:if="${p.category.name() == 'COMPOST_AND_SOIL'}">🪴</span>
+                        <span th:if="${p.category.name() == 'ORGANIC_VEGETABLES'}">🥬</span>
+                        <span th:if="${p.category.name() == 'FRESH_FRUITS'}">🍎</span>
+                        <span th:if="${p.category.name() == 'FARM_DAIRY'}">🥛</span>
+                        <span th:if="${p.category.name() == 'SEEDS_AND_SAPLINGS'}">🌱</span>
+                        <span th:if="${p.category.name() == 'HERBS_AND_SPICES'}">🌿</span>
+                    </div>
+
+                    <!-- Category Badge -->
+                    <span style="position: absolute; top: 0.75rem; left: 0.75rem; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px; color: #a7f3d0; border: 1px solid rgba(52, 211, 153, 0.3);" th:text="${p.category.displayName}">Category</span>
+
+                    <!-- Stock Status Badge -->
+                    <span th:if="${p.stock > 0}" style="position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(16, 185, 129, 0.85); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; color: #fff;" th:text="${p.stock + ' in stock'}">In Stock</span>
+                    <span th:if="${p.stock == 0}" style="position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(239, 68, 68, 0.85); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; color: #fff;">Out of Stock</span>
+                </div>
+
+                <!-- Product Content -->
+                <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+                        <span>By </span><strong style="color: #fff;" th:text="${p.farmer != null ? p.farmer.name : 'Verified Farmer'}">Farmer</strong>
+                    </div>
+
+                    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3;">
+                        <a th:href="@{'/marketplace/products/' + ${p.id}}" style="color: #fff; text-decoration: none;" th:text="${p.name}">Product Name</a>
+                    </h3>
+
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.25rem; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" th:text="${p.description}">
+                        Natural organic crop freshly harvested.
+                    </p>
+
+                    <!-- Price & Actions -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color, #30363d); padding-top: 1rem; margin-top: auto;">
+                        <div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">
+                                🪙 <span th:text="${#numbers.formatDecimal(p.priceInTokens, 1, 2)}">10.00</span>
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);" th:text="${'per ' + p.unit}">per kg</span>
+                        </div>
+
+                        <form th:if="${p.stock > 0}" th:action="@{/marketplace/cart/add}" method="post" style="display: inline;">
+                            <input type="hidden" name="productId" th:value="${p.id}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.5rem 1rem;">+ Add</button>
+                        </form>
+
+                        <button th:if="${p.stock == 0}" class="btn btn-outline btn-sm" disabled style="opacity: 0.5;">Sold Out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

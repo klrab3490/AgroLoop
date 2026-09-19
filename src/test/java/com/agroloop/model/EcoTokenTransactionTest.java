@@ -88,9 +88,22 @@ class EcoTokenTransactionTest {
     void nullVerification_throwsException() {
         assertThrows(NullPointerException.class, () -> new EcoTokenTransaction(
                 household,
-                null,
+                (WasteVerification) null,
                 new BigDecimal("5.00"),
                 TransactionType.REWARD_MINTED,
+                new BigDecimal("10.00"),
+                "Description"
+        ));
+    }
+
+    @Test
+    @DisplayName("Null order throws NullPointerException")
+    void nullOrder_throwsException() {
+        assertThrows(NullPointerException.class, () -> new EcoTokenTransaction(
+                household,
+                (Order) null,
+                new BigDecimal("5.00"),
+                TransactionType.MARKETPLACE_PURCHASE,
                 new BigDecimal("10.00"),
                 "Description"
         ));
@@ -134,5 +147,75 @@ class EcoTokenTransactionTest {
         assertTrue(TransactionType.REWARD_MINTED.isCredit());
         assertTrue(TransactionType.ADMIN_ADJUSTMENT.isCredit());
         assertEquals(false, TransactionType.MARKETPLACE_PURCHASE.isCredit());
+    }
+
+    @Test
+    @DisplayName("Valid MARKETPLACE_PURCHASE creation links order and audit fields")
+    void validMarketplacePurchaseCreation_success() {
+        Order order = new Order(household, "123 Green Way", "Drop off");
+
+        EcoTokenTransaction tx = new EcoTokenTransaction(
+                household,
+                order,
+                new BigDecimal("25.00"),
+                TransactionType.MARKETPLACE_PURCHASE,
+                new BigDecimal("125.00"),
+                "Marketplace purchase for Order #1"
+        );
+
+        assertNotNull(tx);
+        assertEquals(household, tx.getHousehold());
+        assertEquals(order, tx.getOrder());
+        assertEquals(null, tx.getWasteVerification());
+        assertEquals(new BigDecimal("25.00"), tx.getAmount());
+        assertEquals(TransactionType.MARKETPLACE_PURCHASE, tx.getTransactionType());
+        assertEquals(new BigDecimal("125.00"), tx.getBalanceAfter());
+        assertEquals("Marketplace purchase for Order #1", tx.getDescription());
+    }
+
+    @Test
+    @DisplayName("Matrix invariant: REWARD_MINTED must not have order, MARKETPLACE_PURCHASE must not have wasteVerification")
+    void matrixInvariants_enforced() {
+        Order order = new Order(household, "123 Green Way", null);
+
+        // MARKETPLACE_PURCHASE passed into reward constructor should fail
+        assertThrows(IllegalArgumentException.class, () -> new EcoTokenTransaction(
+                household,
+                verification,
+                new BigDecimal("10.00"),
+                TransactionType.MARKETPLACE_PURCHASE,
+                new BigDecimal("50.00"),
+                "Invalid combo"
+        ));
+
+        // REWARD_MINTED passed into marketplace constructor should fail
+        assertThrows(IllegalArgumentException.class, () -> new EcoTokenTransaction(
+                household,
+                order,
+                new BigDecimal("10.00"),
+                TransactionType.REWARD_MINTED,
+                new BigDecimal("50.00"),
+                "Invalid combo"
+        ));
+    }
+
+    @Test
+    @DisplayName("Mismatched household on Order throws IllegalArgumentException")
+    void mismatchedHouseholdOnOrder_throwsException() {
+        org.springframework.test.util.ReflectionTestUtils.setField(household, "id", 101L);
+        Order order = new Order(household, "123 Green Way", null);
+
+        Household anotherHousehold = new Household("Charlie", "charlie@example.com", "hash", "789 Other St");
+        org.springframework.test.util.ReflectionTestUtils.setField(anotherHousehold, "id", 999L);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new EcoTokenTransaction(
+                anotherHousehold,
+                order,
+                new BigDecimal("15.00"),
+                TransactionType.MARKETPLACE_PURCHASE,
+                new BigDecimal("30.00"),
+                "Desc"
+        ));
+        assertTrue(ex.getMessage().contains("does not match order owner"));
     }
 }

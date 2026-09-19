@@ -52,7 +52,9 @@ public class SecurityConfig {
         http
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico", "/marketplace", "/marketplace/products/**", "/marketplace/cart/**").permitAll()
+                .requestMatchers("/marketplace/checkout/**", "/marketplace/orders").hasAuthority("ROLE_HOUSEHOLD")
+                .requestMatchers("/marketplace/orders/*").hasAnyAuthority("ROLE_HOUSEHOLD", "ROLE_FARMER", "ROLE_ADMIN")
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/farmer/**").hasAuthority("ROLE_FARMER")
                 .requestMatchers("/household/**").hasAuthority("ROLE_HOUSEHOLD")

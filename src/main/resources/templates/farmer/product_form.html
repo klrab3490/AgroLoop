@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit != null and isEdit ? 'Edit Product — AgroLoop' : 'New Product Listing — AgroLoop'}">Product Form — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/farmer/products}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Farmer Listing Portal</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/farmer/products}" class="btn btn-outline btn-sm">← Back to Listings</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem; max-width: 750px;">
+
+        <div style="margin-bottom: 2.5rem;">
+            <span class="section-tag">Produce Catalog</span>
+            <h2 style="font-size: 2.25rem; font-weight: 800; margin-top: 0.3rem;" th:text="${isEdit != null and isEdit ? 'Edit Produce Listing' : 'List New Produce or Compost'}">Product Form</h2>
+            <p style="color: var(--text-secondary);">Provide accurate details and price in EcoTokens for household members to purchase.</p>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <div style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 20px; padding: 2.5rem;">
+            
+            <form th:action="${isEdit != null and isEdit ? '/farmer/products/' + product.id + '/edit' : '/farmer/products/new'}" th:object="${productForm}" method="post" enctype="multipart/form-data">
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="name" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Product Name <span style="color: #f87171;">*</span></label>
+                    <input type="text" id="name" th:field="*{name}" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px;" placeholder="e.g. Organic Heritage Tomatoes, Rich Bio-Compost Bag">
+                    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Name error</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label for="category" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Category <span style="color: #f87171;">*</span></label>
+                        <select id="category" th:field="*{category}" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px;">
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.displayName}">Category</option>
+                        </select>
+                        <div th:if="${#fields.hasErrors('category')}" th:errors="*{category}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Category error</div>
+                    </div>
+
+                    <div>
+                        <label for="unit" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Unit of Measurement <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="unit" th:field="*{unit}" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px;" placeholder="e.g. kg, 5kg bag, bundle, box">
+                        <div th:if="${#fields.hasErrors('unit')}" th:errors="*{unit}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Unit error</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <label for="priceInTokens" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Price in EcoTokens <span style="color: #f87171;">*</span></label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #34d399; font-weight: 700;">🪙</span>
+                            <input type="number" step="0.01" min="0.01" id="priceInTokens" th:field="*{priceInTokens}" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem 0.75rem 0.75rem 2.5rem; border-radius: 8px;" placeholder="10.00">
+                        </div>
+                        <div th:if="${#fields.hasErrors('priceInTokens')}" th:errors="*{priceInTokens}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Price error</div>
+                    </div>
+
+                    <div>
+                        <label for="stock" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Stock Quantity <span style="color: #f87171;">*</span></label>
+                        <input type="number" min="0" id="stock" th:field="*{stock}" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px;" placeholder="20">
+                        <div th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Stock error</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="description" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Description</label>
+                    <textarea id="description" th:field="*{description}" rows="3" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.75rem; border-radius: 8px; resize: vertical;" placeholder="Describe cultivating methods, variety, compost details..."></textarea>
+                    <div th:if="${#fields.hasErrors('description')}" th:errors="*{description}" style="color: #f87171; font-size: 0.8rem; margin-top: 0.35rem;">Description error</div>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <label for="image" style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">Produce Photo (Optional)</label>
+                    <input type="file" id="image" name="image" accept="image/*" class="form-control" style="width: 100%; background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.65rem; border-radius: 8px;">
+                    <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Supported formats: JPEG, PNG, WebP (Max 10MB)</small>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <a th:href="@{/farmer/products}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" th:text="${isEdit != null and isEdit ? 'Update Listing' : 'Publish Listing'}">Publish Listing</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders — AgroLoop Marketplace</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/marketplace}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Order History</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/household/dashboard}" class="btn btn-outline btn-sm">Household Dashboard</a>
+                <a th:href="@{/marketplace}" class="btn btn-primary btn-sm">Marketplace</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem; max-width: 1000px;">
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="section-tag">Household Purchases</span>
+                <h2 style="font-size: 2.25rem; font-weight: 800; margin-top: 0.3rem;">My Marketplace Orders</h2>
+                <p style="color: var(--text-secondary);">History of farm produce and compost purchases redeemed using EcoTokens.</p>
+            </div>
+
+            <div th:if="${tokenBalance != null}" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 0.75rem 1.25rem; text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Current EcoTokens</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">
+                    🪙 <span th:text="${#numbers.formatDecimal(tokenBalance, 1, 2)}">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 4rem 2rem; background: var(--card-bg, #161b22); border: 1px dashed var(--border-color, #30363d); border-radius: 16px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+            <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">No Orders Yet</h3>
+            <p style="color: var(--text-secondary); max-width: 450px; margin: 0 auto 1.5rem;">
+                You haven't redeemed your EcoTokens for marketplace produce yet. Explore available listings!
+            </p>
+            <a th:href="@{/marketplace}" class="btn btn-primary">Browse Marketplace</a>
+        </div>
+
+        <div th:if="${not #lists.isEmpty(orders)}" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div th:each="ord : ${orders}" style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; padding: 1.5rem;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.15rem; font-weight: 800; color: #fff;" th:text="${'Order #' + ord.id}">Order #1</span>
+                            <span class="badge" th:classappend="${ord.status.name() == 'COMPLETED' ? 'badge-success' : 'phase-badge'}" th:text="${ord.status.displayName}">Placed</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;" th:text="${#temporals.format(ord.createdAt, 'dd MMM yyyy, HH:mm')}">Date</div>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">
+                            🪙 <span th:text="${#numbers.formatDecimal(ord.totalTokens, 1, 2)}">0.00</span>
+                        </div>
+                        <a th:href="@{'/marketplace/orders/' + ${ord.id}}" class="btn btn-outline btn-sm" style="margin-top: 0.25rem;">View Receipt →</a>
+                    </div>
+                </div>
+
+                <!-- Items snapshot list -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem;">
+                    <div th:each="it : ${ord.items}" style="background: #0d1117; border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.85rem; border: 1px solid #21262d;">
+                        <div style="font-weight: 600; color: #fff;" th:text="${it.productName}">Product Name</div>
+                        <div style="color: var(--text-secondary); font-size: 0.75rem;">
+                            <span th:text="${it.quantity + ' ' + it.unit + ' • By ' + it.farmerName}">1 kg • By Farmer</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+                    <span>Delivery to: </span><strong style="color: #cbd5e1;" th:text="${ord.deliveryAddress}">Address</strong>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

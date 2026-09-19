@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name + ' — AgroLoop Marketplace'}">Product Details — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/marketplace}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Circular Marketplace</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/marketplace}" class="btn btn-outline btn-sm">← Back to Catalog</a>
+                <a th:href="@{/marketplace/cart}" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <span>🛒 Cart</span>
+                    <span class="badge phase-badge" style="background: var(--accent-green); color: #000; font-weight: 700;" th:text="${cart != null ? cart.totalQuantity : 0}">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem; max-width: 900px;">
+
+        <div style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 20px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            
+            <!-- Left: Product Media -->
+            <div style="background: #0d1117; min-height: 350px; display: flex; align-items: center; justify-content: center; position: relative;">
+                <img th:if="${product.imageUrl != null and !product.imageUrl.isBlank()}" th:src="@{'/uploads/' + ${product.imageUrl}}" th:alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                <div th:if="${product.imageUrl == null or product.imageUrl.isBlank()}" style="font-size: 6rem;">
+                    <span th:if="${product.category.name() == 'COMPOST_AND_SOIL'}">🪴</span>
+                    <span th:if="${product.category.name() == 'ORGANIC_VEGETABLES'}">🥬</span>
+                    <span th:if="${product.category.name() == 'FRESH_FRUITS'}">🍎</span>
+                    <span th:if="${product.category.name() == 'FARM_DAIRY'}">🥛</span>
+                    <span th:if="${product.category.name() == 'SEEDS_AND_SAPLINGS'}">🌱</span>
+                    <span th:if="${product.category.name() == 'HERBS_AND_SPICES'}">🌿</span>
+                </div>
+            </div>
+
+            <!-- Right: Details & Purchase -->
+            <div style="padding: 2.5rem 2rem 2.5rem 0; display: flex; flex-direction: column;">
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <span class="badge phase-badge" th:text="${product.category.displayName}">Category</span>
+                    <span th:if="${product.stock > 0}" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.8rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 6px;" th:text="${product.stock + ' units available'}">In Stock</span>
+                    <span th:if="${product.stock == 0}" style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.8rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 6px;">Out of Stock</span>
+                </div>
+
+                <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;" th:text="${product.name}">Product Name</h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">
+                    Listed by: <strong style="color: #fff;" th:text="${product.farmer != null ? product.farmer.name : 'Verified Farmer'}">Farmer</strong>
+                    <span th:if="${product.farmer != null and product.farmer.farmName != null}" th:text="${' (' + product.farmer.farmName + ')'}"></span>
+                </p>
+
+                <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <span style="font-size: 2rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">🪙 <span th:text="${#numbers.formatDecimal(product.priceInTokens, 1, 2)}">10.00</span></span>
+                    <span style="color: var(--text-secondary);" th:text="${'per ' + product.unit}">per kg</span>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; color: #e2e8f0; margin-bottom: 0.5rem;">Description</h4>
+                    <p style="color: var(--text-secondary); line-height: 1.6;" th:text="${product.description != null ? product.description : 'No description provided.'}">
+                        Product description goes here.
+                    </p>
+                </div>
+
+                <!-- Add to cart form -->
+                <form th:if="${product.stock > 0}" th:action="@{/marketplace/cart/add}" method="post" style="margin-top: auto; display: flex; gap: 1rem; align-items: center;">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <div style="width: 100px;">
+                        <label for="quantity" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Quantity</label>
+                        <input type="number" id="quantity" name="quantity" min="1" th:max="${product.stock}" value="1" class="form-control" style="background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 0.65rem; border-radius: 8px; width: 100%; text-align: center;">
+                    </div>
+                    <div style="flex: 1; margin-top: 1.25rem;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">Add to Shopping Cart</button>
+                    </div>
+                </form>
+
+                <div th:if="${product.stock == 0}" style="margin-top: auto; padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; color: #f87171; text-align: center;">
+                    This product is currently out of stock. Check back later when fresh stock is harvested.
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>

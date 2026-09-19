@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Produce & Inventory — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/farmer/dashboard}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Farmer Inventory Management</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/farmer/dashboard}" class="btn btn-outline btn-sm">Farmer Dashboard</a>
+                <a th:href="@{/farmer/products/orders}" class="btn btn-outline btn-sm">Customer Orders</a>
+                <a th:href="@{/farmer/products/new}" class="btn btn-primary btn-sm">+ List New Product</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="section-tag">Marketplace Listings</span>
+                <h2 style="font-size: 2.25rem; font-weight: 800; margin-top: 0.3rem;">Farm Produce & Compost Catalog</h2>
+                <p style="color: var(--text-secondary);">Manage inventory, update prices in EcoTokens, and activate/deactivate listings.</p>
+            </div>
+
+            <a th:href="@{/farmer/products/new}" class="btn btn-primary">+ List New Product</a>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(products)}" style="text-align: center; padding: 4rem 2rem; background: var(--card-bg, #161b22); border: 1px dashed var(--border-color, #30363d); border-radius: 16px;">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">🌾</div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">No Produce Listed Yet</h3>
+            <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+                List your organic harvests, fresh fruits, vegetables, and compost bags for households to purchase using EcoTokens.
+            </p>
+            <a th:href="@{/farmer/products/new}" class="btn btn-primary">+ Create Your First Listing</a>
+        </div>
+
+        <!-- Products Table -->
+        <div th:if="${not #lists.isEmpty(products)}" style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                <thead>
+                    <tr style="background: #0d1117; border-bottom: 1px solid var(--border-color, #30363d); color: var(--text-secondary);">
+                        <th style="padding: 1rem;">Product</th>
+                        <th style="padding: 1rem;">Category</th>
+                        <th style="padding: 1rem;">Price</th>
+                        <th style="padding: 1rem;">Stock</th>
+                        <th style="padding: 1rem;">Status</th>
+                        <th style="padding: 1rem; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${products}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; background: #0d1117; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <img th:if="${p.imageUrl != null and !p.imageUrl.isBlank()}" th:src="@{'/uploads/' + ${p.imageUrl}}" style="width: 100%; height: 100%; object-fit: cover;">
+                                <span th:if="${p.imageUrl == null or p.imageUrl.isBlank()}" style="font-size: 1.5rem;">🌱</span>
+                            </div>
+                            <div>
+                                <strong style="color: #fff; font-size: 0.95rem;" th:text="${p.name}">Product Name</strong>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;" th:text="${'ID #' + p.id}">ID #1</span>
+                            </div>
+                        </td>
+
+                        <td style="padding: 1rem;">
+                            <span class="badge phase-badge" th:text="${p.category.displayName}">Category</span>
+                        </td>
+
+                        <td style="padding: 1rem;">
+                            <span style="font-weight: 700; color: #34d399; font-family: 'JetBrains Mono', monospace;">🪙 <span th:text="${#numbers.formatDecimal(p.priceInTokens, 1, 2)}">10.00</span></span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);" th:text="${'/ ' + p.unit}">/ kg</span>
+                        </td>
+
+                        <td style="padding: 1rem;">
+                            <span style="font-weight: 700;" th:classappend="${p.stock > 0 ? 'text-success' : 'text-danger'}" th:text="${p.stock + ' ' + p.unit}">10 kg</span>
+                            
+                            <!-- Restock inline form -->
+                            <form th:action="@{'/farmer/products/' + ${p.id} + '/restock'}" method="post" style="display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.5rem;">
+                                <input type="number" name="additionalStock" min="1" max="999" value="5" style="width: 50px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 4px; padding: 0.2rem 0.35rem; font-size: 0.8rem; text-align: center;">
+                                <button type="submit" class="btn btn-outline btn-sm" title="Add stock" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;">+ Add</button>
+                            </form>
+                        </td>
+
+                        <td style="padding: 1rem;">
+                            <span th:if="${p.active}" class="badge badge-success">Active</span>
+                            <span th:if="${not p.active}" class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">Archived</span>
+                        </td>
+
+                        <td style="padding: 1rem; text-align: right;">
+                            <div style="display: inline-flex; gap: 0.5rem; align-items: center;">
+                                <a th:href="@{'/farmer/products/' + ${p.id} + '/edit'}" class="btn btn-outline btn-sm">Edit</a>
+
+                                <form th:action="@{'/farmer/products/' + ${p.id} + '/toggle'}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-outline btn-sm" th:text="${p.active ? 'Deactivate' : 'Activate'}" th:style="${p.active ? 'color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);' : 'color: #34d399; border-color: rgba(16, 185, 129, 0.3);'}">Toggle</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+</body>
+</html>

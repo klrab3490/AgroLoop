@@ -228,13 +228,38 @@ classDiagram
         -Long id
         -BigDecimal amount
         -TransactionType type
+        -BigDecimal balanceAfter
     }
 
     class Product {
         -Long id
         -String name
-        -BigDecimal price
+        -BigDecimal priceInTokens
         -int stock
+        -boolean active
+        +deductStock(quantity)
+        +restock(quantity)
+        +deactivate()
+        +activate()
+    }
+
+    class Order {
+        -Long id
+        -String orderNumber
+        -BigDecimal totalTokens
+        -OrderStatus status
+        -String deliveryAddress
+        +addItem(item)
+        +complete()
+    }
+
+    class OrderItem {
+        -Long id
+        -String productName
+        -BigDecimal unitPrice
+        -int quantity
+        -BigDecimal subtotal
+        -String farmerName
     }
 
     User <|-- Household
@@ -243,11 +268,17 @@ classDiagram
 
     Household "1" --> "*" WasteSubmission
     Household "1" --> "*" EcoTokenTransaction
+    Household "1" --> "*" Order
     Farmer "1" --> "*" PickupRequest
     Farmer "1" --> "*" Product
+    Order "1" --> "*" OrderItem
+    Order "1" --> "0..1" EcoTokenTransaction
+    OrderItem "*" --> "1" Product
 
     WasteSubmission "1" --> "*" PickupRequest
----
+    PickupRequest "1" --> "0..1" WasteVerification
+    WasteVerification "1" --> "0..1" EcoTokenTransaction
+```
 
 ## 3. End-to-End System Architecture & Data Flow Mapping
 
@@ -496,9 +527,40 @@ The table below catalogs every key file in the AgroLoop codebase, providing a di
 | **[`TokenRewardServiceTest.java`](../../src/test/java/com/agroloop/service/TokenRewardServiceTest.java)** | Test | Mockito Test | Unit tests verifying reward minting, pessimistic write lock acquisition, idempotency, and rejection audit entries. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
 | **[`TokenRewardServiceIntegrationTest.java`](../../src/test/java/com/agroloop/service/TokenRewardServiceIntegrationTest.java)** | Test | SpringBootTest | Multithreaded concurrency tests asserting pessimistic write locking, idempotency, and lost-update prevention with the default test profile (in-memory H2 and Flyway disabled). |
 | **[`DashboardIntegrationTest.java`](../../src/test/java/com/agroloop/controller/DashboardIntegrationTest.java)** | Test | MockMvc Test | Controller integration tests verifying populated EcoToken ledger rendering and eager fetch resolution with `open-in-view=false`. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
+| **[`ProductCategory.java`](../../src/main/java/com/agroloop/model/ProductCategory.java)** | Domain Model | `enum ProductCategory` | Taxonomy of farm goods: `ORGANIC_VEGETABLES`, `FRESH_FRUITS`, `COMPOST_AND_SOIL`, `SEEDS_AND_PLANTS`, `DAIRY_AND_EGGS`, `HERBS_AND_SPICES`, `HONEY_AND_PRESERVES`. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`Product.java`](../../src/main/java/com/agroloop/model/Product.java)** | Domain Model | `class Product` | Encapsulated marketplace listing managing stock deductions (`deductStock`), replenishment (`restock`), pricing, soft archival (`deactivate`), and `@Version` optimistic locking. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`OrderStatus.java`](../../src/main/java/com/agroloop/model/OrderStatus.java)** | Domain Model | `enum OrderStatus` | Lifecycle states for orders: `PLACED`, `COMPLETED`. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`Order.java`](../../src/main/java/com/agroloop/model/Order.java)** | Domain Model | `class Order` | Aggregate root encapsulating line items, total tokens, buyer relationship, and profile address fallback. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`OrderItem.java`](../../src/main/java/com/agroloop/model/OrderItem.java)** | Domain Model | `class OrderItem` | Historical snapshot line item preserving product title, unit price, category, unit, and farmer name independently of subsequent edits. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`InsufficientStockException.java`](../../src/main/java/com/agroloop/exception/InsufficientStockException.java)** | Domain Exception | `InsufficientStockException` | Thrown when requested purchase quantity exceeds available product inventory. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`InsufficientTokensException.java`](../../src/main/java/com/agroloop/exception/InsufficientTokensException.java)** | Domain Exception | `InsufficientTokensException` | Thrown when household token balance is insufficient for authoritative server-side checkout total. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`V6__create_marketplace_tables.sql`](../../src/main/resources/db/migration/V6__create_marketplace_tables.sql)** | Migration | SQL Migration | Flyway DDL creating `products`, `orders`, `order_items`, and adding `order_id` to `ecotoken_transactions` with mutual exclusivity check constraint. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`ProductRepository.java`](../../src/main/java/com/agroloop/repository/ProductRepository.java)** | Persistence | `ProductRepository` | Spring Data JPA queries with pessimistic write locking (`findByIdForUpdate`), active listings, and farmer listings. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`OrderRepository.java`](../../src/main/java/com/agroloop/repository/OrderRepository.java)** | Persistence | `OrderRepository` | Queries orders by buyer, order number, and farmer sales history. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`OrderItemRepository.java`](../../src/main/java/com/agroloop/repository/OrderItemRepository.java)** | Persistence | `OrderItemRepository` | Data access repository for individual order line items. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`ProductFormRequest.java`](../../src/main/java/com/agroloop/dto/ProductFormRequest.java)** | DTO | `class ProductFormRequest` | Form validation backing object for farmer product listings. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`CartItemDto.java`](../../src/main/java/com/agroloop/dto/CartItemDto.java)** | DTO | `class CartItemDto` | Session cart item representation enforcing positive quantities. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`CartDto.java`](../../src/main/java/com/agroloop/dto/CartDto.java)** | DTO | `class CartDto` | Session shopping cart with helper methods for item counting and total calculations. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`CheckoutRequest.java`](../../src/main/java/com/agroloop/dto/CheckoutRequest.java)** | DTO | `class CheckoutRequest` | Captures delivery address and optional instructions during checkout. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`ProductService.java`](../../src/main/java/com/agroloop/service/ProductService.java)** | Service Contract | `interface ProductService` | Product catalog querying, creation, updating, and soft archival. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`ProductServiceImpl.java`](../../src/main/java/com/agroloop/service/ProductServiceImpl.java)** | Service Logic | `class ProductServiceImpl` | Implements farmer ownership checks, positive stock checks, and catalog filtering. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`CartService.java`](../../src/main/java/com/agroloop/service/CartService.java)** | Service Contract | `interface CartService` | Session shopping cart contract for adding, modifying, and clearing items. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`CartServiceImpl.java`](../../src/main/java/com/agroloop/service/CartServiceImpl.java)** | Service Logic | `class CartServiceImpl` | HTTP session-backed implementation managing cart state. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceService.java`](../../src/main/java/com/agroloop/service/MarketplaceService.java)** | Service Contract | `interface MarketplaceService` | Transactional checkout orchestration and order lookup contract. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceServiceImpl.java`](../../src/main/java/com/agroloop/service/MarketplaceServiceImpl.java)** | Service Logic | `class MarketplaceServiceImpl` | Deterministic dual-phase pessimistic locking (household row -> ascending product rows), validation-before-mutation, and atomic checkout transaction. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceController.java`](../../src/main/java/com/agroloop/controller/MarketplaceController.java)** | Web Controller | `class MarketplaceController` | Catalog browsing, cart management, checkout execution with post-commit cart clearing, and order receipts. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`FarmerProductController.java`](../../src/main/java/com/agroloop/controller/FarmerProductController.java)** | Web Controller | `class FarmerProductController` | Farmer product management, listing forms, active/archive toggles, and sales order view with strict farmer authorization. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`ProductModelTest.java`](../../src/test/java/com/agroloop/model/ProductModelTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying stock deductions, restock, metadata updates, and activation toggles. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`OrderModelTest.java`](../../src/test/java/com/agroloop/model/OrderModelTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying order items, address fallback, and historical snapshot immutability. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`CartServiceTest.java`](../../src/test/java/com/agroloop/service/CartServiceTest.java)** | Test | JUnit 5 Test | Unit tests verifying session cart mutations, quantity bounds, and clearing. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`ProductServiceTest.java`](../../src/test/java/com/agroloop/service/ProductServiceTest.java)** | Test | Mockito Test | Unit tests verifying farmer ownership authorization, catalog filters, and soft archival. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceServiceTest.java`](../../src/test/java/com/agroloop/service/MarketplaceServiceTest.java)** | Test | Mockito Test | Unit tests verifying checkout pipeline, server-side pricing, solvency checks, and lock ordering. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceConcurrencyIntegrationTest.java`](../../src/test/java/com/agroloop/service/MarketplaceConcurrencyIntegrationTest.java)** | Test | SpringBootTest | 10 concurrent threads competing for 2 units of stock with real pessimistic locks; exactly 2 succeed and 8 fail. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceDeadlockAndRollbackIntegrationTest.java`](../../src/test/java/com/agroloop/service/MarketplaceDeadlockAndRollbackIntegrationTest.java)** | Test | SpringBootTest | Concurrency integration testing inverted cart deadlocks [A,B] vs [B,A] and transactional rollback on insufficient tokens. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`MarketplaceControllerTest.java`](../../src/test/java/com/agroloop/controller/MarketplaceControllerTest.java)** | Test | MockMvc Test | Integration tests verifying catalog, cart, checkout flows, and post-commit cart clearing. | [06. Marketplace](../docs/modules/06_marketplace.md) |
+| **[`FarmerProductControllerTest.java`](../../src/test/java/com/agroloop/controller/FarmerProductControllerTest.java)** | Test | MockMvc Test | Integration tests verifying farmer product management, role protection, and cross-farmer authorization guards. | [06. Marketplace](../docs/modules/06_marketplace.md) |
 
 ---
-
 
 ## 5. Dedicated Integration Modules
 
@@ -511,7 +573,7 @@ Each feature and integration in AgroLoop has its own dedicated documentation fil
 | **[03. Waste Submission & Media](../docs/modules/03_waste_submission.md)** | Phase 3: Submissions | ✅ Completed | Multipart photo uploads, category classification taxonomy, address inheritance, UUID storage with traversal defense, and household dashboard tracking. |
 | **[04. Pickup & Verification Engine](../docs/modules/04_pickup_and_verification.md)** | Phase 4: Pickups | ✅ Completed | Farmer pickup claims, collection state machine, quality grading, decline re-queuing, and post-collection verification. |
 | **[05. EcoTokens & Rewards](../docs/modules/05_ecotokens.md)** | Phase 5: Rewards | ✅ Completed | Polymorphic `TokenCalculator` strategy, atomic wallet updates, pessimistic locking, idempotent reward minting, and household ledger. |
-| **[06. Marketplace & Commerce](../docs/modules/06_marketplace.md)** | Phase 6: Commerce | ⚪ Planned | Farmer produce catalog, inventory stock validation, and checkout using EcoTokens. |
+| **[06. Marketplace & Commerce](../docs/modules/06_marketplace.md)** | Phase 6: Commerce | ✅ Completed | Farmer product catalog, soft-archive lifecycle, session cart, authoritative DB pricing, deterministic dual-phase pessimistic locking, atomic stock/token/order/ledger checkout, and sales tracking. |
 
 | **[07. Admin Governance & Testing](../docs/modules/07_admin_and_testing.md)** | Phase 7: Governance | ⚪ Planned | Audit dashboards, dispute reviews, test automation (JUnit 5 & MockMvc), and production hardening. |
 

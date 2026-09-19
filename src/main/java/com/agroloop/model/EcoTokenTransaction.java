@@ -21,7 +21,8 @@ import java.util.Objects;
 
 /**
  * Immutable ledger entry recording an EcoToken credit or debit event.
- * Strictly linked to the contributing household and verified waste collection.
+ * Strictly linked to the contributing household, and either to a verified waste collection
+ * (for REWARD_MINTED credits) or an order (for MARKETPLACE_PURCHASE debits).
  */
 @Entity
 @Table(name = "ecotoken_transactions")
@@ -35,9 +36,13 @@ public class EcoTokenTransaction {
     @JoinColumn(name = "household_id", nullable = false)
     private Household household;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "waste_verification_id", nullable = false, unique = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "waste_verification_id", unique = true)
     private WasteVerification wasteVerification;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
 
     @Column(name = "amount", nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
@@ -59,6 +64,9 @@ public class EcoTokenTransaction {
         // Required by JPA.
     }
 
+    /**
+     * Constructor for REWARD_MINTED credit transactions originating from verified waste collections.
+     */
     public EcoTokenTransaction(
             Household household,
             WasteVerification wasteVerification,
@@ -69,12 +77,49 @@ public class EcoTokenTransaction {
     ) {
         this.household = Objects.requireNonNull(household, "Household cannot be null");
         this.wasteVerification = Objects.requireNonNull(wasteVerification, "Waste verification cannot be null");
-        validateHouseholdOwnership(household, wasteVerification);
-        this.amount = validateAmount(amount);
+        this.order = null;
         this.transactionType = Objects.requireNonNull(transactionType, "Transaction type cannot be null");
+        validateHouseholdOwnership(household, wasteVerification);
+        validateMatrix(this.transactionType, this.wasteVerification, this.order);
+        this.amount = validateAmount(amount);
         this.balanceAfter = validateBalanceAfter(balanceAfter);
         this.description = description != null ? description.trim() : null;
         this.createdAt = LocalDateTime.now();
+    }
+
+    /**
+     * Constructor for MARKETPLACE_PURCHASE debit transactions originating from marketplace orders.
+     */
+    public EcoTokenTransaction(
+            Household household,
+            Order order,
+            BigDecimal amount,
+            TransactionType transactionType,
+            BigDecimal balanceAfter,
+            String description
+    ) {
+        this.household = Objects.requireNonNull(household, "Household cannot be null");
+        this.order = Objects.requireNonNull(order, "Order cannot be null");
+        this.wasteVerification = null;
+        this.transactionType = Objects.requireNonNull(transactionType, "Transaction type cannot be null");
+        validateHouseholdOwnership(household, order);
+        validateMatrix(this.transactionType, this.wasteVerification, this.order);
+        this.amount = validateAmount(amount);
+        this.balanceAfter = validateBalanceAfter(balanceAfter);
+        this.description = description != null ? description.trim() : null;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    private static void validateMatrix(TransactionType type, WasteVerification wv, Order ord) {
+        if (type == TransactionType.REWARD_MINTED) {
+            if (wv == null || ord != null) {
+                throw new IllegalArgumentException("REWARD_MINTED requires wasteVerification and must not have an order");
+            }
+        } else if (type == TransactionType.MARKETPLACE_PURCHASE) {
+            if (ord == null || wv != null) {
+                throw new IllegalArgumentException("MARKETPLACE_PURCHASE requires order and must not have a wasteVerification");
+            }
+        }
     }
 
     private static void validateHouseholdOwnership(Household household, WasteVerification wasteVerification) {
@@ -88,13 +133,21 @@ public class EcoTokenTransaction {
         }
     }
 
+    private static void validateHouseholdOwnership(Household household, Order order) {
+        if (order.getHousehold() != null) {
+            Household owner = order.getHousehold();
+            if (household.getId() != null && owner.getId() != null && !Objects.equals(household.getId(), owner.getId())) {
+                throw new IllegalArgumentException("Transaction household does not match order owner");
+            }
+        }
+    }
+
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
     }
-
 
     // --- Validation Invariants ---
 
@@ -124,6 +177,10 @@ public class EcoTokenTransaction {
 
     public WasteVerification getWasteVerification() {
         return wasteVerification;
+    }
+
+    public Order getOrder() {
+        return order;
     }
 
     public BigDecimal getAmount() {

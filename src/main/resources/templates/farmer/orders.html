@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Orders — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/farmer/dashboard}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Farmer Order Fulfillment</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/farmer/dashboard}" class="btn btn-outline btn-sm">Dashboard</a>
+                <a th:href="@{/farmer/products}" class="btn btn-outline btn-sm">Produce Listings</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem;">
+
+        <div style="margin-bottom: 2.5rem;">
+            <span class="section-tag">Marketplace Demand</span>
+            <h2 style="font-size: 2.25rem; font-weight: 800; margin-top: 0.3rem;">Customer Orders for Your Produce</h2>
+            <p style="color: var(--text-secondary);">Orders placed by households redeeming EcoTokens for your fresh harvest and compost.</p>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 4rem 2rem; background: var(--card-bg, #161b22); border: 1px dashed var(--border-color, #30363d); border-radius: 16px;">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">No Customer Orders Yet</h3>
+            <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem;">
+                When households purchase your produce using EcoTokens, orders will appear here for fulfillment.
+            </p>
+            <a th:href="@{/farmer/products}" class="btn btn-primary">Manage Your Listings</a>
+        </div>
+
+        <!-- Orders Table -->
+        <div th:if="${not #lists.isEmpty(orders)}" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div th:each="ord : ${orders}" style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 16px; padding: 1.5rem;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="font-size: 1.15rem; font-weight: 800; color: #fff;" th:text="${'Order #' + ord.id}">Order #1</span>
+                            <span class="badge" th:classappend="${ord.status.name() == 'COMPLETED' ? 'badge-success' : 'phase-badge'}" th:text="${ord.status.displayName}">Placed</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            Placed by <strong style="color: #cbd5e1;" th:text="${ord.household.name}">Alice</strong> (<span th:text="${ord.household.email}">alice@example.com</span>) on <span th:text="${#temporals.format(ord.createdAt, 'dd MMM yyyy, HH:mm')}">Date</span>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <a th:href="@{'/marketplace/orders/' + ${ord.id}}" class="btn btn-outline btn-sm">View Full Order Receipt →</a>
+                    </div>
+                </div>
+
+                <!-- Items belonging to this farmer -->
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">Requested Items:</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem;">
+                        <div th:each="it : ${ord.items}" style="background: #0d1117; border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.85rem; border: 1px solid #21262d;">
+                            <strong style="color: #fff;" th:text="${it.productName}">Product</strong>
+                            <div style="color: #34d399; font-size: 0.8rem; margin-top: 0.2rem;">
+                                <span th:text="${it.quantity + ' ' + it.unit}">2 kg</span> • 🪙 <span th:text="${#numbers.formatDecimal(it.subtotal, 1, 2)}">10.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.85rem; color: var(--text-secondary); background: #0d1117; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #21262d;">
+                    <span>Delivery Address: </span><strong style="color: #e2e8f0;" th:text="${ord.deliveryAddress}">123 Green Way</strong>
+                    <div th:if="${ord.notes != null and !ord.notes.isBlank()}" style="margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-muted);">
+                        Instructions: <span th:text="${ord.notes}">Notes</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
