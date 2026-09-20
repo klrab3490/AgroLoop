@@ -1,6 +1,9 @@
 package com.agroloop.controller.api.v1;
 
 import com.agroloop.dto.api.v1.request.CancelOrderApiRequest;
+import com.agroloop.dto.api.v1.request.VerifyPickupHandshakeApiRequest;
+import com.agroloop.dto.api.v1.response.PickupHandshakePassResponse;
+import com.agroloop.dto.api.v1.response.PickupHandshakeResultApiResponse;
 import com.agroloop.dto.api.v1.response.PickupRequestApiResponse;
 import com.agroloop.exception.MissingIdempotencyKeyException;
 import com.agroloop.exception.ResourceNotFoundException;
@@ -8,6 +11,7 @@ import com.agroloop.model.PickupRequest;
 import com.agroloop.security.authorization.PickupSecurityEvaluator;
 import com.agroloop.security.idempotency.IdempotencyScope;
 import com.agroloop.security.idempotency.IdempotencyService;
+import com.agroloop.service.PickupHandshakeService;
 import com.agroloop.service.PickupService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -25,15 +29,18 @@ public class PickupApiController {
     private final PickupService pickupService;
     private final PickupSecurityEvaluator pickupSecurityEvaluator;
     private final IdempotencyService idempotencyService;
+    private final PickupHandshakeService pickupHandshakeService;
 
     public PickupApiController(
             PickupService pickupService,
             PickupSecurityEvaluator pickupSecurityEvaluator,
-            IdempotencyService idempotencyService
+            IdempotencyService idempotencyService,
+            PickupHandshakeService pickupHandshakeService
     ) {
         this.pickupService = pickupService;
         this.pickupSecurityEvaluator = pickupSecurityEvaluator;
         this.idempotencyService = idempotencyService;
+        this.pickupHandshakeService = pickupHandshakeService;
     }
 
     @GetMapping
@@ -48,7 +55,9 @@ public class PickupApiController {
         } else {
             pickups = pickupService.getHouseholdPickups(userId);
         }
-        return ResponseEntity.ok(pickups.stream().map(PickupRequestApiResponse::from).toList());
+        return ResponseEntity.ok(pickups.stream().map(p -> 
+                PickupRequestApiResponse.from(p, pickupHandshakeService.isHandshakeVerified(p))
+        ).toList());
     }
 
     @GetMapping("/{id}")
@@ -56,7 +65,31 @@ public class PickupApiController {
     public ResponseEntity<PickupRequestApiResponse> getPickup(@PathVariable Long id) {
         PickupRequest pickup = pickupService.getPickupById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pickup request not found: " + id));
-        return ResponseEntity.ok(PickupRequestApiResponse.from(pickup));
+        boolean verified = pickupHandshakeService.isHandshakeVerified(pickup);
+        return ResponseEntity.ok(PickupRequestApiResponse.from(pickup, verified));
+    }
+
+    @PostMapping("/{id}/handshake/pass")
+    @PreAuthorize("@pickupAuth.canAccessPickup(authentication, #id)")
+    public ResponseEntity<PickupHandshakePassResponse> issueHandshakePass(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        Long userId = getUserId(auth);
+        PickupHandshakePassResponse pass = pickupHandshakeService.issueHandshakePass(id, userId);
+        return ResponseEntity.ok(pass);
+    }
+
+    @PostMapping("/{id}/handshake")
+    @PreAuthorize("hasRole('FARMER')")
+    public ResponseEntity<PickupHandshakeResultApiResponse> verifyHandshake(
+            @PathVariable Long id,
+            @Valid @RequestBody VerifyPickupHandshakeApiRequest request,
+            Authentication auth
+    ) {
+        Long farmerUserId = getUserId(auth);
+        PickupHandshakeResultApiResponse result = pickupHandshakeService.verifyAndConsumeHandshake(id, farmerUserId, request);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/{id}/cancel")

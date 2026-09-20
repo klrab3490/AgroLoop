@@ -14,6 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { mobileApiClient } from "../../src/lib/api.js";
 import { useAuth } from "../../src/context/auth-context.js";
+import { QrScannerModal } from "../../src/components/qr-scanner-modal.js";
 import type { PickupRequestApiResponse } from "@agroloop/api-types";
 
 export default function FarmerCollectionsScreen() {
@@ -26,6 +27,10 @@ export default function FarmerCollectionsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionInProgress, setActionInProgress] = useState<number | null>(null);
+
+  // Scanner modal state
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [selectedPickupIdForScan, setSelectedPickupIdForScan] = useState<number | undefined>();
 
   // Scheduling modal state
   const [schedulingId, setSchedulingId] = useState<number | null>(null);
@@ -137,7 +142,18 @@ export default function FarmerCollectionsScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backText}>&larr; Back to Portal</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Collection Board</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.title}>Collection Board</Text>
+          <TouchableOpacity
+            style={styles.scanHeaderBtn}
+            onPress={() => {
+              setSelectedPickupIdForScan(undefined);
+              setScannerVisible(true);
+            }}
+          >
+            <Text style={styles.scanHeaderBtnText}>📷 Scan QR Pass</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>
           Discover nearby compostable waste batches, schedule routes, and collect organic feedstock
         </Text>
@@ -196,8 +212,15 @@ export default function FarmerCollectionsScreen() {
                     Household: {pickup.householdName || `User #${pickup.householdId ?? "--"}`}
                   </Text>
                 </View>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusBadgeText}>{pickup.status}</Text>
+                <View style={styles.headerBadges}>
+                  {pickup.handshakeVerified && (
+                    <View style={styles.handshakeVerifiedPill}>
+                      <Text style={styles.handshakeVerifiedPillText}>✓ Verified</Text>
+                    </View>
+                  )}
+                  <View style={styles.statusBadge}>
+                    <Text style={styles.statusBadgeText}>{pickup.status}</Text>
+                  </View>
                 </View>
               </View>
 
@@ -262,6 +285,19 @@ export default function FarmerCollectionsScreen() {
                     ) : (
                       <Text style={styles.collectButtonText}>🚛 Mark Collected (On-Site)</Text>
                     )}
+                  </TouchableOpacity>
+                )}
+
+                {(isClaimed || isScheduled || isCollected) && !pickup.handshakeVerified && (
+                  <TouchableOpacity
+                    style={styles.scanButton}
+                    onPress={() => {
+                      setSelectedPickupIdForScan(pickup.id);
+                      setScannerVisible(true);
+                    }}
+                    disabled={isBusy}
+                  >
+                    <Text style={styles.scanButtonText}>📷 Scan Handshake</Text>
                   </TouchableOpacity>
                 )}
 
@@ -340,6 +376,25 @@ export default function FarmerCollectionsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Handshake QR Scanner Modal */}
+      <QrScannerModal
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        initialPickupId={selectedPickupIdForScan}
+        onHandshakeSuccess={(result) => {
+          setScannerVisible(false);
+          Alert.alert(
+            "Handshake Verified!",
+            `Passcode/QR successfully verified on-site for Pickup #${result.pickupId}.`
+          );
+          fetchData();
+          router.push({
+            pathname: "/farmer/verify",
+            params: { pickupId: String(result.pickupId) },
+          });
+        }}
+      />
     </ScrollView>
   );
 }
@@ -365,6 +420,22 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#0f172a",
+  },
+  headerTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  scanHeaderBtn: {
+    backgroundColor: "#059669",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  scanHeaderBtnText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "700",
   },
   subtitle: {
     fontSize: 14,
@@ -463,6 +534,24 @@ const styles = StyleSheet.create({
     color: "#64748b",
     marginTop: 2,
   },
+  headerBadges: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  handshakeVerifiedPill: {
+    backgroundColor: "#ecfdf5",
+    borderWidth: 1,
+    borderColor: "#10b981",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  handshakeVerifiedPillText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#059669",
+  },
   statusBadge: {
     backgroundColor: "#dcfce7",
     paddingHorizontal: 8,
@@ -539,6 +628,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   collectButtonText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  scanButton: {
+    backgroundColor: "#059669",
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+  },
+  scanButtonText: {
     color: "#ffffff",
     fontSize: 13,
     fontWeight: "600",

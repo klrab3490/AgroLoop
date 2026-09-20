@@ -133,6 +133,18 @@ public class RestExceptionHandler {
                 .body(buildProblem(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "Too Many Requests", ex.getMessage(), request));
     }
 
+    @ExceptionHandler(com.agroloop.exception.HandshakeAlreadyConsumedException.class)
+    public ResponseEntity<ProblemDetail> handleHandshakeAlreadyConsumed(com.agroloop.exception.HandshakeAlreadyConsumedException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildProblem(HttpStatus.CONFLICT, "HANDSHAKE_ALREADY_CONSUMED", "Handshake Already Consumed", ex.getMessage(), request));
+    }
+
+    @ExceptionHandler(com.agroloop.exception.InvalidHandshakeException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidHandshake(com.agroloop.exception.InvalidHandshakeException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildProblem(HttpStatus.BAD_REQUEST, "INVALID_HANDSHAKE", "Invalid Handshake Credential", ex.getMessage(), request));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

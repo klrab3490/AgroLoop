@@ -70,6 +70,9 @@ public class PickupRequest {
     @OneToOne(mappedBy = "pickupRequest", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private WasteVerification verification;
 
+    @Column(name = "latest_handshake_id")
+    private Long latestHandshakeId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -293,5 +296,13 @@ public class PickupRequest {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Long getLatestHandshakeId() {
+        return latestHandshakeId;
+    }
+
+    public void setLatestHandshakeId(Long latestHandshakeId) {
+        this.latestHandshakeId = latestHandshakeId;
     }
 }

@@ -17,10 +17,16 @@ public record PickupRequestApiResponse(
     LocalDateTime cancelledAt,
     String cancellationReason,
     VerificationApiResponse verification,
+    Boolean handshakeVerified,
+    Long latestHandshakeId,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
     public static PickupRequestApiResponse from(PickupRequest pickup) {
+        return from(pickup, null);
+    }
+
+    public static PickupRequestApiResponse from(PickupRequest pickup, Boolean handshakeVerified) {
         if (pickup == null) {
             return null;
         }
@@ -34,6 +40,11 @@ public record PickupRequestApiResponse(
         String farmerName = (pickup.getAssignedFarmer() != null)
                 ? pickup.getAssignedFarmer().getName() : null;
         VerificationApiResponse verif = pickup.getVerification() != null ? VerificationApiResponse.from(pickup.getVerification()) : null;
+
+        Boolean verifiedFlag = handshakeVerified;
+        if (verifiedFlag == null && pickup.getLatestHandshakeId() != null) {
+            verifiedFlag = true;
+        }
 
         return new PickupRequestApiResponse(
                 pickup.getId(),
@@ -49,6 +60,8 @@ public record PickupRequestApiResponse(
                 pickup.getCancelledAt(),
                 pickup.getCancellationReason(),
                 verif,
+                verifiedFlag != null && verifiedFlag,
+                pickup.getLatestHandshakeId(),
                 pickup.getCreatedAt(),
                 pickup.getUpdatedAt()
         );

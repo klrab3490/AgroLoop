@@ -30,10 +30,63 @@ export type ResolveDisputeApiRequest = Schemas["ResolveDisputeApiRequest"];
 // Waste & Verification DTOs
 export type WasteSubmissionApiResponse = Schemas["WasteSubmissionApiResponse"];
 export type WasteSubmissionApiRequest = Schemas["WasteSubmissionApiRequest"];
-export type PickupRequestApiResponse = Schemas["PickupRequestApiResponse"];
+export type PickupRequestApiResponse = Schemas["PickupRequestApiResponse"] & {
+  handshakeVerified?: boolean;
+  latestHandshakeId?: number | null;
+};
 export type VerificationApiResponse = Schemas["VerificationApiResponse"];
 export type SchedulePickupApiRequest = Schemas["SchedulePickupApiRequest"];
 export type VerifyWasteApiRequest = Schemas["VerifyWasteApiRequest"];
+
+// Physical On-Site Pickup Handshake DTOs
+export interface CompactQrPayload {
+  t: string;
+  v: number;
+  p: number;
+  h: number;
+  s?: number;
+  iat: number;
+  exp: number;
+  n: string;
+  c: string;
+  sig: string;
+}
+
+export interface PickupHandshakePassResponse {
+  type: string;
+  version: number;
+  pickupId: number;
+  householdId: number;
+  submissionId?: number;
+  issuedAt: number;
+  expiresAt: number;
+  nonce: string;
+  passCode: string;
+  signature: string;
+  compactQr: CompactQrPayload;
+}
+
+export type VerifyPickupHandshakeApiRequest =
+  | {
+      method: "QR_SCAN";
+      payload: CompactQrPayload;
+      passCode?: undefined;
+    }
+  | {
+      method: "MANUAL_PASSCODE";
+      passCode: string;
+      payload?: undefined;
+    };
+
+export interface PickupHandshakeResultApiResponse {
+  verified: boolean;
+  handshakeId: number;
+  pickupId: number;
+  householdId: number;
+  farmerId: number;
+  method: "QR_SCAN" | "MANUAL_PASSCODE";
+  verifiedAt: string;
+}
 
 // Tokens, Solvency & Ledger DTOs
 export type HouseholdBalanceResponse = Schemas["HouseholdBalanceResponse"];

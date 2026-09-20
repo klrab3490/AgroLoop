@@ -14,7 +14,11 @@ import {
 import { useRouter } from "expo-router";
 import { mobileApiClient } from "../../src/lib/api.js";
 import { useAuth } from "../../src/context/auth-context.js";
-import type { PickupRequestApiResponse } from "@agroloop/api-types";
+import { QrCodeView } from "../../src/components/qr-code-view.js";
+import type {
+  PickupRequestApiResponse,
+  PickupHandshakePassResponse,
+} from "@agroloop/api-types";
 
 const STAGES = [
   { key: "REQUESTED", label: "Requested" },
@@ -54,6 +58,25 @@ export default function HouseholdPickupScreen() {
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [submittingCancel, setSubmittingCancel] = useState(false);
+
+  // QR Handshake Pass state
+  const [passModalPickupId, setPassModalPickupId] = useState<number | null>(null);
+  const [activePass, setActivePass] = useState<PickupHandshakePassResponse | null>(null);
+  const [loadingPass, setLoadingPass] = useState(false);
+
+  const fetchHandshakePass = async (pickupId: number) => {
+    setLoadingPass(true);
+    try {
+      const pass = await mobileApiClient.pickups.generateHandshakePass(pickupId);
+      setActivePass(pass);
+      setPassModalPickupId(pickupId);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to generate handshake pass";
+      Alert.alert("Pass Generation Error", msg);
+    } finally {
+      setLoadingPass(false);
+    }
+  };
 
   const fetchPickups = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -297,20 +320,74 @@ export default function HouseholdPickupScreen() {
               </View>
 
               {/* Action buttons */}
-              {canCancel && (
-                <View style={styles.cardActions}>
+              <View style={styles.cardActions}>
+                {(item.status === "CLAIMED" || item.status === "ASSIGNED" || item.status === "SCHEDULED") && (
+                  <TouchableOpacity
+                    style={styles.qrPassBtn}
+                    onPress={() => item.id && fetchHandshakePass(item.id)}
+                    disabled={loadingPass}
+                  >
+                    <Text style={styles.qrPassBtnText}>
+                      📱 Show Verification QR Pass
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                {canCancel && (
                   <TouchableOpacity
                     style={styles.cancelBtn}
                     onPress={() => setCancellingId(item.id ?? null)}
                   >
                     <Text style={styles.cancelBtnText}>Cancel Pickup Request</Text>
                   </TouchableOpacity>
-                </View>
-              )}
+                )}
+              </View>
             </View>
           );
         })
       )}
+
+      {/* Handshake QR Pass Modal */}
+      <Modal
+        visible={passModalPickupId !== null && activePass !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setPassModalPickupId(null);
+          setActivePass(null);
+        }}
+      >
+        <View style={styles.passModalOverlay}>
+          <View style={styles.passModalCard}>
+            <View style={styles.passModalHeader}>
+              <View>
+                <Text style={styles.passModalTitle}>Pickup #{passModalPickupId} Pass</Text>
+                <Text style={styles.passModalSubtitle}>Present to partner farmer on collection</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  setPassModalPickupId(null);
+                  setActivePass(null);
+                }}
+                style={styles.passModalClose}
+              >
+                <Text style={styles.passModalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {activePass && (
+              <QrCodeView
+                pass={activePass}
+                onRefresh={() => {
+                  if (passModalPickupId) {
+                    fetchHandshakePass(passModalPickupId);
+                  }
+                }}
+                isRefreshing={loadingPass}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Cancellation Reason Modal */}
       <Modal
@@ -730,9 +807,67 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  modalConfirmBtnText: {
+    modalConfirmBtnText: {
     fontSize: 14,
     color: "#ffffff",
     fontWeight: "600",
+  },
+  qrPassBtn: {
+    backgroundColor: "#0f172a",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  qrPassBtnText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  passModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  passModalCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    padding: 20,
+    width: "100%",
+    maxWidth: 360,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  passModalHeader: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  passModalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0f172a",
+  },
+  passModalSubtitle: {
+    fontSize: 12,
+    color: "#64748b",
+    marginTop: 2,
+  },
+  passModalClose: {
+    padding: 4,
+  },
+  passModalCloseText: {
+    fontSize: 18,
+    color: "#94a3b8",
+    fontWeight: "700",
   },
 });

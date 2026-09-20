@@ -12,6 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { mobileApiClient } from "../../src/lib/api.js";
 import { uploadMediaAsset } from "../../src/services/media-upload.js";
+import { QrScannerModal } from "../../src/components/qr-scanner-modal.js";
 import type { PickupRequestApiResponse } from "@agroloop/api-types";
 
 type QualityGrade = "GRADE_A" | "GRADE_B" | "GRADE_C" | "REJECTED";
@@ -32,6 +33,7 @@ export default function FarmerVerifyScreen() {
   const [pickupIdInput, setPickupIdInput] = useState(params.pickupId || "");
   const [pickup, setPickup] = useState<PickupRequestApiResponse | null>(null);
   const [loadingPickup, setLoadingPickup] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   const [weightKg, setWeightKg] = useState("5.0");
   const [grade, setGrade] = useState<QualityGrade>("GRADE_A");
@@ -168,15 +170,60 @@ export default function FarmerVerifyScreen() {
               <Text style={styles.lookupButtonText}>Load Batch</Text>
             )}
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.scanPassButton}
+            onPress={() => setScannerVisible(true)}
+          >
+            <Text style={styles.scanPassButtonText}>📷 Scan Pass</Text>
+          </TouchableOpacity>
         </View>
 
         {pickup && (
           <View style={styles.pickupLoadedBox}>
-            <Text style={styles.pickupLoadedTitle}>
-              Batch #{pickup.wasteSubmissionId ?? pickup.id} &bull; Household: {pickup.householdName || `#${pickup.householdId}`}
-            </Text>
+            <View style={styles.pickupHeaderRow}>
+              <Text style={styles.pickupLoadedTitle}>
+                Batch #{pickup.wasteSubmissionId ?? pickup.id} &bull; Household: {pickup.householdName || `#${pickup.householdId}`}
+              </Text>
+              {pickup.handshakeVerified ? (
+                <View style={styles.verifiedHandshakePill}>
+                  <Text style={styles.verifiedHandshakePillText}>✓ Handshake Verified</Text>
+                </View>
+              ) : (
+                <View style={styles.pendingHandshakePill}>
+                  <Text style={styles.pendingHandshakePillText}>⚠️ Handshake Pending</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.pickupLoadedAddress}>📍 {pickup.pickupAddress || "Registered household address"}</Text>
             <Text style={styles.pickupLoadedStatus}>Current Status: {pickup.status}</Text>
+
+            {pickup.handshakeVerified ? (
+              <View style={styles.handshakeVerifiedBanner}>
+                <Text style={styles.handshakeVerifiedBannerTitle}>
+                  🛡️ Server-Authenticated On-Site Handshake
+                </Text>
+                <Text style={styles.handshakeVerifiedBannerDesc}>
+                  Cryptographic pass has been verified and consumed by the server. Feedstock possession authenticated.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.handshakePendingBanner}>
+                <View style={styles.handshakePendingTextWrap}>
+                  <Text style={styles.handshakePendingBannerTitle}>
+                    On-Site Handshake Pending
+                  </Text>
+                  <Text style={styles.handshakePendingBannerDesc}>
+                    Scan the household's QR pass or input their 10-char passcode before committing tokens.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.handshakeAuthenticateBtn}
+                  onPress={() => setScannerVisible(true)}
+                >
+                  <Text style={styles.handshakeAuthenticateBtnText}>Authenticate</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -297,6 +344,21 @@ export default function FarmerVerifyScreen() {
           <Text style={styles.submitButtonText}>Commit Verification & Mint Tokens</Text>
         )}
       </TouchableOpacity>
+
+      {/* Handshake QR Scanner Modal */}
+      <QrScannerModal
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        initialPickupId={pickup?.id || (Number(pickupIdInput) || undefined)}
+        onHandshakeSuccess={(result) => {
+          setScannerVisible(false);
+          Alert.alert(
+            "Handshake Verified!",
+            `Passcode/QR successfully authenticated for Pickup #${result.pickupId}.`
+          );
+          loadPickupDetails(result.pickupId);
+        }}
+      />
     </ScrollView>
   );
 }
@@ -369,12 +431,113 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 13,
   },
+  scanPassButton: {
+    backgroundColor: "#059669",
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanPassButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 13,
+  },
   pickupLoadedBox: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "#f1f5f9",
     gap: 4,
+  },
+  pickupHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  verifiedHandshakePill: {
+    backgroundColor: "#ecfdf5",
+    borderWidth: 1,
+    borderColor: "#10b981",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  verifiedHandshakePillText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#059669",
+  },
+  pendingHandshakePill: {
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#f59e0b",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  pendingHandshakePillText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#b45309",
+  },
+  handshakeVerifiedBanner: {
+    marginTop: 10,
+    backgroundColor: "#ecfdf5",
+    borderWidth: 1,
+    borderColor: "#a7f3d0",
+    borderRadius: 8,
+    padding: 10,
+  },
+  handshakeVerifiedBannerTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#065f46",
+    marginBottom: 2,
+  },
+  handshakeVerifiedBannerDesc: {
+    fontSize: 11,
+    color: "#047857",
+    lineHeight: 16,
+  },
+  handshakePendingBanner: {
+    marginTop: 10,
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    borderRadius: 8,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  handshakePendingTextWrap: {
+    flex: 1,
+  },
+  handshakePendingBannerTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#92400e",
+    marginBottom: 2,
+  },
+  handshakePendingBannerDesc: {
+    fontSize: 11,
+    color: "#b45309",
+    lineHeight: 15,
+  },
+  handshakeAuthenticateBtn: {
+    backgroundColor: "#059669",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  handshakeAuthenticateBtnText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: 12,
   },
   pickupLoadedTitle: {
     fontSize: 14,

@@ -36,6 +36,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pickups/{id}/handshake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verifyHandshake"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pickups/{id}/handshake/pass": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueHandshakePass"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pickups/{id}/cancel": {
         parameters: {
             query?: never;
@@ -661,6 +693,64 @@ export interface components {
             mediaId?: string;
             imageUrl?: string;
         };
+        CompactQrPayload: {
+            t?: string;
+            /** Format: int32 */
+            v?: number;
+            /** Format: int64 */
+            p?: number;
+            /** Format: int64 */
+            h?: number;
+            /** Format: int64 */
+            s?: number;
+            /** Format: int64 */
+            iat?: number;
+            /** Format: int64 */
+            exp?: number;
+            n?: string;
+            c?: string;
+            sig?: string;
+        };
+        VerifyPickupHandshakeApiRequest: {
+            /** @enum {string} */
+            method: "QR_SCAN" | "MANUAL_PASSCODE";
+            payload?: components["schemas"]["CompactQrPayload"];
+            passCode?: string;
+        };
+        PickupHandshakeResultApiResponse: {
+            verified?: boolean;
+            /** Format: int64 */
+            handshakeId?: number;
+            /** Format: int64 */
+            pickupId?: number;
+            /** Format: int64 */
+            householdId?: number;
+            /** Format: int64 */
+            farmerId?: number;
+            /** @enum {string} */
+            method?: "QR_SCAN" | "MANUAL_PASSCODE";
+            /** Format: date-time */
+            verifiedAt?: string;
+        };
+        PickupHandshakePassResponse: {
+            type?: string;
+            /** Format: int32 */
+            version?: number;
+            /** Format: int64 */
+            pickupId?: number;
+            /** Format: int64 */
+            householdId?: number;
+            /** Format: int64 */
+            submissionId?: number;
+            /** Format: int64 */
+            issuedAt?: number;
+            /** Format: int64 */
+            expiresAt?: number;
+            nonce?: string;
+            passCode?: string;
+            signature?: string;
+            compactQr?: components["schemas"]["CompactQrPayload"];
+        };
         CancelOrderApiRequest: {
             reason: string;
         };
@@ -685,6 +775,9 @@ export interface components {
             cancelledAt?: string;
             cancellationReason?: string;
             verification?: components["schemas"]["VerificationApiResponse"];
+            handshakeVerified?: boolean;
+            /** Format: int64 */
+            latestHandshakeId?: number;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -973,6 +1066,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ProductApiResponse"];
+                };
+            };
+        };
+    };
+    verifyHandshake: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyPickupHandshakeApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PickupHandshakeResultApiResponse"];
+                };
+            };
+        };
+    };
+    issueHandshakePass: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PickupHandshakePassResponse"];
                 };
             };
         };
