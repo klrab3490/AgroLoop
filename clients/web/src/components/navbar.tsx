@@ -1,0 +1,230 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { useCart } from "@/lib/cart-context";
+import { CartDrawer } from "./cart-drawer";
+
+export function Navbar() {
+  const { user, isAuthenticated, logout } = useAuth();
+  const { itemCount } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  return (
+    <>
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-8">
+              <Link href="/" className="flex items-center gap-2 group">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg font-bold shadow-sm shadow-emerald-200 group-hover:scale-105 transition-transform">
+                  🌿
+                </div>
+                <div>
+                  <span className="font-extrabold text-lg text-slate-900 tracking-tight">AgroLoop</span>
+                  <span className="hidden sm:inline-block ml-2 text-3xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    Circular Hub
+                  </span>
+                </div>
+              </Link>
+
+              {/* Primary Navigation */}
+              <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+                <Link href="/marketplace" className="hover:text-emerald-700 transition">
+                  Marketplace
+                </Link>
+                <Link href="/orders" className="hover:text-emerald-700 transition">
+                  My Orders
+                </Link>
+
+                {/* Role Specific Links */}
+                {user?.role === "ROLE_HOUSEHOLD" && (
+                  <>
+                    <Link href="/household" className="hover:text-emerald-700 transition">
+                      Household Hub
+                    </Link>
+                    <Link href="/household/submit" className="hover:text-emerald-700 transition">
+                      Submit Waste
+                    </Link>
+                    <Link href="/household/pickups" className="hover:text-emerald-700 transition">
+                      Pickups
+                    </Link>
+                    <Link href="/household/ledger" className="hover:text-emerald-700 transition">
+                      Ledger
+                    </Link>
+                  </>
+                )}
+
+                {user?.role === "ROLE_FARMER" && (
+                  <>
+                    <Link href="/farmer" className="hover:text-emerald-700 transition">
+                      Farmer Hub
+                    </Link>
+                    <Link href="/farmer/pickups" className="hover:text-emerald-700 transition">
+                      Pickup Queue
+                    </Link>
+                    <Link href="/farmer/products" className="hover:text-emerald-700 transition">
+                      Products
+                    </Link>
+                    <Link href="/farmer/orders" className="hover:text-emerald-700 transition">
+                      Sales
+                    </Link>
+                  </>
+                )}
+              </nav>
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-4">
+              {/* Cart Trigger */}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 text-slate-600 hover:text-emerald-700 transition rounded-lg hover:bg-slate-100"
+                aria-label="Open Shopping Cart"
+              >
+                <span className="text-xl">🛒</span>
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-emerald-600 text-white font-bold text-2xs w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                    {itemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* User Profile / Auth State */}
+              {isAuthenticated && user ? (
+                <div className="flex items-center gap-3">
+                  <span className="hidden sm:inline-block px-2.5 py-1 text-2xs font-semibold rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+                    {user.role}
+                  </span>
+                  <div className="text-right hidden sm:block">
+                    <p className="text-xs font-bold text-slate-900 leading-tight">{user.name ?? user.email}</p>
+                    <p className="text-2xs text-slate-500 leading-tight">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={() => logout()}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/auth/login"
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-emerald-700 transition"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition shadow-sm"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+
+              {/* Mobile menu trigger */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                ☰
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile dropdown menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden py-4 border-t border-slate-200 space-y-2">
+              <Link
+                href="/marketplace"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Marketplace
+              </Link>
+              <Link
+                href="/orders"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                My Orders
+              </Link>
+              {user?.role === "ROLE_HOUSEHOLD" && (
+                <>
+                  <Link
+                    href="/household"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Household Hub
+                  </Link>
+                  <Link
+                    href="/household/submit"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Submit Waste
+                  </Link>
+                  <Link
+                    href="/household/pickups"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Pickups & Pass
+                  </Link>
+                  <Link
+                    href="/household/ledger"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    EcoToken Ledger
+                  </Link>
+                </>
+              )}
+              {user?.role === "ROLE_FARMER" && (
+                <>
+                  <Link
+                    href="/farmer"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Farmer Hub
+                  </Link>
+                  <Link
+                    href="/farmer/pickups"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Pickup Queue
+                  </Link>
+                  <Link
+                    href="/farmer/products"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Product Management
+                  </Link>
+                  <Link
+                    href="/farmer/orders"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Sales Orders
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Slide-over cart */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+    </>
+  );
+}

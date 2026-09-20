@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { QueryProvider } from "@/lib/query-provider";
+import { Providers } from "./providers";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "AgroLoop - Waste-to-Resource Platform",
-  description: "Cross-platform marketplace and logistics platform for circular economy and sustainability.",
+  title: "AgroLoop — Circular Waste-to-Reward Platform",
+  description: "Bridging households and farmers in a circular waste-to-reward ecosystem powered by EcoTokens.",
 };
 
 export default function RootLayout({
@@ -14,8 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-slate-50 text-slate-900">
-        <QueryProvider>{children}</QueryProvider>
+      <body className="antialiased min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+        <Providers>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
