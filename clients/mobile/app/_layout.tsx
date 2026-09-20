@@ -45,6 +45,12 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="household/submit"
+          options={{
+            title: "Log Waste Submission",
+          }}
+        />
+        <Stack.Screen
           name="farmer/index"
           options={{
             title: "Farmer Marketplace",

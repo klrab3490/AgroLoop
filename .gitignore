@@ -57,3 +57,4 @@ clients/**/.expo/
 clients/**/out/
 clients/**/*.tsbuildinfo/
 clients/**/.env*.local
+node_modules/
