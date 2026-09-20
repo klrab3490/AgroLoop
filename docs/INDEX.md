@@ -128,6 +128,15 @@ docker compose up --build -d
 Logs: `docker compose logs -f app`  
 Stop: `docker compose down`
 
+#### Option C: Run Postgres-Free Local Docker Stack (Connect to Host PostgreSQL)
+If you already have PostgreSQL installed and running natively on your machine:
+```bash
+docker compose -f docker-compose.local.yml up --build -d
+```
+This builds and starts the Spring Boot backend (`app`) and Next.js frontend (`web`) without spinning up a PostgreSQL container, securely routing database traffic to your host machine via `host.docker.internal:5432`.
+Logs: `docker compose -f docker-compose.local.yml logs -f app`  
+Stop: `docker compose -f docker-compose.local.yml down`
+
 ---
 
 ### Step 4: Default Credentials Reference
@@ -435,11 +444,13 @@ The table below catalogs every key file in the AgroLoop codebase, providing a di
 | File Path | Component Layer | Core Classes / Interfaces | Key Functions & Responsibilities | Mapped Module |
 | :--- | :--- | :--- | :--- | :--- |
 | **[`pom.xml`](../pom.xml)** | Build & Dependencies | Maven POM | Declares project dependencies: Spring Boot 3.3.4, Security, JPA, PostgreSQL, Flyway, H2 (test), Thymeleaf. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`.github/workflows/ci.yml`](../.github/workflows/ci.yml)** | CI / Automation | GitHub Actions | Automated continuous integration running Java 21 test suites on all PRs targeting `dev` and `main`. | [01. Setup](../docs/modules/01_project_setup.md) |
+| **[`.github/workflows/ci.yml`](../.github/workflows/ci.yml)** | CI / Automation | GitHub Actions | Automated continuous integration running Java 21 test suites on PRs and dev branch. | [01. Setup](../docs/modules/01_project_setup.md) |
+| **[`.github/workflows/main-release.yml`](../.github/workflows/main-release.yml)** | CI / Packaging | GitHub Actions | Production release pipeline triggered on main branch push; builds backend & web Docker containers and packages standalone Android APK + Expo bundle. | [08. Clients](../docs/modules/08_cross_platform_clients.md) |
 | **[`.github/pull_request_template.md`](../.github/pull_request_template.md)** | Code Review | PR Template | Standardized Pull Request template enforcing OOP principles, documentation updates, and test verification. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`run.sh`](../run.sh)** | Dev Runner | Shell Script | Automates local execution on macOS/Linux with environment checks and PostgreSQL readiness verification. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`run.bat`](../run.bat)** | Dev Runner | Batch Script | Automates local execution on Windows Command Prompt. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`docker-compose.yml`](../docker-compose.yml)** | Infrastructure | Compose Config | Orchestrates PostgreSQL container and full application stack with healthchecks and volumes. | [01. Setup](../docs/modules/01_project_setup.md) |
+| **[`docker-compose.local.yml`](../docker-compose.local.yml)** | Infrastructure | Compose Config | Runs backend and web frontend containers connecting directly to a native/host PostgreSQL database without running a Postgres container. | [08. Clients](../docs/modules/08_cross_platform_clients.md) |
 | **[`docker/init.sql`](../docker/init.sql)** | Database Schema | SQL Script | Standalone PostgreSQL schema initialization script for Docker container bootstrap. | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`application.properties`](../../src/main/resources/application.properties)** | Config | Properties | Configures PostgreSQL datasource (`localhost:5432/agroloop`), Flyway migrations, multipart limits (10MB). | [01. Setup](../docs/modules/01_project_setup.md) |
 | **[`AgroLoopApplication.java`](../../src/main/java/com/agroloop/AgroLoopApplication.java)** | Application Entrypoint | `AgroLoopApplication` | Bootstraps the Spring Boot application context (`main` method). | [01. Setup](../docs/modules/01_project_setup.md) |
@@ -646,4 +657,10 @@ feature/<phase-name> (Individual feature branch)
    - When a phase/milestone is ready for release, open a PR from `dev` to `main`:
      👉 **[Create PR from dev to main](https://github.com/AgnaMariya/AgroLoop/compare/main...dev?expand=1)**
    - Review, approve, and merge into `main`.
+6. **Automated Main Release Packaging:**
+   - Merging or pushing code into `main` automatically fires [`.github/workflows/main-release.yml`](../.github/workflows/main-release.yml).
+   - Builds multi-stage production Docker images for Backend (`agroloop-backend:latest`) and Next.js Web (`agroloop-web:latest`).
+   - Packages `@agroloop/mobile` cross-platform Expo JS/assets bundle (`agroloop-mobile-expo-export`) and compiles the standalone Android debug APK (`agroloop-mobile-android-debug`).
+   - Attaches built packages as downloadable GitHub Actions run artifacts.
+
 

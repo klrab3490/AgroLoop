@@ -1,35 +1,12 @@
 # ==============================================================================
-# Local Docker Compose for AgroLoop (All-in-One Local Development Stack)
-# Builds and starts PostgreSQL, Spring Boot Backend, and Next.js Web Client
+# Local Docker Compose for AgroLoop (Postgres-Free Local Stack)
+# Runs Spring Boot Backend and Next.js Web Client while connecting to
+# a local PostgreSQL database running directly on the host machine.
 # ==============================================================================
 
 services:
   # ==========================================================
-  # PostgreSQL Database Service
-  # ==========================================================
-  postgres:
-    image: pgvector/pgvector:pg18
-    container_name: agroloop-postgres-local
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: agroloop
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "7200"
-    ports:
-      - "5432:5432"
-    volumes:
-      - agroloop_local_pgdata:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - agroloop-local-network
-
-  # ==========================================================
-  # Spring Boot Backend Service
+  # Spring Boot Backend Service (Connects to Host PostgreSQL)
   # ==========================================================
   app:
     build:
@@ -38,16 +15,16 @@ services:
     container_name: agroloop-app-local
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agroloop
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "7200"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-host.docker.internal}:${DB_PORT:-5432}/${POSTGRES_DB:-agroloop}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-7200}
       PORT: 8080
       UPLOAD_DIR: /app/uploads
-    depends_on:
-      postgres:
-        condition: service_healthy
+      SERVER_VERSION: ${SERVER_VERSION:-8.0.0}
     volumes:
       - agroloop_local_uploads:/app/uploads
     networks:
@@ -61,23 +38,21 @@ services:
       context: ./clients
       dockerfile: web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
     container_name: agroloop-web-local
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3000}:3000"
     environment:
       PORT: 3000
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
     depends_on:
       - app
     networks:
       - agroloop-local-network
 
 volumes:
-  agroloop_local_pgdata:
-    name: agroloop_local_pgdata
   agroloop_local_uploads:
     name: agroloop_local_uploads
 

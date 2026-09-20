@@ -2,7 +2,7 @@
 # Multi-stage Dockerfile for AgroLoop Next.js Web Client (Monorepo)
 # ==============================================================================
 
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 WORKDIR /app
 
@@ -34,7 +34,7 @@ RUN pnpm turbo build --filter=@agroloop/web
 # ------------------------------------------------------------------------------
 # 2. Production Runner Stage
 # ------------------------------------------------------------------------------
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

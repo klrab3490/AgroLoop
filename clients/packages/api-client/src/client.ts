@@ -5,6 +5,8 @@ import { ApiError } from "./errors.js";
 import { SessionManager, type PlatformClientType } from "./auth/session.js";
 import type { TokenStorage } from "./auth/token-storage.js";
 
+import { normalizeServerUrl } from "./server-verification.js";
+
 export const API_PREFIX = "/api/v1";
 
 export interface ApiClientConfig {
@@ -24,14 +26,14 @@ export interface RequestOptions extends RequestInit {
 }
 
 export class AgroLoopApiClient {
-  readonly baseUrl: string;
+  baseUrl: string;
   readonly session: SessionManager;
   readonly deviceName: string;
   private readonly customFetch: typeof fetch;
 
   constructor(config: ApiClientConfig) {
-    // Normalize baseUrl: strip trailing slash
-    this.baseUrl = config.baseUrl.replace(/\/+$/, "");
+    // Normalize baseUrl: strip trailing slash and validate structure
+    this.baseUrl = normalizeServerUrl(config.baseUrl);
     this.deviceName = config.deviceName ?? "AgroLoop Client";
     this.customFetch = config.fetchFn ?? globalThis.fetch;
     this.session = new SessionManager({
@@ -39,6 +41,10 @@ export class AgroLoopApiClient {
       tokenStorage: config.tokenStorage,
       onSessionExpired: config.onSessionExpired,
     });
+  }
+
+  setBaseUrl(newBaseUrl: string): void {
+    this.baseUrl = normalizeServerUrl(newBaseUrl);
   }
 
   get clientType(): "WEB" | "MOBILE" | "DESKTOP" {

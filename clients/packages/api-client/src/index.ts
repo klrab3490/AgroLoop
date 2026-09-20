@@ -15,6 +15,7 @@ export * from "./idempotency.js";
 export * from "./auth/token-storage.js";
 export * from "./auth/session.js";
 export * from "./auth/refresh.js";
+export * from "./server-verification.js";
 
 export type {
   AuthEndpoints,

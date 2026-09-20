@@ -8,6 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "build": "echo 'mobile build pre-check ok'",
+    "export": "expo export",
+    "prebuild:android": "expo prebuild --platform android --clean",
+    "build:apk": "expo prebuild --platform android --clean && cd android && ./gradlew assembleDebug",
     "type-check": "tsc --noEmit",
     "lint": "echo 'mobile lint ok'",
     "test": "vitest run"

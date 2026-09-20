@@ -1,0 +1,121 @@
+name: AgroLoop Main Release & Packaging
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ============================================================================
+  # 1. Multi-Stage Docker Container Builds (Backend & Web Frontend)
+  # ============================================================================
+  docker-build:
+    name: Build Docker Images (Backend & Web)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Spring Boot Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: |
+            agroloop-backend:latest
+            agroloop-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Next.js Web Client Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./clients
+          file: ./clients/web/Dockerfile
+          push: false
+          load: true
+          tags: |
+            agroloop-web:latest
+            agroloop-web:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Inspect Built Images & Validate Compose
+        run: |
+          docker image ls | grep agroloop
+          docker compose config --quiet
+          docker compose -f docker-compose.local.yml config --quiet
+
+  # ============================================================================
+  # 2. Mobile App Package Creation (Expo Bundle & Standalone Android APK)
+  # ============================================================================
+  mobile-packages:
+    name: Build Mobile App Packages
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: clients
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'pnpm'
+          cache-dependency-path: clients/pnpm-lock.yaml
+
+      - name: Install Workspace Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Export Mobile Production Bundle (Expo Export)
+        run: pnpm --filter @agroloop/mobile exec expo export --platform all
+
+      - name: Upload Mobile Expo Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agroloop-mobile-expo-export
+          path: clients/mobile/dist
+          retention-days: 14
+
+      - name: Generate Android Native Project (Expo Prebuild)
+        run: pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean
+
+      - name: Build Standalone Android Debug APK
+        working-directory: clients/mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload Standalone Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agroloop-mobile-android-debug
+          path: clients/mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

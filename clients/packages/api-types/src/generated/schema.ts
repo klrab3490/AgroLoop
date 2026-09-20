@@ -452,6 +452,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Server metadata
+         * @description Returns server capability and minimum supported client version.
+         */
+        get: operations["getMeta"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/download/{mediaId}": {
         parameters: {
             query?: never;
@@ -540,6 +560,26 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getBalance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health probe
+         * @description Returns service health status and identity.
+         */
+        get: operations["getHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -964,6 +1004,13 @@ export interface components {
             resolution: "APPROVED_REFUND" | "DISMISSED";
             adminNotes?: string;
         };
+        SystemMetaApiResponse: {
+            status?: string;
+            service?: string;
+            api_version?: string;
+            minimum_client_version?: string;
+            server_version?: string;
+        };
         PageApiResponseProductApiResponse: {
             content?: components["schemas"]["ProductApiResponse"][];
             /** Format: int32 */
@@ -993,6 +1040,10 @@ export interface components {
             balanceAfter?: number;
             /** Format: date-time */
             createdAt?: string;
+        };
+        SystemHealthApiResponse: {
+            status?: string;
+            service?: string;
         };
         SolvencyMetricsDto: {
             totalHouseholdBalances?: number;
@@ -1786,6 +1837,26 @@ export interface operations {
             };
         };
     };
+    getMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SystemMetaApiResponse"];
+                };
+            };
+        };
+    };
     downloadMedia: {
         parameters: {
             query?: never;
@@ -1913,6 +1984,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["HouseholdBalanceResponse"];
+                };
+            };
+        };
+    };
+    getHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SystemHealthApiResponse"];
                 };
             };
         };

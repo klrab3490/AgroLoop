@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { desktopApiClient } from "../lib/api.js";
 import type { UserApiResponse } from "@agroloop/api-types";
+import { ServerManagerModal } from "./ServerManagerModal.js";
+import { getActiveServerProfile, type DesktopServerProfile } from "../storage/server-config.js";
 
 interface HeaderProps {
   currentUser: UserApiResponse | null;
@@ -10,6 +12,8 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauriActive }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showServerManager, setShowServerManager] = useState(false);
+  const [activeServer, setActiveServer] = useState<DesktopServerProfile>(getActiveServerProfile());
   const [email, setEmail] = useState("admin@agroloop.local");
   const [password, setPassword] = useState("AdminSecure2026!");
   const [loading, setLoading] = useState(false);
@@ -98,6 +102,32 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          {/* Server Manager Chip */}
+          <button
+            type="button"
+            onClick={() => setShowServerManager(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 12px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "8px",
+              color: "var(--text-primary)",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+            title="Click to manage and switch servers"
+          >
+            <span style={{ color: "#10b981", fontSize: "10px" }}>●</span>
+            <span>{activeServer.name}</span>
+            <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>
+              {activeServer.url.replace(/^https?:\/\//i, "")}
+            </span>
+          </button>
+
           {currentUser ? (
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ textAlign: "right" }}>
@@ -277,6 +307,16 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
           </div>
         </div>
       )}
+
+      <ServerManagerModal
+        isOpen={showServerManager}
+        onClose={() => setShowServerManager(false)}
+        onServerSwitched={(profile) => {
+          setActiveServer(profile);
+          onUserChange(null);
+          setShowServerManager(false);
+        }}
+      />
     </>
   );
 };

@@ -224,8 +224,110 @@ AgroLoop/
 | Test Suite | Target Component | Tests | Invariants Certified |
 | :--- | :--- | :---: | :--- |
 | **`@agroloop/qr`** | Pure TS QR Generator | 5 | Alphanumeric encoding, Version 1 21x21 matrix, 3-corner finder patterns, dynamic scaling, zero HMAC secrets. |
-| **`@agroloop/api-client`** | Core Client Library | 6 | `/api/v1` prefixing, UUID request-id, idempotency key preservation, single-flight refresh coalescence, RFC 7807 problem details normalization. |
+| **`@agroloop/api-client`** | Core Client Library | 17 | `/api/v1` prefixing, UUID request-id, idempotency key preservation, single-flight refresh coalescence, RFC 7807 normalization, server verification (`/api/v1/meta`), protocol compatibility, semver checks, dynamic `setBaseUrl`. |
 | **`@agroloop/web`** | Next.js 15 Web Portal | 13 | BFF allowlist proxy enforcement, HttpOnly refresh boundary, cart ID-only persistence, login/auth state transitions. |
-| **`@agroloop/desktop`** | Tauri v2 Operations Console | 7 | Desktop storage memory fallback, integer-only token arithmetic, solvency math reconciliation, self-disable & last-admin safeguards, QR bundle inclusion. |
-| **Backend Integration** | Spring Boot 3.3.4 | 29 | `AuthApiControllerTest`, `AdminGovernanceServiceTest`, `OrderAtomicRefundTest` certifying pessimistic locking, token families, and solvency computation. |
-| **Total Passing Tests** | **All Layers Combined** | **60** | **100% Green Across TypeScript Monorepo & Java Backend** |
+| **`@agroloop/desktop`** | Tauri v2 Operations Console | 7 | Desktop storage memory fallback, integer-only token arithmetic, solvency math reconciliation, self-disable & last-admin safeguards, Server Manager profile switching. |
+| **`@agroloop/mobile`** | Expo Mobile App | 20 | Server-authoritative QR handshake, offline mutation queue, media upload, server discovery & setup redirect. |
+| **Backend Integration** | Spring Boot 3.3.4 | 31 | `AuthApiControllerTest`, `SystemApiControllerTest` (`/api/v1/health`, `/api/v1/meta`), `AdminGovernanceServiceTest`, `OrderAtomicRefundTest`. |
+| **Total Passing Tests** | **All Layers Combined** | **93** | **100% Green Across TypeScript Monorepo & Java Backend** |
+
+---
+
+## 6. Dynamic Server Discovery, Verification & Multi-Server Management
+
+### 6.1 Server Discovery & Compatibility Contract
+
+AgroLoop exposes two public discovery endpoints under `/api/v1`:
+
+```http
+GET /api/v1/health
+GET /api/v1/meta
+```
+
+#### Contract Specification:
+- `GET /api/v1/health` (Lightweight probe for Docker, Kubernetes, and load balancers):
+  ```json
+  {
+    "status": "ok",
+    "service": "agroloop"
+  }
+  ```
+- `GET /api/v1/meta` (Full capability & semver handshake):
+  ```json
+  {
+    "status": "ok",
+    "service": "agroloop",
+    "api_version": "v1",
+    "minimum_client_version": "1.0.0",
+    "server_version": "8.0.0"
+  }
+  ```
+
+Metadata attributes are dynamically injected from Spring properties (`agroloop.server.version`, `agroloop.api.minimum-client-version`), guaranteeing that build and Git tags match the runtime discovery payload.
+
+### 6.2 Centralized Handshake Protocol (`@agroloop/api-client`)
+
+To ensure consistent verification across Mobile, Desktop, and Web, the verification logic is centralized in `@agroloop/api-client/src/server-verification.ts`:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client App (Mobile / Desktop)
+    participant Core as verifyServer() [@agroloop/api-client]
+    participant Server as AgroLoop Backend (/api/v1/meta)
+
+    Client->>Core: verifyServer("http://localhost:8080")
+    Core->>Core: normalizeServerUrl()
+    Core->>Server: GET /api/v1/meta
+    alt Server Unreachable / Timeout
+        Server-->>Core: Network Error / Timeout
+        Core-->>Client: { ok: false, reason: "NETWORK_ERROR" | "TIMEOUT" }
+    else Non-AgroLoop Server
+        Server-->>Core: 200 OK (service: "other")
+        Core-->>Client: { ok: false, reason: "NOT_AGROLOOP" }
+    else Incompatible API / Client Version
+        Server-->>Core: 200 OK (api_version: "v2" or min: "2.0.0")
+        Core-->>Client: { ok: false, reason: "UNSUPPORTED_API" | "INCOMPATIBLE_CLIENT" }
+    else Verification Success
+        Server-->>Core: 200 OK (agroloop, v1, compatible)
+        Core-->>Client: { ok: true, meta, latencyMs: 14 }
+    end
+```
+
+### 6.3 Mobile First-Run Experience (`@agroloop/mobile`)
+
+1. **First-Launch Guard:** On startup, `@agroloop/mobile` queries `SecureStore` for `agroloop_server_config`. If absent, the app routes directly to `/server-setup`.
+2. **Server Setup Screen (`app/server-setup.tsx`):**
+   - Provides quick preset buttons (`Android Emulator: http://10.0.2.2:8080`, `Localhost: http://localhost:8080`, `Cloud: https://api.agroloop.app`).
+   - "Test Connection" button probes `/api/v1/meta` and renders structured latency and compatibility chips.
+   - Upon confirmation, configuration is persisted in hardware-backed `SecureStore` and `mobileApiClient.setBaseUrl()` is updated dynamically.
+3. **Header Hostname Indicator:** Displays the active server hostname (`● 10.0.2.2:8080`) with a "Change" button allowing operators to reconfigure the server at any time.
+
+### 6.4 Desktop Server Manager (`@agroloop/desktop`)
+
+The Tauri Operations Console incorporates an operator-grade **Server Manager**:
+- **Multi-Profile Persistence:** Stores named environments (Production, Development, Staging, Company Server).
+- **Guarded Server Switching:** Switching servers executes a strict security reset sequence:
+  $$\text{verifyServer()} \longrightarrow \text{setBaseUrl()} \longrightarrow \text{clearSession()} \longrightarrow \text{clearStorage()} \longrightarrow \text{routeToLogin()}$$
+  This strictly ensures that JWT tokens and cached data from one server never leak into another.
+
+---
+
+## 7. Infrastructure & CI/CD Pipelines
+
+### 7.1 Postgres-Free Local Docker Stack (`docker-compose.local.yml`)
+
+For developers running PostgreSQL locally on their host machine:
+- The containerized `postgres` service and persistent pgdata volume are omitted.
+- `app` connects to host PostgreSQL via `host.docker.internal:5432` with `extra_hosts: ["host.docker.internal:host-gateway"]`.
+- `web` connects to `app:8080`.
+
+### 7.2 Main Branch Release & Artifact Packaging (`.github/workflows/main-release.yml`)
+
+When code is promoted to the `main` branch, a dedicated pipeline executes production builds and packages artifacts:
+1. **Docker Container Builds:** Builds multi-stage production images for `agroloop-backend` and `agroloop-web` with GitHub Actions layer caching (`type=gha`).
+2. **Mobile Standalone Packaging:**
+   - Exports the cross-platform production Expo JavaScript & assets bundle (`agroloop-mobile-expo-export`).
+   - Generates the native Android project via `expo prebuild --platform android --clean` and compiles a standalone Android APK via `./gradlew assembleDebug` (`agroloop-mobile-android-debug`).
+   - Uploads both artifacts to GitHub Actions for download.
+

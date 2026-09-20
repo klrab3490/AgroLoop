@@ -1,16 +1,38 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { useAuth } from "../src/context/auth-context.js";
+import { getServerConfig, getServerHostname } from "../src/storage/server-config.js";
 
 export default function IndexScreen() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const [serverHost, setServerHost] = useState<string>("Detecting server...");
+
+  useEffect(() => {
+    getServerConfig().then((config) => {
+      if (!config) {
+        router.replace("/server-setup");
+      } else {
+        setServerHost(getServerHostname(config.url));
+      }
+    });
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.badge}>Phase 9 Mobile Client</Text>
+        <View style={styles.topBarRow}>
+          <Text style={styles.badge}>Phase 8 Mobile Client</Text>
+          <TouchableOpacity
+            style={styles.serverBadge}
+            onPress={() => router.push("/server-setup")}
+          >
+            <View style={styles.serverDot} />
+            <Text style={styles.serverText}>{serverHost}</Text>
+            <Text style={styles.changeServerText}>Change</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.title}>AgroLoop Mobile</Text>
         <Text style={styles.subtitle}>
           Circular Waste-to-Resource Platform • Hardware Secure Keystore
@@ -94,16 +116,50 @@ const styles = StyleSheet.create({
     marginVertical: 24,
     alignItems: "center",
   },
+  topBarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 8,
+  },
   badge: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
     color: "#15803d",
     backgroundColor: "#dcfce7",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  serverBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 8,
+    gap: 6,
+  },
+  serverDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#16a34a",
+  },
+  serverText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  changeServerText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#2563eb",
+    marginLeft: 2,
   },
   title: {
     fontSize: 28,
