@@ -51,6 +51,18 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="household/pickup"
+          options={{
+            title: "Pickup Tracker",
+          }}
+        />
+        <Stack.Screen
+          name="household/history"
+          options={{
+            title: "History & Ledger",
+          }}
+        />
+        <Stack.Screen
           name="farmer/index"
           options={{
             title: "Farmer Marketplace",
