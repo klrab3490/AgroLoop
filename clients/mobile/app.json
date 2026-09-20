@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "AgroLoop Mobile",
+    "slug": "agroloop-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "agroloop",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agroloop.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "AgroLoop requires camera access to verify organic waste sorting and pickup validation.",
+        "NSPhotoLibraryUsageDescription": "AgroLoop allows selecting photos of waste materials for verification."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.agroloop.mobile",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}

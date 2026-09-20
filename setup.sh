@@ -469,7 +469,9 @@ command -v git >/dev/null 2>&1 \
     || echo -e "  • Docker:           ${YELLOW}Not installed (needed for PostgreSQL container)${NC}"
 
 echo -e "\n${BOLD}Quick Start Guide:${NC}"
-echo -e "  1. Start the PostgreSQL database:  ${CYAN}docker compose up -d postgres${NC}"
-echo -e "  2. Start the AgroLoop application:  ${CYAN}./run.sh${NC}"
-echo -e "  3. Open your browser at:           ${CYAN}http://localhost:8080${NC}"
+echo -e "  1. Start the PostgreSQL database:     ${CYAN}docker compose up -d postgres${NC}"
+echo -e "  2. Start the AgroLoop application:     ${CYAN}./run.sh${NC}"
+echo -e "  3. Start all services via Docker:      ${CYAN}docker compose up -d${NC}"
+echo -e "  4. Open Web Frontend at:               ${CYAN}http://localhost:3000${NC}"
+echo -e "  5. Open API Backend / Swagger at:      ${CYAN}http://localhost:8080/swagger-ui.html${NC}"
 echo ""

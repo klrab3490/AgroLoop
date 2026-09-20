@@ -46,3 +46,14 @@ uploads/
 .env.local
 
 *.code-profile
+
+### Client workspace ###
+clients/node_modules/
+clients/.turbo/
+clients/**/node_modules/
+clients/**/.next/
+clients/**/dist/
+clients/**/.expo/
+clients/**/out/
+clients/**/*.tsbuildinfo/
+clients/**/.env*.local

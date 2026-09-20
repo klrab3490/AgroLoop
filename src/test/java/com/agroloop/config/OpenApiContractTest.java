@@ -25,11 +25,11 @@ class OpenApiContractTest {
     @Test
     @DisplayName("GET /v3/api-docs returns valid OpenAPI JSON schema with BearerAuth security scheme")
     void testOpenApiDocsAvailable() throws Exception {
-        mockMvc.perform(get("/v3/api-docs")
+        org.springframework.test.web.servlet.MvcResult result = mockMvc.perform(get("/v3/api-docs")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.openapi").value(containsString("3.")))
+                .andExpect(jsonPath("$.openapi").value("3.1.0"))
                 .andExpect(jsonPath("$.info.title").value("AgroLoop Circular Economy Platform API"))
                 .andExpect(jsonPath("$.info.version").value("v1"))
                 .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.type").value("http"))
@@ -37,6 +37,16 @@ class OpenApiContractTest {
                 .andExpect(jsonPath("$.components.securitySchemes.BearerAuth.bearerFormat").value("JWT"))
                 .andExpect(jsonPath("$.paths['/api/v1/auth/login']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/marketplace/products']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/orders']").exists());
+                .andExpect(jsonPath("$.paths['/api/v1/orders']").exists())
+                .andReturn();
+
+        // Write canonical contract snapshot for Phase 8 clients
+        java.nio.file.Path snapshotDir = java.nio.file.Paths.get("clients", "openapi");
+        java.nio.file.Files.createDirectories(snapshotDir);
+        java.nio.file.Files.writeString(
+                snapshotDir.resolve("openapi.json"),
+                result.getResponse().getContentAsString(),
+                java.nio.charset.StandardCharsets.UTF_8
+        );
     }
 }

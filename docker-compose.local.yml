@@ -1,7 +1,36 @@
-# Local Docker Compose for AgroLoop
-# Builds and starts both PostgreSQL and the Spring Boot web application
+# ==============================================================================
+# Local Docker Compose for AgroLoop (All-in-One Local Development Stack)
+# Builds and starts PostgreSQL, Spring Boot Backend, and Next.js Web Client
+# ==============================================================================
 
 services:
+  # ==========================================================
+  # PostgreSQL Database Service
+  # ==========================================================
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: agroloop-postgres-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agroloop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "7200"
+    ports:
+      - "5432:5432"
+    volumes:
+      - agroloop_local_pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - agroloop-local-network
+
+  # ==========================================================
+  # Spring Boot Backend Service
+  # ==========================================================
   app:
     build:
       context: .
@@ -21,6 +50,28 @@ services:
         condition: service_healthy
     volumes:
       - agroloop_local_uploads:/app/uploads
+    networks:
+      - agroloop-local-network
+
+  # ==========================================================
+  # Next.js Web Frontend Service
+  # ==========================================================
+  web:
+    build:
+      context: ./clients
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    container_name: agroloop-web-local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    depends_on:
+      - app
     networks:
       - agroloop-local-network
 

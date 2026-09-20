@@ -49,6 +49,28 @@ services:
       - agroloop-network
 
   # ==========================================================
+  # Next.js Web Frontend Service
+  # ==========================================================
+  web:
+    build:
+      context: ./clients
+      dockerfile: web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    container_name: agroloop-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    depends_on:
+      - app
+    networks:
+      - agroloop-network
+
+  # ==========================================================
   # Optional pgAdmin Management UI (activate with: --profile tools)
   # ==========================================================
   pgadmin:

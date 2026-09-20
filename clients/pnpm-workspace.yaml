@@ -1,0 +1,7 @@
+packages:
+  - 'packages/*'
+  - 'web'
+  - 'mobile'
+  - 'desktop'
+allowBuilds:
+  esbuild: true
