@@ -68,6 +68,18 @@ export default function RootLayout() {
             title: "Farmer Marketplace",
           }}
         />
+        <Stack.Screen
+          name="farmer/collections"
+          options={{
+            title: "Collection Board",
+          }}
+        />
+        <Stack.Screen
+          name="farmer/verify"
+          options={{
+            title: "On-Site Verification",
+          }}
+        />
       </RootStack>
     </AuthProvider>
   );
