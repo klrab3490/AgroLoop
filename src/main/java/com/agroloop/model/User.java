@@ -101,6 +101,18 @@ public abstract class User {
         return enabled;
     }
 
+    public boolean isActive() {
+        return enabled;
+    }
+
+    public String getFullName() {
+        return name;
+    }
+
+    public String getPassword() {
+        return passwordHash;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }

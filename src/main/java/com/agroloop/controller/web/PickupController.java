@@ -1,4 +1,4 @@
-package com.agroloop.controller;
+package com.agroloop.controller.web;
 
 import com.agroloop.dto.CancelPickupRequest;
 import com.agroloop.dto.SchedulePickupRequest;

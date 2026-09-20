@@ -242,7 +242,15 @@ public class Product {
         return priceInTokens;
     }
 
+    public BigDecimal getPrice() {
+        return priceInTokens;
+    }
+
     public int getStock() {
+        return stock;
+    }
+
+    public int getStockQuantity() {
         return stock;
     }
 

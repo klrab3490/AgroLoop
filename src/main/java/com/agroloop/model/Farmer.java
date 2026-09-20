@@ -36,6 +36,10 @@ public class Farmer extends User {
         this.notes = notes;
     }
 
+    public User getUser() {
+        return this;
+    }
+
     public String getFarmName() {
         return farmName;
     }

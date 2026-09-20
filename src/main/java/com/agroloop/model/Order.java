@@ -300,6 +300,10 @@ public class Order {
         return resolutionType;
     }
 
+    public DisputeResolution getDisputeResolution() {
+        return resolutionType;
+    }
+
     public String getResolutionNotes() {
         return resolutionNotes;
     }

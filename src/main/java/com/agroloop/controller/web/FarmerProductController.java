@@ -1,4 +1,4 @@
-package com.agroloop.controller;
+package com.agroloop.controller.web;
 
 import com.agroloop.dto.ProductFormRequest;
 import com.agroloop.model.Farmer;

@@ -180,6 +180,13 @@ public class WasteSubmission {
         return estimatedWeight;
     }
 
+    public BigDecimal getEstimatedTokens() {
+        if (this.estimatedWeight == null || this.category == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        return this.category.getRewardMultiplier().multiply(this.estimatedWeight);
+    }
+
     public String getPickupAddress() {
         return pickupAddress;
     }

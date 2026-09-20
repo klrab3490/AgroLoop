@@ -594,6 +594,7 @@ Each feature and integration in AgroLoop has its own dedicated documentation fil
 | **[05. EcoTokens & Rewards](../docs/modules/05_ecotokens.md)** | Phase 5: Rewards | ✅ Completed | Polymorphic `TokenCalculator` strategy, atomic wallet updates, pessimistic locking, idempotent reward minting, and household ledger. |
 | **[06. Marketplace & Commerce](../docs/modules/06_marketplace.md)** | Phase 6: Commerce | ✅ Completed | Farmer product catalog, soft-archive lifecycle, session cart, authoritative DB pricing, deterministic dual-phase pessimistic locking, atomic stock/token/order/ledger checkout, and sales tracking. |
 | **[07. Admin Governance & Testing](../docs/modules/07_admin_and_testing.md)** | Phase 7: Governance | ✅ Completed | Order lifecycle state machine, atomic refund engine, deterministic lock hierarchy (`Order` ➔ `Household` ➔ `Products ASC`), double-refund prevention, physical immutability trigger, serialized last-admin protection, two-tier financial reconciliation, admin portal, and 241 passing tests. |
+| **[7.5. Client/API Boundary & Architecture](../docs/modules/07_5_client_api_boundary.md)** | Phase 7.5: Client/API | ✅ Completed | Versioned `/api/v1` REST contract layer for Web, Mobile, and Desktop. Dual Spring Security filter chains, RSA-2048 JWT, refresh rotation with replay defense, AES-GCM-256 encrypted idempotency, media management, OpenAPI 3.1, and 265 green tests. |
 
 ---
 

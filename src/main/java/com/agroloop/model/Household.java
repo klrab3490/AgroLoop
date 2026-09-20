@@ -32,6 +32,10 @@ public class Household extends User {
         this.address = address;
     }
 
+    public User getUser() {
+        return this;
+    }
+
     public BigDecimal getTokenBalance() {
         return tokenBalance;
     }
