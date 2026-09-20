@@ -1,11 +1,13 @@
+import React from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { AuthProvider } from "../src/context/auth-context.js";
 
 const RootStack = Stack as any;
 
 export default function RootLayout() {
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="dark" />
       <RootStack
         screenOptions={{
@@ -25,6 +27,18 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="auth/login"
+          options={{
+            title: "Sign In",
+          }}
+        />
+        <Stack.Screen
+          name="auth/register"
+          options={{
+            title: "Register",
+          }}
+        />
+        <Stack.Screen
           name="household/index"
           options={{
             title: "Household Waste & Pickups",
@@ -37,6 +51,6 @@ export default function RootLayout() {
           }}
         />
       </RootStack>
-    </>
+    </AuthProvider>
   );
 }
