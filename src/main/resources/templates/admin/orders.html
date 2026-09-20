@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders & Dispute Adjudication — AgroLoop Admin</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Administrator Portal</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <span class="badge phase-badge">Admin Role</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="margin-bottom: 2rem;">
+            <span class="section-tag">Order Governance</span>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Marketplace Orders & Dispute Adjudication</h2>
+            <p style="color: var(--text-secondary);">Oversee circular commerce orders, execute administrative cancellations, and adjudicate customer disputes.</p>
+        </div>
+
+        <!-- Admin Sub-Navigation -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+            <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-outline">Overview</a>
+            <a th:href="@{/admin/users}" class="btn btn-sm btn-outline">User Governance</a>
+            <a th:href="@{/admin/orders}" class="btn btn-sm btn-primary">Orders & Disputes</a>
+            <a th:href="@{/admin/ledger}" class="btn btn-sm btn-outline">Global Ledger & Solvency</a>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <!-- Filter by Status -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.85rem; color: var(--text-secondary); margin-right: 0.5rem;">Filter by Status:</span>
+            <a th:href="@{/admin/orders}" class="btn btn-sm"
+               th:classappend="${selectedStatus == null ? 'btn-primary' : 'btn-outline'}">All</a>
+            <a th:each="st : ${statuses}" th:href="@{/admin/orders(status=${st})}" class="btn btn-sm"
+               th:classappend="${selectedStatus == st ? 'btn-primary' : 'btn-outline'}" th:text="${st}">STATUS</a>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem;">
+            <div th:if="${orders == null or orders.isEmpty()}" style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📦</div>
+                <p>No orders found matching the selected filter.</p>
+            </div>
+
+            <div th:if="${orders != null and !orders.isEmpty()}" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">
+                            <th style="padding: 0.8rem 1rem;">Order #</th>
+                            <th style="padding: 0.8rem 1rem;">Date</th>
+                            <th style="padding: 0.8rem 1rem;">Buyer</th>
+                            <th style="padding: 0.8rem 1rem;">Total Tokens</th>
+                            <th style="padding: 0.8rem 1rem;">Status</th>
+                            <th style="padding: 0.8rem 1rem;">Audit Details</th>
+                            <th style="padding: 0.8rem 1rem;">Adjudication Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="order : ${orders}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <td style="padding: 1rem; font-family: var(--font-mono); font-weight: 700;">
+                                <a th:href="@{/marketplace/orders/{id}(id=${order.id})}" th:text="'#' + ${order.id}" style="color: #60a5fa; text-decoration: underline;">#1</a>
+                            </td>
+                            <td style="padding: 1rem; font-size: 0.8rem; color: var(--text-secondary);"
+                                th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy HH:mm')}">Date</td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 700; color: #fff;" th:text="${order.household.name}">Buyer</div>
+                                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);" th:text="${order.household.email}">buyer@example.com</div>
+                            </td>
+                            <td style="padding: 1rem; font-weight: 700; color: #60a5fa;" th:text="${order.totalTokens + ' tokens'}">0.00</td>
+                            <td style="padding: 1rem;">
+                                <span class="badge"
+                                      th:style="${order.status.name() == 'PLACED' ? 'background: rgba(59, 130, 246, 0.2); color: #60a5fa;' : (order.status.name() == 'DISPUTED' ? 'background: rgba(245, 158, 11, 0.2); color: #f59e0b;' : (order.status.name() == 'CANCELLED' ? 'background: rgba(239, 68, 68, 0.2); color: #f87171;' : 'background: rgba(16, 185, 129, 0.2); color: #34d399;'))}"
+                                      th:text="${order.status}">PLACED</span>
+                            </td>
+                            <td style="padding: 1rem; font-size: 0.82rem;">
+                                <!-- Dispute Details -->
+                                <div th:if="${order.disputeReason != null}" style="margin-bottom: 0.3rem;">
+                                    <strong style="color: #f59e0b;">Dispute:</strong> <span th:text="${order.disputeReason}">Reason</span>
+                                    <div th:if="${order.disputeActor != null}" style="font-size: 0.72rem; color: var(--text-secondary);"
+                                         th:text="'Filed by: ' + ${order.disputeActor.name}">By Actor</div>
+                                </div>
+                                <!-- Resolution Details -->
+                                <div th:if="${order.resolutionType != null}" style="margin-bottom: 0.3rem;">
+                                    <strong style="color: #34d399;" th:text="'Resolution: ' + ${order.resolutionType.displayName}">Resolution</strong>
+                                    <div th:if="${order.resolutionNotes != null}" style="color: var(--text-secondary);" th:text="${order.resolutionNotes}">Notes</div>
+                                </div>
+                                <!-- Cancellation Details -->
+                                <div th:if="${order.cancellationReason != null}">
+                                    <strong style="color: #f87171;">Cancelled:</strong> <span th:text="${order.cancellationReason}">Reason</span>
+                                    <div th:if="${order.cancellationActor != null}" style="font-size: 0.72rem; color: var(--text-secondary);"
+                                         th:text="'By: ' + ${order.cancellationActor.name}">By Actor</div>
+                                </div>
+                                <div th:if="${order.disputeReason == null and order.cancellationReason == null and order.resolutionType == null}" style="color: var(--text-secondary);">
+                                    Standard lifecycle
+                                </div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <!-- Admin Cancel Button if PLACED -->
+                                <details th:if="${order.status.name() == 'PLACED'}" style="display: inline-block;">
+                                    <summary class="btn btn-sm" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer; list-style: none;">Cancel Order</summary>
+                                    <div style="position: absolute; right: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; min-width: 280px; margin-top: 0.5rem;">
+                                        <h5 style="margin-bottom: 0.5rem; font-weight: 700; color: #f87171;">Cancel & Refund Order</h5>
+                                        <form th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post">
+                                            <div style="margin-bottom: 0.8rem;">
+                                                <label style="font-size: 0.75rem; color: var(--text-secondary);">Cancellation Reason</label>
+                                                <input type="text" name="reason" placeholder="e.g. Administrative intervention" required style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle);">
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary" style="background: #ef4444; width: 100%;">Confirm Cancellation</button>
+                                        </form>
+                                    </div>
+                                </details>
+
+                                <!-- Resolve Dispute if DISPUTED -->
+                                <details th:if="${order.status.name() == 'DISPUTED'}" style="display: inline-block;">
+                                    <summary class="btn btn-sm btn-primary" style="background: #f59e0b; color: #000; font-weight: 700; cursor: pointer; list-style: none;">⚖️ Adjudicate</summary>
+                                    <div style="position: absolute; right: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; min-width: 320px; margin-top: 0.5rem;">
+                                        <h5 style="margin-bottom: 0.5rem; font-weight: 700;">Adjudicate Dispute</h5>
+                                        <form th:action="@{/admin/orders/{id}/resolve-dispute(id=${order.id})}" method="post">
+                                            <div style="margin-bottom: 0.5rem;">
+                                                <label style="font-size: 0.75rem; color: var(--text-secondary);">Ruling Outcome</label>
+                                                <select name="resolution" style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle);">
+                                                    <option th:each="res : ${disputeResolutions}" th:value="${res}" th:text="${res.displayName}">APPROVED_REFUND</option>
+                                                </select>
+                                            </div>
+                                            <div style="margin-bottom: 0.8rem;">
+                                                <label style="font-size: 0.75rem; color: var(--text-secondary);">Resolution Notes</label>
+                                                <textarea name="resolutionNotes" rows="2" placeholder="Document reasons and evidence review..." required style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle);"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary" style="width: 100%;">Submit Adjudication</button>
+                                        </form>
+                                    </div>
+                                </details>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

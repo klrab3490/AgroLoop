@@ -1,0 +1,170 @@
+package com.agroloop.service;
+
+import com.agroloop.dto.SolvencyMetricsDto;
+import com.agroloop.model.EcoTokenTransaction;
+import com.agroloop.model.Household;
+import com.agroloop.model.Order;
+import com.agroloop.model.OrderStatus;
+import com.agroloop.model.Role;
+import com.agroloop.model.TransactionDirection;
+import com.agroloop.model.User;
+import com.agroloop.repository.EcoTokenTransactionRepository;
+import com.agroloop.repository.HouseholdRepository;
+import com.agroloop.repository.OrderRepository;
+import com.agroloop.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+
+@Service
+@Transactional(readOnly = true)
+public class AdminGovernanceServiceImpl implements AdminGovernanceService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminGovernanceServiceImpl.class);
+
+    private final UserRepository userRepository;
+    private final HouseholdRepository householdRepository;
+    private final OrderRepository orderRepository;
+    private final EcoTokenTransactionRepository ecoTokenTransactionRepository;
+
+    public AdminGovernanceServiceImpl(
+            UserRepository userRepository,
+            HouseholdRepository householdRepository,
+            OrderRepository orderRepository,
+            EcoTokenTransactionRepository ecoTokenTransactionRepository
+    ) {
+        this.userRepository = Objects.requireNonNull(userRepository, "UserRepository cannot be null");
+        this.householdRepository = Objects.requireNonNull(householdRepository, "HouseholdRepository cannot be null");
+        this.orderRepository = Objects.requireNonNull(orderRepository, "OrderRepository cannot be null");
+        this.ecoTokenTransactionRepository = Objects.requireNonNull(ecoTokenTransactionRepository, "EcoTokenTransactionRepository cannot be null");
+    }
+
+    @Override
+    @Transactional
+    public void enableUser(Long userId, String adminEmail) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        user.enable();
+        userRepository.save(user);
+        log.info("User {} ({}) enabled by admin {}", user.getName(), user.getEmail(), adminEmail);
+    }
+
+    @Override
+    @Transactional
+    public void disableUser(Long userId, String adminEmail) {
+        User callerAdmin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Admin user not found with email: " + adminEmail));
+
+        // 1. Self-disable guard: an administrator cannot disable themselves
+        if (Objects.equals(callerAdmin.getId(), userId)) {
+            throw new IllegalArgumentException("Administrators cannot disable their own account");
+        }
+
+        // 2. Concurrency-safe active admin serialization:
+        //    Lock all active administrators in deterministic ascending ID order
+        List<User> activeAdmins = userRepository.findActiveUsersByRoleForUpdate(Role.ROLE_ADMIN);
+
+        // 3. Re-read target user under active admin locks
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        if (!targetUser.isEnabled()) {
+            log.info("User {} ({}) is already disabled", targetUser.getName(), targetUser.getEmail());
+            return;
+        }
+
+        // 4. Last-admin guard
+        if (targetUser.getRole() == Role.ROLE_ADMIN) {
+            if (activeAdmins.size() <= 1) {
+                throw new IllegalStateException("Cannot disable the last active administrator");
+            }
+        }
+
+        targetUser.disable();
+        userRepository.save(targetUser);
+        log.info("User {} ({}) disabled by admin {}", targetUser.getName(), targetUser.getEmail(), adminEmail);
+    }
+
+    @Override
+    @Transactional
+    public void adjustTokens(Long householdId, BigDecimal amount, TransactionDirection direction, String reason, String adminEmail) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Adjustment amount must be strictly greater than zero");
+        }
+        if (reason == null || reason.trim().isBlank()) {
+            throw new IllegalArgumentException("Adjustment reason cannot be blank");
+        }
+        Objects.requireNonNull(direction, "Transaction direction cannot be null");
+
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Admin user not found with email: " + adminEmail));
+
+        // Acquire exclusive lock on Household
+        Household household = householdRepository.findByIdForUpdate(householdId)
+                .orElseThrow(() -> new IllegalArgumentException("Household not found with ID: " + householdId));
+
+        if (direction == TransactionDirection.DEBIT) {
+            if (household.getTokenBalance().compareTo(amount) < 0) {
+                throw new IllegalStateException("Household has insufficient token balance for debit adjustment");
+            }
+            household.spendTokens(amount);
+        } else if (direction == TransactionDirection.CREDIT) {
+            household.addTokens(amount);
+        }
+        householdRepository.save(household);
+
+        BigDecimal balanceAfter = household.getTokenBalance();
+
+        EcoTokenTransaction tx = EcoTokenTransaction.adminAdjustment(
+                household,
+                amount,
+                direction,
+                balanceAfter,
+                admin,
+                reason.trim()
+        );
+        ecoTokenTransactionRepository.save(tx);
+        log.info("Admin {} adjusted tokens for household {}: direction={}, amount={}, newBalance={}",
+                adminEmail, household.getId(), direction, amount, balanceAfter);
+    }
+
+    @Override
+    public SolvencyMetricsDto getPlatformSolvencyMetrics() {
+        BigDecimal totalBalances = ecoTokenTransactionRepository.sumAllHouseholdBalances();
+        BigDecimal totalCredits = ecoTokenTransactionRepository.sumAmountByDirection(TransactionDirection.CREDIT);
+        BigDecimal totalDebits = ecoTokenTransactionRepository.sumAmountByDirection(TransactionDirection.DEBIT);
+
+        return new SolvencyMetricsDto(totalBalances, totalCredits, totalDebits);
+    }
+
+    @Override
+    public List<Order> getAllOrders(OrderStatus statusFilter) {
+        if (statusFilter != null) {
+            return orderRepository.findByStatusOrderByCreatedAtDesc(statusFilter);
+        }
+        return orderRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    public List<Order> getDisputedOrders() {
+        return orderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.DISPUTED);
+    }
+
+    @Override
+    public Page<EcoTokenTransaction> getPlatformLedger(Pageable pageable) {
+        return ecoTokenTransactionRepository.findAllPlatformTransactions(pageable);
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAllByOrderByCreatedAtDesc();
+    }
+}

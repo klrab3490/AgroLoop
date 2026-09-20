@@ -19,6 +19,7 @@ import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.OrderRepository;
 import com.agroloop.repository.ProductRepository;
+import com.agroloop.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,9 @@ class MarketplaceServiceTest {
 
     @Mock
     private AdminRepository adminRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private MarketplaceServiceImpl marketplaceService;
@@ -242,6 +246,7 @@ class MarketplaceServiceTest {
         Order order = new Order(household, "Delivery Address", null);
         order.addItem(product1, 2);
         when(orderRepository.findById(100L)).thenReturn(Optional.of(order));
+        when(farmerRepository.findByEmail("bob@example.com")).thenReturn(Optional.of(farmer));
 
         Order result = marketplaceService.getOrderById(100L, "bob@example.com");
         assertNotNull(result);

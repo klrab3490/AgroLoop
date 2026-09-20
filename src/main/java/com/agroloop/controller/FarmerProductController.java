@@ -235,6 +235,25 @@ public class FarmerProductController {
         return "farmer/orders";
     }
 
+    /**
+     * Participating farmer raises a dispute on an order.
+     */
+    @PostMapping("/orders/{id}/dispute")
+    public String disputeOrder(
+            @PathVariable("id") Long id,
+            @RequestParam("disputeReason") String disputeReason,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            marketplaceService.disputeOrderAsFarmer(id, authentication.getName(), disputeReason);
+            redirectAttributes.addFlashAttribute("successMessage", "Dispute raised successfully on Order #" + id);
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to dispute order: " + ex.getMessage());
+        }
+        return "redirect:/farmer/products/orders";
+    }
+
     private Farmer getAuthenticatedFarmer(Authentication authentication) {
         return farmerRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalStateException("Authenticated farmer not found"));

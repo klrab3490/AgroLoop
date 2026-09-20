@@ -16,6 +16,11 @@ public enum TransactionType {
     MARKETPLACE_PURCHASE("Marketplace Purchase", false),
 
     /**
+     * Tokens refunded due to order cancellation or upheld dispute (Phase 7).
+     */
+    ORDER_REFUND("Order Refund", true),
+
+    /**
      * Administrative balance adjustment or dispute resolution (Phase 7).
      */
     ADMIN_ADJUSTMENT("Admin Adjustment", true);

@@ -2,12 +2,13 @@ package com.agroloop.model;
 
 /**
  * Lifecycle states for marketplace orders.
- * Cancellation and refund workflows are reserved for Phase 7 Admin Governance.
  */
 public enum OrderStatus {
 
     PLACED("Placed", "Order has been confirmed and tokens have been debited."),
-    COMPLETED("Completed", "Order produce has been delivered or fulfilled.");
+    COMPLETED("Completed", "Order produce has been delivered or fulfilled."),
+    DISPUTED("Disputed", "Order is contested and pending administrative adjudication."),
+    CANCELLED("Cancelled", "Order was cancelled and tokens refunded.");
 
     private final String displayName;
     private final String description;

@@ -2,13 +2,14 @@ package com.agroloop.service;
 
 import com.agroloop.dto.CartDto;
 import com.agroloop.dto.CheckoutRequest;
+import com.agroloop.model.DisputeResolution;
 import com.agroloop.model.Order;
 
 import java.util.List;
 
 /**
  * Service contract for atomic marketplace checkout coordination, order management,
- * and order history queries.
+ * order history queries, order cancellations, dispute processing, and atomic refunds.
  */
 public interface MarketplaceService {
 
@@ -35,4 +36,31 @@ public interface MarketplaceService {
     Order getOrderById(Long orderId, String userEmail);
 
     List<Order> getFarmerOrders(String farmerEmail);
+
+    /**
+     * Initiates cancellation and atomic refund by the authenticated customer who placed the order.
+     */
+    void cancelHouseholdOrder(Long orderId, String householdEmail, String reason);
+
+    /**
+     * Initiates cancellation and atomic refund by an authenticated administrator.
+     */
+    void adminCancelOrder(Long orderId, String adminEmail, String reason);
+
+    /**
+     * Raises a dispute on an active order by the authenticated household owner.
+     */
+    void disputeOrderAsHousehold(Long orderId, String householdEmail, String disputeReason);
+
+    /**
+     * Raises a dispute on an active order by an authenticated participating farmer.
+     */
+    void disputeOrderAsFarmer(Long orderId, String farmerEmail, String disputeReason);
+
+    /**
+     * Adjudicates a disputed order as an administrator.
+     * If APPROVED_REFUND: triggers atomic refund and restock.
+     * If DISMISSED: reverts order to PLACED.
+     */
+    void resolveDispute(Long orderId, String adminEmail, DisputeResolution resolution, String resolutionNotes);
 }

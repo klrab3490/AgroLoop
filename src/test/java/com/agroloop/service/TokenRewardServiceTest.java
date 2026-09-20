@@ -102,13 +102,12 @@ class TokenRewardServiceTest {
     @Test
     @DisplayName("Idempotency: When transaction already exists, returns existing without double crediting")
     void mintReward_idempotency_returnsExisting() {
-        EcoTokenTransaction existingTx = new EcoTokenTransaction(
+        EcoTokenTransaction existingTx = EcoTokenTransaction.rewardMinted(
                 household,
                 verification,
                 new BigDecimal("9.00"),
-                TransactionType.REWARD_MINTED,
                 new BigDecimal("9.00"),
-                "Existing reward"
+                null
         );
         when(transactionRepository.findByWasteVerificationId(501L)).thenReturn(Optional.of(existingTx));
 
@@ -124,13 +123,12 @@ class TokenRewardServiceTest {
     @Test
     @DisplayName("Idempotency: When duplicate appears during post-lock re-check, returns existing without double crediting")
     void mintReward_idempotency_postLockRecheck_returnsExisting() {
-        EcoTokenTransaction existingTx = new EcoTokenTransaction(
+        EcoTokenTransaction existingTx = EcoTokenTransaction.rewardMinted(
                 household,
                 verification,
                 new BigDecimal("9.00"),
-                TransactionType.REWARD_MINTED,
                 new BigDecimal("9.00"),
-                "Existing reward under lock"
+                null
         );
         // First check returns empty, second check (under lock) returns existing transaction
         when(transactionRepository.findByWasteVerificationId(501L))
@@ -174,13 +172,12 @@ class TokenRewardServiceTest {
     @Test
     @DisplayName("getHouseholdLedger delegates to transaction repository")
     void getHouseholdLedger_success() {
-        EcoTokenTransaction tx = new EcoTokenTransaction(
+        EcoTokenTransaction tx = EcoTokenTransaction.rewardMinted(
                 household,
                 verification,
                 new BigDecimal("9.00"),
-                TransactionType.REWARD_MINTED,
                 new BigDecimal("9.00"),
-                "Reward"
+                null
         );
         when(transactionRepository.findByHouseholdIdOrderByCreatedAtDesc(101L)).thenReturn(List.of(tx));
 

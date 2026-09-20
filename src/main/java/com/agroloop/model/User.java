@@ -129,6 +129,10 @@ public abstract class User {
         this.enabled = false;
     }
 
+    public java.math.BigDecimal getTokenBalance() {
+        return null;
+    }
+
     protected static String requireText(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + " cannot be blank");

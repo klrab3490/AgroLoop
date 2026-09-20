@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Platform Ledger — AgroLoop Admin</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Administrator Portal</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <span class="badge phase-badge">Admin Role</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="margin-bottom: 2rem;">
+            <span class="section-tag">Financial Audit</span>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Global EcoToken Ledger & Solvency</h2>
+            <p style="color: var(--text-secondary);">Immutable, append-only double-entry audit trail recording every token mint, debit, refund, and administrative adjustment.</p>
+        </div>
+
+        <!-- Admin Sub-Navigation -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+            <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-outline">Overview</a>
+            <a th:href="@{/admin/users}" class="btn btn-sm btn-outline">User Governance</a>
+            <a th:href="@{/admin/orders}" class="btn btn-sm btn-outline">Orders & Disputes</a>
+            <a th:href="@{/admin/ledger}" class="btn btn-sm btn-primary">Global Ledger & Solvency</a>
+        </div>
+
+        <!-- Tier-2 Platform Solvency Summary Card -->
+        <div th:if="${solvencyMetrics != null}" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h4 style="font-size: 1.1rem; font-weight: 700;">Platform Solvency Reconciliation</h4>
+                <div>
+                    <span th:if="${solvencyMetrics.solvent}" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: 700;">
+                        ✓ SOLVENT (Discrepancy: 0.00)
+                    </span>
+                    <span th:unless="${solvencyMetrics.solvent}" class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: 700;">
+                        ⚠️ DISCREPANCY: <span th:text="${solvencyMetrics.discrepancy}">0.00</span>
+                    </span>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; font-size: 0.9rem;">
+                <div>
+                    <span style="color: var(--text-secondary);">Total Balances:</span>
+                    <strong style="color: #60a5fa; display: block;" th:text="${solvencyMetrics.totalHouseholdBalances + ' tokens'}">0.00</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Total Credits:</span>
+                    <strong style="color: #34d399; display: block;" th:text="${solvencyMetrics.totalCredits + ' tokens'}">0.00</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Total Debits:</span>
+                    <strong style="color: #f87171; display: block;" th:text="${solvencyMetrics.totalDebits + ' tokens'}">0.00</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-secondary);">Net Ledger:</span>
+                    <strong style="color: #fff; display: block;" th:text="${solvencyMetrics.expectedBalance + ' tokens'}">0.00</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">
+                            <th style="padding: 0.8rem 1rem;">Tx #</th>
+                            <th style="padding: 0.8rem 1rem;">Timestamp</th>
+                            <th style="padding: 0.8rem 1rem;">Household</th>
+                            <th style="padding: 0.8rem 1rem;">Type</th>
+                            <th style="padding: 0.8rem 1rem;">Direction</th>
+                            <th style="padding: 0.8rem 1rem;">Amount</th>
+                            <th style="padding: 0.8rem 1rem;">Balance After</th>
+                            <th style="padding: 0.8rem 1rem;">Actor</th>
+                            <th style="padding: 0.8rem 1rem;">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tx : ${ledgerPage.content}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <td style="padding: 1rem; font-family: var(--font-mono); color: var(--text-secondary);" th:text="'#' + ${tx.id}">#1</td>
+                            <td style="padding: 1rem; font-size: 0.8rem; color: var(--text-secondary);"
+                                th:text="${#temporals.format(tx.createdAt, 'dd MMM yyyy HH:mm:ss')}">Date</td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 700; color: #fff;" th:text="${tx.household.name}">Household</div>
+                                <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);" th:text="${tx.household.email}">email@example.com</div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span class="badge" th:text="${tx.transactionType}">REWARD_MINTED</span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span th:if="${tx.direction.name() == 'CREDIT'}" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">+ CREDIT</span>
+                                <span th:if="${tx.direction.name() == 'DEBIT'}" class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">- DEBIT</span>
+                            </td>
+                            <td style="padding: 1rem; font-weight: 700; font-family: var(--font-mono);"
+                                th:style="${tx.direction.name() == 'CREDIT' ? 'color: #34d399;' : 'color: #f87171;'}"
+                                th:text="${(tx.direction.name() == 'CREDIT' ? '+' : '-') + tx.amount + ' tokens'}">+0.00</td>
+                            <td style="padding: 1rem; font-weight: 600; color: #60a5fa; font-family: var(--font-mono);" th:text="${tx.balanceAfter + ' tokens'}">0.00</td>
+                            <td style="padding: 1rem; font-size: 0.82rem;">
+                                <span th:if="${tx.actor != null}" th:text="${tx.actor.name}">Actor Name</span>
+                                <span th:unless="${tx.actor != null}" style="color: var(--text-secondary);">System Automation</span>
+                            </td>
+                            <td style="padding: 1rem; font-size: 0.82rem; color: var(--text-secondary);" th:text="${tx.description}">Description</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div th:if="${ledgerPage.totalPages > 1}" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+                <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                    Page <strong th:text="${ledgerPage.number + 1}">1</strong> of <strong th:text="${ledgerPage.totalPages}">1</strong>
+                    (<span th:text="${ledgerPage.totalElements}">0</span> total records)
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a th:if="${ledgerPage.hasPrevious()}" th:href="@{/admin/ledger(page=${ledgerPage.number - 1})}" class="btn btn-sm btn-outline">Previous</a>
+                    <a th:if="${ledgerPage.hasNext()}" th:href="@{/admin/ledger(page=${ledgerPage.number + 1})}" class="btn btn-sm btn-outline">Next</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

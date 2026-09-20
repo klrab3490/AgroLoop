@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Governance — AgroLoop Admin</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Administrator Portal</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <span class="badge phase-badge">Admin Role</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
+        <div style="margin-bottom: 2rem;">
+            <span class="section-tag">User Governance</span>
+            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">User Management & Token Adjustments</h2>
+            <p style="color: var(--text-secondary);">Manage account access states and execute administrative token adjustments with immutable audit records.</p>
+        </div>
+
+        <!-- Admin Sub-Navigation -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+            <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-outline">Overview</a>
+            <a th:href="@{/admin/users}" class="btn btn-sm btn-primary">User Governance</a>
+            <a th:href="@{/admin/orders}" class="btn btn-sm btn-outline">Orders & Disputes</a>
+            <a th:href="@{/admin/ledger}" class="btn btn-sm btn-outline">Global Ledger & Solvency</a>
+        </div>
+
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">
+                            <th style="padding: 0.8rem 1rem;">ID</th>
+                            <th style="padding: 0.8rem 1rem;">User Details</th>
+                            <th style="padding: 0.8rem 1rem;">Role</th>
+                            <th style="padding: 0.8rem 1rem;">Status</th>
+                            <th style="padding: 0.8rem 1rem;">Token Balance</th>
+                            <th style="padding: 0.8rem 1rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${users}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                            <td style="padding: 1rem; font-family: var(--font-mono); color: var(--text-secondary);" th:text="'#' + ${user.id}">#1</td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 700; color: #fff;" th:text="${user.name}">User Name</div>
+                                <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary);" th:text="${user.email}">email@example.com</div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span class="badge" th:classappend="${user.role.name() == 'ROLE_ADMIN' ? 'phase-badge' : (user.role.name() == 'ROLE_FARMER' ? 'badge-farmer' : 'badge-household')}"
+                                      th:text="${user.role.name().replace('ROLE_', '')}">HOUSEHOLD</span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span th:if="${user.enabled}" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Active</span>
+                                <span th:unless="${user.enabled}" class="badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">Disabled</span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <span th:if="${user.tokenBalance != null}" style="font-weight: 700; color: #60a5fa;"
+                                      th:text="${user.tokenBalance + ' tokens'}">0.00 tokens</span>
+                                <span th:unless="${user.tokenBalance != null}" style="color: var(--text-secondary);">—</span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                    <!-- Enable / Disable Button -->
+                                    <form th:if="${user.enabled}" th:action="@{/admin/users/{id}/disable(id=${user.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">Disable</button>
+                                    </form>
+                                    <form th:unless="${user.enabled}" th:action="@{/admin/users/{id}/enable(id=${user.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Enable</button>
+                                    </form>
+
+                                    <!-- Token Adjustment for Households -->
+                                    <details th:if="${user.role.name() == 'ROLE_HOUSEHOLD'}" style="display: inline-block;">
+                                        <summary class="btn btn-sm btn-outline" style="cursor: pointer; list-style: none;">🪙 Adjust</summary>
+                                        <div style="position: absolute; right: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; min-width: 280px; margin-top: 0.5rem;">
+                                            <h5 style="margin-bottom: 0.5rem; font-weight: 700;">Adjust Token Balance</h5>
+                                            <form th:action="@{/admin/households/{id}/adjust-tokens(id=${user.id})}" method="post">
+                                                <div style="margin-bottom: 0.5rem;">
+                                                    <label style="font-size: 0.75rem; color: var(--text-secondary);">Direction</label>
+                                                    <select name="direction" style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle);">
+                                                        <option th:each="dir : ${directions}" th:value="${dir}" th:text="${dir}">CREDIT</option>
+                                                    </select>
+                                                </div>
+                                                <div style="margin-bottom: 0.5rem;">
+                                                    <label style="font-size: 0.75rem; color: var(--text-secondary);">Amount</label>
+                                                    <input type="number" step="0.01" min="0.01" name="amount" required style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle);">
+                                                </div>
+                                                <div style="margin-bottom: 0.8rem;">
+                                                    <label style="font-size: 0.75rem; color: var(--text-secondary);">Reason</label>
+                                                    <input type="text" name="reason" placeholder="e.g. Goodwill credit" required style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle);">
+                                                </div>
+                                                <button type="submit" class="btn btn-sm btn-primary" style="width: 100%;">Submit Adjustment</button>
+                                            </form>
+                                        </div>
+                                    </details>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

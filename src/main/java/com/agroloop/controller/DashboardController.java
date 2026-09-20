@@ -76,44 +76,7 @@ public class DashboardController {
         return "redirect:/";
     }
 
-    @GetMapping("/admin/dashboard")
-    public String adminDashboard(Authentication authentication, Model model) {
-        User admin = userRepository.findByEmail(authentication.getName()).orElse(null);
-        List<FarmerApplication> pendingApps = userService.getPendingFarmerApplications();
 
-        model.addAttribute("user", admin);
-        model.addAttribute("totalUsers", userRepository.count());
-        model.addAttribute("totalHouseholds", householdRepository.count());
-        model.addAttribute("totalFarmers", farmerRepository.count());
-        model.addAttribute("pendingApplications", pendingApps);
-        return "dashboard/admin";
-    }
-
-    @PostMapping("/admin/applications/{id}/approve")
-    public String approveFarmerApplication(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-        try {
-            userService.approveFarmerApplication(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Farmer application #" + id + " has been approved. The user is now a verified Farmer.");
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to approve application: " + ex.getMessage());
-        }
-        return "redirect:/admin/dashboard";
-    }
-
-    @PostMapping("/admin/applications/{id}/reject")
-    public String rejectFarmerApplication(
-            @PathVariable("id") Long id,
-            @RequestParam(value = "reason", defaultValue = "Application does not meet current verification criteria.") String reason,
-            RedirectAttributes redirectAttributes
-    ) {
-        try {
-            userService.rejectFarmerApplication(id, reason);
-            redirectAttributes.addFlashAttribute("successMessage", "Farmer application #" + id + " has been rejected.");
-        } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to reject application: " + ex.getMessage());
-        }
-        return "redirect:/admin/dashboard";
-    }
 
     @GetMapping("/household/dashboard")
     public String householdDashboard(Authentication authentication, Model model) {

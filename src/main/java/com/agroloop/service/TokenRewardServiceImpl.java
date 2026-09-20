@@ -97,14 +97,13 @@ public class TokenRewardServiceImpl implements TokenRewardService {
                     categoryName);
         }
 
-        // 6. Record immutable transaction in ledger
-        EcoTokenTransaction transaction = new EcoTokenTransaction(
+        // 6. Record immutable transaction in ledger via factory
+        EcoTokenTransaction transaction = EcoTokenTransaction.rewardMinted(
                 lockedHousehold,
                 verification,
                 reward,
-                TransactionType.REWARD_MINTED,
                 lockedHousehold.getTokenBalance(),
-                description
+                null // automated verification minting has null actor
         );
 
         EcoTokenTransaction saved = transactionRepository.save(transaction);

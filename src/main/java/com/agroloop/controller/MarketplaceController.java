@@ -307,4 +307,44 @@ public class MarketplaceController {
         model.addAttribute("isNewOrder", success);
         return "marketplace/order_details";
     }
+
+    /**
+     * Household cancels order and receives atomic refund.
+     */
+    @PostMapping("/orders/{id}/cancel")
+    @PreAuthorize("hasRole('HOUSEHOLD')")
+    public String cancelOrder(
+            @PathVariable("id") Long id,
+            @RequestParam("reason") String reason,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            marketplaceService.cancelHouseholdOrder(id, authentication.getName(), reason);
+            redirectAttributes.addFlashAttribute("successMessage", "Order #" + id + " has been cancelled and refunded successfully.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel order: " + ex.getMessage());
+        }
+        return "redirect:/marketplace/orders/" + id;
+    }
+
+    /**
+     * Household files a dispute on an order.
+     */
+    @PostMapping("/orders/{id}/dispute")
+    @PreAuthorize("hasRole('HOUSEHOLD')")
+    public String disputeOrder(
+            @PathVariable("id") Long id,
+            @RequestParam("disputeReason") String disputeReason,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            marketplaceService.disputeOrderAsHousehold(id, authentication.getName(), disputeReason);
+            redirectAttributes.addFlashAttribute("successMessage", "Dispute submitted successfully for Order #" + id + ".");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to submit dispute: " + ex.getMessage());
+        }
+        return "redirect:/marketplace/orders/" + id;
+    }
 }

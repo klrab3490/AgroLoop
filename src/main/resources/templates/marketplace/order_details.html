@@ -41,6 +41,14 @@
             </div>
         </div>
 
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
         <div style="background: var(--card-bg, #161b22); border: 1px solid var(--border-color, #30363d); border-radius: 20px; padding: 2.5rem;">
             
             <!-- Receipt Header -->
@@ -52,9 +60,39 @@
                 </div>
 
                 <div style="text-align: right;">
-                    <span class="badge" th:classappend="${order.status.name() == 'COMPLETED' ? 'badge-success' : 'phase-badge'}" th:text="${order.status.displayName}">Placed</span>
+                    <span class="badge"
+                          th:style="${order.status.name() == 'PLACED' ? 'background: rgba(59, 130, 246, 0.2); color: #60a5fa;' : (order.status.name() == 'DISPUTED' ? 'background: rgba(245, 158, 11, 0.2); color: #f59e0b;' : (order.status.name() == 'CANCELLED' ? 'background: rgba(239, 68, 68, 0.2); color: #f87171;' : 'background: rgba(16, 185, 129, 0.2); color: #34d399;'))}"
+                          th:text="${order.status.displayName}">Placed</span>
                     <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Payment Method: <strong>EcoTokens</strong></div>
                 </div>
+            </div>
+
+            <!-- Lifecycle Audit Banners -->
+            <div th:if="${order.status.name() == 'CANCELLED'}" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem;">
+                <h4 style="color: #f87171; font-weight: 700; margin-bottom: 0.3rem;">Order Cancelled & Refunded</h4>
+                <p style="margin: 0; font-size: 0.88rem; color: #fca5a5;">
+                    Reason: <strong th:text="${order.cancellationReason}">Reason</strong>
+                </p>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    Processed at <span th:text="${#temporals.format(order.cancelledAt, 'dd MMM yyyy HH:mm')}">Date</span>
+                    <span th:if="${order.cancellationActor != null}"> by <span th:text="${order.cancellationActor.name}">Actor</span></span>
+                </div>
+            </div>
+
+            <div th:if="${order.status.name() == 'DISPUTED'}" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem;">
+                <h4 style="color: #f59e0b; font-weight: 700; margin-bottom: 0.3rem;">Under Review (Dispute Active)</h4>
+                <p style="margin: 0; font-size: 0.88rem; color: #fde68a;">
+                    Dispute Reason: <strong th:text="${order.disputeReason}">Reason</strong>
+                </p>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.4rem;">
+                    Raised at <span th:text="${#temporals.format(order.disputedAt, 'dd MMM yyyy HH:mm')}">Date</span>
+                    <span th:if="${order.disputeActor != null}"> by <span th:text="${order.disputeActor.name}">Actor</span></span>
+                </div>
+            </div>
+
+            <div th:if="${order.resolutionType != null}" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem;">
+                <h4 style="color: #34d399; font-weight: 700; margin-bottom: 0.3rem;" th:text="'Dispute Adjudicated: ' + ${order.resolutionType.displayName}">Resolution</h4>
+                <p style="margin: 0; font-size: 0.88rem; color: #a7f3d0;" th:text="${order.resolutionNotes}">Notes</p>
             </div>
 
             <!-- Customer & Delivery Info -->
@@ -102,11 +140,40 @@
             </div>
 
             <!-- Total Bar -->
-            <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 1.5rem; border-top: 1px solid var(--border-color, #30363d); padding-top: 1.5rem;">
+            <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 1.5rem; border-top: 1px solid var(--border-color, #30363d); padding-top: 1.5rem; margin-bottom: 2rem;">
                 <span style="font-size: 1.1rem; font-weight: 600;">Total Paid:</span>
                 <span style="font-size: 1.75rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">
                     🪙 <span th:text="${#numbers.formatDecimal(order.totalTokens, 1, 2)}">0.00</span>
                 </span>
+            </div>
+
+            <!-- Household Actions: Cancel or Dispute (only for PLACED orders) -->
+            <div th:if="${order.status.name() == 'PLACED'}" style="display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border-color, #30363d); padding-top: 1.5rem; flex-wrap: wrap;" sec:authorize="hasRole('HOUSEHOLD')">
+                <!-- Cancel Order Modal/Details -->
+                <details style="display: inline-block;">
+                    <summary class="btn btn-sm" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); cursor: pointer; list-style: none;">Cancel Order</summary>
+                    <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 1.2rem; margin-top: 0.8rem;">
+                        <h5 style="color: #f87171; font-weight: 700; margin-bottom: 0.5rem;">Cancel & Request Instant Refund</h5>
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Your tokens will be instantly credited back to your balance and inventory will be restored.</p>
+                        <form th:action="@{/marketplace/orders/{id}/cancel(id=${order.id})}" method="post">
+                            <input type="text" name="reason" placeholder="Reason for cancellation..." required style="width: 100%; padding: 0.5rem; border-radius: 6px; background: #161b22; color: #fff; border: 1px solid #30363d; margin-bottom: 0.8rem;">
+                            <button type="submit" class="btn btn-sm btn-primary" style="background: #ef4444;">Confirm Cancellation</button>
+                        </form>
+                    </div>
+                </details>
+
+                <!-- Dispute Order Modal/Details (if not already resolved) -->
+                <details th:if="${order.resolvedAt == null}" style="display: inline-block;">
+                    <summary class="btn btn-sm" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer; list-style: none;">File Dispute</summary>
+                    <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 12px; padding: 1.2rem; margin-top: 0.8rem;">
+                        <h5 style="color: #f59e0b; font-weight: 700; margin-bottom: 0.5rem;">Report Issue / Dispute Order</h5>
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Platform administrators will review your claim and may approve a full refund.</p>
+                        <form th:action="@{/marketplace/orders/{id}/dispute(id=${order.id})}" method="post">
+                            <textarea name="disputeReason" rows="2" placeholder="Describe the issue (e.g. damaged goods, unfulfilled items)..." required style="width: 100%; padding: 0.5rem; border-radius: 6px; background: #161b22; color: #fff; border: 1px solid #30363d; margin-bottom: 0.8rem;"></textarea>
+                            <button type="submit" class="btn btn-sm btn-primary" style="background: #f59e0b; color: #000; font-weight: 700;">Submit Dispute</button>
+                        </form>
+                    </div>
+                </details>
             </div>
 
         </div>

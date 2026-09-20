@@ -38,6 +38,14 @@
             <p style="color: var(--text-secondary);">Orders placed by households redeeming EcoTokens for your fresh harvest and compost.</p>
         </div>
 
+        <!-- Notification Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
+            <span>✓</span> <span th:text="${successMessage}">Success</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
+            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
+        </div>
+
         <!-- Empty State -->
         <div th:if="${#lists.isEmpty(orders)}" style="text-align: center; padding: 4rem 2rem; background: var(--card-bg, #161b22); border: 1px dashed var(--border-color, #30363d); border-radius: 16px;">
             <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
@@ -56,16 +64,40 @@
                     <div>
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             <span style="font-size: 1.15rem; font-weight: 800; color: #fff;" th:text="${'Order #' + ord.id}">Order #1</span>
-                            <span class="badge" th:classappend="${ord.status.name() == 'COMPLETED' ? 'badge-success' : 'phase-badge'}" th:text="${ord.status.displayName}">Placed</span>
+                            <span class="badge"
+                                  th:style="${ord.status.name() == 'PLACED' ? 'background: rgba(59, 130, 246, 0.2); color: #60a5fa;' : (ord.status.name() == 'DISPUTED' ? 'background: rgba(245, 158, 11, 0.2); color: #f59e0b;' : (ord.status.name() == 'CANCELLED' ? 'background: rgba(239, 68, 68, 0.2); color: #f87171;' : 'background: rgba(16, 185, 129, 0.2); color: #34d399;'))}"
+                                  th:text="${ord.status.displayName}">Placed</span>
                         </div>
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
                             Placed by <strong style="color: #cbd5e1;" th:text="${ord.household.name}">Alice</strong> (<span th:text="${ord.household.email}">alice@example.com</span>) on <span th:text="${#temporals.format(ord.createdAt, 'dd MMM yyyy, HH:mm')}">Date</span>
                         </div>
                     </div>
 
-                    <div style="text-align: right;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <!-- Farmer Dispute Button (only if PLACED and not already resolved) -->
+                        <details th:if="${ord.status.name() == 'PLACED' and ord.resolvedAt == null}" style="display: inline-block;">
+                            <summary class="btn btn-sm" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer; list-style: none;">Raise Dispute</summary>
+                            <div style="position: absolute; right: 2rem; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; min-width: 280px; margin-top: 0.5rem;">
+                                <h5 style="margin-bottom: 0.5rem; font-weight: 700; color: #f59e0b;">Dispute Order Claim</h5>
+                                <form th:action="@{/farmer/products/orders/{id}/dispute(id=${ord.id})}" method="post">
+                                    <textarea name="disputeReason" rows="2" placeholder="State fulfillment or payment issue..." required style="width: 100%; padding: 0.4rem; border-radius: 6px; background: var(--bg-dark); color: #fff; border: 1px solid var(--border-subtle); margin-bottom: 0.5rem;"></textarea>
+                                    <button type="submit" class="btn btn-sm btn-primary" style="background: #f59e0b; color: #000; font-weight: 700; width: 100%;">Submit Dispute</button>
+                                </form>
+                            </div>
+                        </details>
+
                         <a th:href="@{'/marketplace/orders/' + ${ord.id}}" class="btn btn-outline btn-sm">View Full Order Receipt →</a>
                     </div>
+                </div>
+
+                <!-- Dispute / Cancellation Banners if active -->
+                <div th:if="${ord.status.name() == 'DISPUTED'}" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                    <strong style="color: #f59e0b;">Dispute Active:</strong> <span th:text="${ord.disputeReason}">Reason</span>
+                    <span th:if="${ord.disputeActor != null}" style="color: var(--text-muted); font-size: 0.78rem;" th:text="'(Filed by ' + ${ord.disputeActor.name} + ')'"></span>
+                </div>
+
+                <div th:if="${ord.resolutionType != null}" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                    <strong style="color: #34d399;" th:text="'Dispute Resolved: ' + ${ord.resolutionType.displayName}">Resolution</strong>: <span th:text="${ord.resolutionNotes}">Notes</span>
                 </div>
 
                 <!-- Items belonging to this farmer -->
