@@ -116,7 +116,7 @@ jobs:
         working-directory: clients/mobile/android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug -Pandroid.kotlinVersion=1.9.25 -PkotlinVersion=1.9.25 --no-daemon
 
       - name: Upload Standalone Android APK Artifact
         uses: actions/upload-artifact@v4
