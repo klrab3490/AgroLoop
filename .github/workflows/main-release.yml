@@ -130,6 +130,38 @@ jobs:
                       }
                   }
               }
+
+              tasks.matching { it.name.toLowerCase().contains("packagelist") }.configureEach {
+                  doLast {
+                      if (rootProject.projectDir.exists()) {
+                          fileTree(dir: rootProject.projectDir, includes: ['**/PackageList.java']).each { f ->
+                              if (f.exists()) {
+                                  def text = f.text
+                                  if (text.contains("expo.core.ExpoModulesPackage")) {
+                                      println "Fixing expo.core.ExpoModulesPackage in PackageList task: ${f}"
+                                      f.text = text.replaceAll("expo\\.core\\.ExpoModulesPackage", "expo.modules.ExpoModulesPackage")
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+
+              tasks.withType(JavaCompile).configureEach {
+                  doFirst {
+                      if (rootProject.projectDir.exists()) {
+                          fileTree(dir: rootProject.projectDir, includes: ['**/PackageList.java']).each { f ->
+                              if (f.exists()) {
+                                  def text = f.text
+                                  if (text.contains("expo.core.ExpoModulesPackage")) {
+                                      println "Fixing expo.core.ExpoModulesPackage in JavaCompile: ${f}"
+                                      f.text = text.replaceAll("expo\\.core\\.ExpoModulesPackage", "expo.modules.ExpoModulesPackage")
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
           }
           EOF
 
