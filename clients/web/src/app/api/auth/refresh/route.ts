@@ -28,7 +28,7 @@ async function performBackendRefresh(
         "Content-Type": "application/json",
         "Idempotency-Key": idempotencyKey,
         "X-Request-Id": requestId,
-        Cookie: `eco_refresh_token=${refreshToken}`,
+        Cookie: `refreshToken=${refreshToken}; eco_refresh_token=${refreshToken}`,
       },
       body: JSON.stringify({
         refreshToken,
@@ -38,7 +38,9 @@ async function performBackendRefresh(
 
     const data = await backendRes.json();
     const setCookieHeader = backendRes.headers.get("set-cookie");
-    const newRefreshToken = extractCookieValue(setCookieHeader, "eco_refresh_token");
+    const newRefreshToken =
+      extractCookieValue(setCookieHeader, "eco_refresh_token") ||
+      extractCookieValue(setCookieHeader, "refreshToken");
 
     return {
       ok: backendRes.ok,
@@ -95,9 +97,13 @@ export async function POST(req: NextRequest) {
   });
 
   if (result.newRefreshToken) {
+    const isSecure =
+      process.env.COOKIE_SECURE === "true" ||
+      (process.env.NODE_ENV === "production" && req.nextUrl.protocol === "https:");
+
     response.cookies.set("eco_refresh_token", result.newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecure,
       sameSite: "lax",
       path: "/",
       maxAge: 30 * 24 * 60 * 60,

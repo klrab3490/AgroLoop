@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
     }
 
     const setCookieHeader = backendRes.headers.get("set-cookie");
-    const refreshToken = extractCookieValue(setCookieHeader, "eco_refresh_token");
+    const refreshToken =
+      extractCookieValue(setCookieHeader, "eco_refresh_token") ||
+      extractCookieValue(setCookieHeader, "refreshToken");
 
     const response = NextResponse.json(
       {
@@ -34,9 +36,13 @@ export async function POST(req: NextRequest) {
     );
 
     if (refreshToken) {
+      const isSecure =
+        process.env.COOKIE_SECURE === "true" ||
+        (process.env.NODE_ENV === "production" && req.nextUrl.protocol === "https:");
+
       response.cookies.set("eco_refresh_token", refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: isSecure,
         sameSite: "lax",
         path: "/",
         maxAge: 30 * 24 * 60 * 60,

@@ -51,14 +51,14 @@ export default function LoginPage() {
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => handleDemoFill("household@agroloop.com", "password123")}
+              onClick={() => handleDemoFill("household@agroloop.com", "household123")}
               className="py-1.5 px-2 text-2xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 text-slate-700 transition"
             >
               🏡 Household
             </button>
             <button
               type="button"
-              onClick={() => handleDemoFill("farmer@agroloop.com", "password123")}
+              onClick={() => handleDemoFill("farmer@agroloop.com", "farmer123")}
               className="py-1.5 px-2 text-2xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 text-slate-700 transition"
             >
               🚜 Farmer
