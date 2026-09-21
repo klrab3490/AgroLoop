@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { UserApiResponse, LoginApiRequest, RegisterApiRequest } from "@agroloop/api-types";
-import { mobileApiClient, mobileTokenStorage } from "../lib/api.js";
+import { mobileApiClient, mobileTokenStorage } from "../lib/api";
 
 export interface AuthContextType {
   user: UserApiResponse | null;

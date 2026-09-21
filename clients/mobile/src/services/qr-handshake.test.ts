@@ -5,7 +5,7 @@ import {
   normalizePassCode,
   isSupportedPassVersion,
   generateQrMatrix,
-} from "./qr-handshake.js";
+} from "./qr-handshake";
 import type { PickupHandshakePassResponse } from "@agroloop/api-types";
 
 describe("Mobile QR Handshake Presentation & Parsing Utilities", () => {

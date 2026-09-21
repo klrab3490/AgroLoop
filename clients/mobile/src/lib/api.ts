@@ -1,6 +1,6 @@
 import { createAgroLoopClient } from "@agroloop/api-client";
-import { SecureStoreTokenStorage } from "../storage/secure-store.js";
-import { getServerConfig } from "../storage/server-config.js";
+import { SecureStoreTokenStorage } from "../storage/secure-store";
+import { getServerConfig } from "../storage/server-config";
 
 export const defaultBaseUrl =
   process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8080";

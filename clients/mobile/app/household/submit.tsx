@@ -11,8 +11,8 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { mobileApiClient } from "../../src/lib/api.js";
-import { uploadMediaAsset } from "../../src/services/media-upload.js";
+import { mobileApiClient } from "../../src/lib/api";
+import { uploadMediaAsset } from "../../src/services/media-upload";
 import type { WasteSubmissionApiResponse } from "@agroloop/api-types";
 
 type WasteCategoryType = "FOOD_SCRAPS" | "GARDEN_WASTE" | "AGRICULTURAL_ORGANIC" | "COFFEE_GROUNDS";

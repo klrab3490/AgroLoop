@@ -1,7 +1,7 @@
 import React from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider } from "../src/context/auth-context.js";
+import { AuthProvider } from "../src/context/auth-context";
 
 const RootStack = Stack as any;
 

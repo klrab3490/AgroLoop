@@ -6,7 +6,7 @@ vi.mock("expo-secure-store", () => ({
   deleteItemAsync: vi.fn(),
 }));
 
-import { mobileApiClient } from "../lib/api.js";
+import { mobileApiClient } from "../lib/api";
 import type { PickupRequestApiResponse } from "@agroloop/api-types";
 
 describe("Household Pickup Operations", () => {

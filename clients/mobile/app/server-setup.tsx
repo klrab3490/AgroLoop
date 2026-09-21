@@ -15,8 +15,8 @@ import {
   saveServerConfig,
   clearServerConfig,
   getServerHostname,
-} from "../src/storage/server-config.js";
-import { setMobileServerUrl, defaultBaseUrl } from "../src/lib/api.js";
+} from "../src/storage/server-config";
+import { setMobileServerUrl, defaultBaseUrl } from "../src/lib/api";
 
 const PRESETS = [
   { label: "Android Emulator", url: "http://10.0.2.2:8080" },

@@ -1,4 +1,4 @@
-import { mobileApiClient } from "../lib/api.js";
+import { mobileApiClient } from "../lib/api";
 import type { MediaAssetApiResponse } from "@agroloop/api-types";
 
 export interface MediaUploadOptions {

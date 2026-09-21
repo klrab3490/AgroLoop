@@ -2,9 +2,9 @@ import type {
   CompactQrPayload,
   PickupHandshakePassResponse,
 } from "@agroloop/api-types";
-import { generateQrMatrix } from "./qr-matrix.js";
+import { generateQrMatrix } from "./qr-matrix";
 
-export { generateQrMatrix } from "./qr-matrix.js";
+export { generateQrMatrix } from "./qr-matrix";
 
 /**
  * Serializes a server-issued pickup pass into a compact, low-density QR JSON string.

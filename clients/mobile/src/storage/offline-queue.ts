@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import { mobileApiClient } from "../lib/api.js";
+import { mobileApiClient } from "../lib/api";
 
 const OFFLINE_QUEUE_STORAGE_KEY = "agroloop_offline_mutations_queue";
 

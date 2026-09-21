@@ -12,9 +12,9 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { mobileApiClient } from "../../src/lib/api.js";
-import { useAuth } from "../../src/context/auth-context.js";
-import { QrScannerModal } from "../../src/components/qr-scanner-modal.js";
+import { mobileApiClient } from "../../src/lib/api";
+import { useAuth } from "../../src/context/auth-context";
+import { QrScannerModal } from "../../src/components/qr-scanner-modal";
 import type { PickupRequestApiResponse } from "@agroloop/api-types";
 
 export default function FarmerCollectionsScreen() {

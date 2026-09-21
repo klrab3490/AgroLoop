@@ -10,9 +10,9 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { mobileApiClient } from "../../src/lib/api.js";
-import { uploadMediaAsset } from "../../src/services/media-upload.js";
-import { QrScannerModal } from "../../src/components/qr-scanner-modal.js";
+import { mobileApiClient } from "../../src/lib/api";
+import { uploadMediaAsset } from "../../src/services/media-upload";
+import { QrScannerModal } from "../../src/components/qr-scanner-modal";
 import type { PickupRequestApiResponse } from "@agroloop/api-types";
 
 type QualityGrade = "GRADE_A" | "GRADE_B" | "GRADE_C" | "REJECTED";

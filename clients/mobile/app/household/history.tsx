@@ -9,8 +9,8 @@ import {
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { mobileApiClient } from "../../src/lib/api.js";
-import { useAuth } from "../../src/context/auth-context.js";
+import { mobileApiClient } from "../../src/lib/api";
+import { useAuth } from "../../src/context/auth-context";
 import type {
   WasteSubmissionApiResponse,
   EcoTokenTransactionApiResponse,

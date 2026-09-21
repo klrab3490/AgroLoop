@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { generateQrMatrix, serializePickupPass } from "../services/qr-handshake.js";
+import { generateQrMatrix, serializePickupPass } from "../services/qr-handshake";
 import type { PickupHandshakePassResponse } from "@agroloop/api-types";
 
 interface QrCodeViewProps {

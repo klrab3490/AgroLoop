@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Link, useRouter } from "expo-router";
-import { mobileApiClient } from "../../src/lib/api.js";
-import { useAuth } from "../../src/context/auth-context.js";
+import { mobileApiClient } from "../../src/lib/api";
+import { useAuth } from "../../src/context/auth-context";
 
 export default function HouseholdScreen() {
   const router = useRouter();

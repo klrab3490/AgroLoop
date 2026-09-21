@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { Link, useRouter } from "expo-router";
-import { useAuth } from "../src/context/auth-context.js";
-import { getServerConfig, getServerHostname } from "../src/storage/server-config.js";
+import { useAuth } from "../src/context/auth-context";
+import { getServerConfig, getServerHostname } from "../src/storage/server-config";
 
 export default function IndexScreen() {
   const router = useRouter();

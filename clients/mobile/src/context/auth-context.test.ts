@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mobileApiClient, mobileTokenStorage } from "../lib/api.js";
+import { mobileApiClient, mobileTokenStorage } from "../lib/api";
 
 // Mock SecureStore
 vi.mock("expo-secure-store", () => {

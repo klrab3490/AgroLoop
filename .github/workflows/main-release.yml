@@ -96,8 +96,11 @@ jobs:
       - name: Install Workspace Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build Workspace Packages
+        run: pnpm turbo build
+
       - name: Export Mobile Production Bundle (Expo Export)
-        run: pnpm --filter @agroloop/mobile exec expo export --platform all
+        run: pnpm --filter @agroloop/mobile exec expo export
 
       - name: Upload Mobile Expo Bundle Artifact
         uses: actions/upload-artifact@v4
@@ -107,7 +110,7 @@ jobs:
           retention-days: 14
 
       - name: Generate Android Native Project (Expo Prebuild)
-        run: pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean
+        run: pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean --no-install
 
       - name: Build Standalone Android Debug APK
         working-directory: clients/mobile/android

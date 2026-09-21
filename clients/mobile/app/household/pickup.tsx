@@ -12,9 +12,9 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { mobileApiClient } from "../../src/lib/api.js";
-import { useAuth } from "../../src/context/auth-context.js";
-import { QrCodeView } from "../../src/components/qr-code-view.js";
+import { mobileApiClient } from "../../src/lib/api";
+import { useAuth } from "../../src/context/auth-context";
+import { QrCodeView } from "../../src/components/qr-code-view";
 import type {
   PickupRequestApiResponse,
   PickupHandshakePassResponse,

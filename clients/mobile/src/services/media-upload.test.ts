@@ -6,8 +6,8 @@ vi.mock("expo-secure-store", () => ({
   deleteItemAsync: vi.fn(),
 }));
 
-import { uploadMediaAsset } from "./media-upload.js";
-import { mobileApiClient } from "../lib/api.js";
+import { uploadMediaAsset } from "./media-upload";
+import { mobileApiClient } from "../lib/api";
 
 describe("Media Upload 3-Phase Lifecycle", () => {
   beforeEach(() => {

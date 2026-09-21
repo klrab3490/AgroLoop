@@ -9,8 +9,8 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { mobileApiClient } from "../lib/api.js";
-import { parsePickupPass, normalizePassCode } from "../services/qr-handshake.js";
+import { mobileApiClient } from "../lib/api";
+import { parsePickupPass, normalizePassCode } from "../services/qr-handshake";
 import type {
   CompactQrPayload,
   PickupHandshakeResultApiResponse,

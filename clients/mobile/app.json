@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "agroloop",
     "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SecureStoreTokenStorage } from "./secure-store.js";
+import { SecureStoreTokenStorage } from "./secure-store";
 import * as SecureStore from "expo-secure-store";
 
 vi.mock("expo-secure-store", () => {

@@ -19,8 +19,8 @@ import {
   getOfflineQueue,
   processOfflineQueue,
   clearOfflineQueue,
-} from "./offline-queue.js";
-import { mobileApiClient } from "../lib/api.js";
+} from "./offline-queue";
+import { mobileApiClient } from "../lib/api";
 
 describe("Offline Mutation Queue", () => {
   beforeEach(async () => {
