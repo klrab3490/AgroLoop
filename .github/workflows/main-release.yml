@@ -112,6 +112,29 @@ jobs:
       - name: Generate Android Native Project (Expo Prebuild)
         run: pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean --no-install
 
+      - name: Configure Android Kotlin & Compose Compatibility
+        working-directory: clients/mobile/android
+        run: |
+          cat << 'EOF' >> build.gradle
+
+          rootProject.ext.kotlinVersion = '1.9.25'
+
+          subprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty('android')) {
+                      project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                          kotlinOptions {
+                              freeCompilerArgs += [
+                                  "-P",
+                                  "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+                              ]
+                          }
+                      }
+                  }
+              }
+          }
+          EOF
+
       - name: Build Standalone Android Debug APK
         working-directory: clients/mobile/android
         run: |
