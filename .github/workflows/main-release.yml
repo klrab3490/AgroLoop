@@ -119,16 +119,14 @@ jobs:
 
           rootProject.ext.kotlinVersion = '1.9.25'
 
-          subprojects {
-              afterEvaluate { project ->
-                  if (project.hasProperty('android')) {
-                      project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                          kotlinOptions {
-                              freeCompilerArgs += [
-                                  "-P",
-                                  "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-                              ]
-                          }
+          allprojects {
+              plugins.withId('kotlin-android') {
+                  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                      kotlinOptions {
+                          freeCompilerArgs += [
+                              "-P",
+                              "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+                          ]
                       }
                   }
               }
