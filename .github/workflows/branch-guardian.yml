@@ -1,0 +1,58 @@
+name: Branch Deletion Guardian
+
+on:
+  delete:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  guard-protected-branches:
+    name: Prevent Protected Branch Deletion
+    if: github.event.ref_type == 'branch' && (github.event.ref == 'main' || github.event.ref == 'dev')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore Deleted Protected Branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DELETED_BRANCH: ${{ github.event.ref }}
+          DELETER: ${{ github.actor }}
+        run: |
+          echo "::error::CRITICAL: Protected branch '$DELETED_BRANCH' was deleted by $DELETER!"
+
+          # Query GitHub repository events to locate the last known commit SHA for the deleted branch
+          LAST_SHA=$(gh api repos/${{ github.repository }}/events \
+            --jq ".[] | select(.type == \"PushEvent\" and .payload.ref == \"refs/heads/$DELETED_BRANCH\") | .payload.head" 2>/dev/null | head -n 1)
+
+          if [ -z "$LAST_SHA" ]; then
+            echo "Last event SHA not found in recent events; falling back to current SHA (${{ github.sha }})..."
+            LAST_SHA="${{ github.sha }}"
+          fi
+
+          echo "Restoring branch '$DELETED_BRANCH' to commit $LAST_SHA..."
+          gh api -X POST repos/${{ github.repository }}/git/refs \
+            -f ref="refs/heads/$DELETED_BRANCH" \
+            -f sha="$LAST_SHA"
+
+          echo "✅ Branch '$DELETED_BRANCH' successfully resurrected and restored."
+
+      - name: File Security Incident Alert
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DELETED_BRANCH: ${{ github.event.ref }}
+          DELETER: ${{ github.actor }}
+        run: |
+          gh issue create --repo ${{ github.repository }} \
+            --title "🚨 Security Incident: Protected branch '$DELETED_BRANCH' was deleted by @$DELETER" \
+            --body "### Critical Branch Deletion Notice
+          A deletion event was triggered on protected branch **\`$DELETED_BRANCH\`** by **@$DELETER** on \`$(date -u)\`.
+
+          The automated **Branch Deletion Guardian** workflow intercepted this event and restored the branch reference.
+
+          ### Recommended Repository Hardening:
+          To prevent deletion attempts at the Git protocol pre-receive layer:
+          1. Go to **Settings > Branches** (or **Settings > Rulesets**).
+          2. Add or edit protection rules for \`main\` and \`dev\`.
+          3. Enable **'Do not allow deletions'**."
