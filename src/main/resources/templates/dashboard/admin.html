@@ -3,192 +3,609 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard — AgroLoop</title>
+    <title>Admin Operations Command Center — AgroLoop</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body style="background-color: var(--bg-primary); color: var(--text-primary);">
 
     <!-- Header / Navigation -->
     <header class="navbar">
-        <div class="container nav-container">
+        <div class="admin-container nav-container">
             <a th:href="@{/}" class="brand">
                 <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
                 <div>
                     <h1 class="brand-title">AgroLoop</h1>
-                    <span class="brand-subtitle">Administrator Portal</span>
+                    <span class="brand-subtitle">Administrator Operations Command Center</span>
                 </div>
             </a>
 
             <div class="nav-actions">
-                <span class="badge phase-badge">Admin Role</span>
-                <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Administrator</span>
+                <span class="pill-badge pill-admin">
+                    <span class="status-dot dot-green"></span>
+                    <span>Admin Operations</span>
+                </span>
+                <span style="font-size: 0.9rem; font-weight: 600; color: #fff;" th:text="${user?.name != null ? user.name : 'Administrator'}">Administrator</span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                    <button type="submit" class="btn btn-outline btn-sm" style="border-radius: 8px; font-size: 0.8rem; padding: 0.4rem 0.85rem;">Sign Out</button>
                 </form>
             </div>
         </div>
     </header>
 
-    <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
-        <div style="margin-bottom: 2.5rem;">
-            <span class="section-tag">System Administration</span>
-            <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Admin</span></h2>
-            <p style="color: var(--text-secondary);">Manage users, oversee circular waste collections, and inspect platform analytics.</p>
-        </div>
-
-        <!-- Notification Messages -->
-        <div th:if="${successMessage}" class="alert alert-success" style="padding: 1rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; margin-bottom: 2rem;">
-            <span>✓</span> <span th:text="${successMessage}">Success</span>
-        </div>
-        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; margin-bottom: 2rem;">
-            <span>⚠️</span> <span th:text="${errorMessage}">Error</span>
-        </div>
-
-        <!-- Admin Sub-Navigation -->
-        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
-            <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-primary">Overview</a>
-            <a th:href="@{/admin/users}" class="btn btn-sm btn-outline">User Governance</a>
-            <a th:href="@{/admin/orders}" class="btn btn-sm btn-outline">Orders & Disputes <span th:if="${disputedOrdersCount > 0}" class="badge" style="background: #ef4444; color: #fff; margin-left: 0.3rem;" th:text="${disputedOrdersCount}">1</span></a>
-            <a th:href="@{/admin/ledger}" class="btn btn-sm btn-outline">Global Ledger & Solvency</a>
-        </div>
-
-        <!-- System Analytics Grid -->
-        <div class="cards-grid" style="margin-bottom: 2.5rem;">
-            <div class="role-card">
-                <div class="card-icon admin-icon">👥</div>
-                <h4>Total Registered Users</h4>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem;" th:text="${totalUsers}">3</div>
-                <p>Total accounts in PostgreSQL database.</p>
+    <main class="admin-container" style="padding-top: 2rem; padding-bottom: 5rem;">
+        
+        <!-- Command Header & Live Status -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="micro-eyebrow emerald">
+                    <span>⚡</span> PLATFORM GOVERNANCE & OPERATIONS
+                </span>
+                <h2 style="font-size: 2.1rem; font-weight: 800; letter-spacing: -0.03em; margin-top: 0.25rem; color: #fff;">
+                    AgroLoop Admin Hub
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.15rem;">
+                    Platform operational control, cryptographic solvency reconciliation, and participant identity governance.
+                </p>
             </div>
-
-            <div class="role-card">
-                <div class="card-icon household-icon">🏡</div>
-                <h4>Households</h4>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa; margin-bottom: 0.5rem;" th:text="${totalHouseholds}">1</div>
-                <p>Citizen households submitting waste.</p>
-            </div>
-
-            <div class="role-card">
-                <div class="card-icon farmer-icon">🚜</div>
-                <h4>Farmers</h4>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;" th:text="${totalFarmers}">1</div>
-                <p>Agro partners collecting compost.</p>
-            </div>
-
-            <div class="role-card">
-                <div class="card-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">📦</div>
-                <h4>Marketplace Orders</h4>
-                <div style="font-size: 2.2rem; font-weight: 800; color: #f59e0b; margin-bottom: 0.5rem;" th:text="${totalOrders != null ? totalOrders : 0}">0</div>
-                <p>Disputed: <strong th:text="${disputedOrdersCount != null ? disputedOrdersCount : 0}" style="color: #ef4444;">0</strong> pending resolution.</p>
+            <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+                <span class="pill-badge" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25);">
+                    <span class="status-dot dot-green"></span>
+                    System ● Healthy
+                </span>
+                <span th:if="${solvencyMetrics != null and solvencyMetrics.solvent}" class="pill-badge" style="background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25);">
+                    ● Solvent
+                </span>
+                <span th:if="${solvencyMetrics != null and !solvencyMetrics.solvent}" class="pill-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    ⚠️ Discrepancy
+                </span>
+                <span th:if="${demoMode}" class="pill-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    DEV / DEMO MODE
+                </span>
             </div>
         </div>
 
-        <!-- Tier-2 Platform Solvency Overview Card -->
-        <div th:if="${solvencyMetrics != null}" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 1.8rem; margin-bottom: 2.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
-                <div>
-                    <span class="section-tag" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">Financial Audit</span>
-                    <h3 style="font-size: 1.3rem; font-weight: 800; margin-top: 0.3rem;">🪙 Tier-2 EcoToken Solvency Invariant</h3>
-                </div>
-                <div>
-                    <span th:if="${solvencyMetrics.solvent}" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.5rem 1rem; font-weight: 700;">
-                        ✓ SOLVENT (0.00 DISCREPANCY)
+        <!-- Flash Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" style="padding: 0.9rem 1.2rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem;">
+            <span style="font-size: 1.1rem;">✓</span>
+            <span th:text="${successMessage}">Operation completed successfully.</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="padding: 0.9rem 1.2rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem;">
+            <span style="font-size: 1.1rem;">⚠️</span>
+            <span th:text="${errorMessage}">An error occurred during operation.</span>
+        </div>
+
+        <!-- Sub-Navigation -->
+        <nav class="admin-subnav" style="margin-bottom: 1.75rem;">
+            <a th:href="@{/admin/dashboard}" class="admin-nav-item active">Operations Command Center</a>
+            <a th:href="@{/admin/users}" class="admin-nav-item">User Directory</a>
+            <a th:href="@{/admin/orders}" class="admin-nav-item">
+                Orders & Adjudication
+                <span th:if="${disputedOrdersCount != null and disputedOrdersCount > 0}" class="pill-badge pill-disabled" style="padding: 0.1rem 0.45rem; font-size: 0.7rem; margin-left: 0.35rem;" th:text="${disputedOrdersCount}">1</span>
+            </a>
+            <a th:href="@{/admin/ledger}" class="admin-nav-item">Global Ledger & Solvency</a>
+        </nav>
+
+        <!-- KPI Summary Row: 5 Unified Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div class="kpi-card">
+                <div class="kpi-inner">
+                    <span class="micro-eyebrow">
+                        <span>👥</span> PARTICIPANTS
                     </span>
-                    <span th:unless="${solvencyMetrics.solvent}" class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.5rem 1rem; font-weight: 700;">
-                        ⚠️ DISCREPANCY: <span th:text="${solvencyMetrics.discrepancy}">0.00</span>
+                    <div class="kpi-val" style="color: #fff;" th:text="${totalUsers}">3</div>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);">Registered Users</span>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-inner">
+                    <span class="micro-eyebrow emerald">
+                        <span>🚜</span> AGRICULTURE
+                    </span>
+                    <div class="kpi-val" style="color: #34d399;" th:text="${totalFarmers}">1</div>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);">Verified Farmers</span>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-inner">
+                    <span class="micro-eyebrow amber">
+                        <span>📦</span> COMMERCE
+                    </span>
+                    <div class="kpi-val" style="color: #fbbf24;" th:text="${totalOrders != null ? totalOrders : 0}">0</div>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);">
+                        Orders (<strong th:text="${disputedOrdersCount != null ? disputedOrdersCount : 0}" style="color: #f87171;">0</strong> disputed)
                     </span>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; background: rgba(0,0,0,0.2); padding: 1.2rem; border-radius: 12px;">
-                <div>
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase;">Total Household Balances</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #60a5fa;" th:text="${solvencyMetrics.totalHouseholdBalances + ' tokens'}">0.00 tokens</div>
+            <div class="kpi-card">
+                <div class="kpi-inner">
+                    <span class="micro-eyebrow blue">
+                        <span>🪙</span> ECOTOKENS
+                    </span>
+                    <div class="kpi-val" style="color: #60a5fa;" th:text="${totalTokensInCirculation != null ? totalTokensInCirculation : 0}">0</div>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);">In Circulation</span>
                 </div>
-                <div>
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase;">Total Platform Credits</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #34d399;" th:text="${solvencyMetrics.totalCredits + ' tokens'}">0.00 tokens</div>
-                </div>
-                <div>
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase;">Total Platform Debits</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #f87171;" th:text="${solvencyMetrics.totalDebits + ' tokens'}">0.00 tokens</div>
-                </div>
-                <div>
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase;">Net Ledger Invariant</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #fff;" th:text="${solvencyMetrics.expectedBalance + ' tokens'}">0.00 tokens</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-inner">
+                    <span class="micro-eyebrow emerald">
+                        <span>⚖️</span> SOLVENCY
+                    </span>
+                    <div class="kpi-val" style="font-size: 1.5rem; line-height: 1.8;" th:styleappend="${solvencyMetrics != null and solvencyMetrics.solvent ? 'color: #34d399;' : 'color: #f87171;'}">
+                        <span th:if="${solvencyMetrics != null and solvencyMetrics.solvent}">✓ 100%</span>
+                        <span th:unless="${solvencyMetrics != null and solvencyMetrics.solvent}">⚠️ Invariant Breach</span>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);">Double-Entry Verified</span>
                 </div>
             </div>
         </div>
 
-        <!-- Pending Farmer Applications Moderation -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <!-- Core Operations Grid (60/40 Split) -->
+        <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.75rem; margin-bottom: 2rem; align-items: start;">
+            
+            <!-- Left: User Governance Directory -->
+            <section class="double-bezel">
+                <div class="bezel-inner">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <span class="micro-eyebrow">
+                                <span>👥</span> PARTICIPANT MANAGEMENT
+                            </span>
+                            <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 0.2rem;">
+                                User Governance Directory
+                            </h3>
+                        </div>
+                        <a th:href="@{/admin/users}" class="btn btn-outline btn-sm" style="border-radius: 8px; font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+                            Dedicated View ➔
+                        </a>
+                    </div>
+
+                    <!-- Search Filter Input -->
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="userDirectorySearch" placeholder="Filter participants by name, email, or role..." 
+                               onkeyup="filterUsers()" 
+                               style="width: 100%; padding: 0.65rem 1rem; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: #fff; font-size: 0.82rem; outline: none;">
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table id="userTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;">
+                                    <th style="padding: 0.65rem 0.75rem;">ID</th>
+                                    <th style="padding: 0.65rem 0.75rem;">Participant</th>
+                                    <th style="padding: 0.65rem 0.75rem;">Role</th>
+                                    <th style="padding: 0.65rem 0.75rem;">Status</th>
+                                    <th style="padding: 0.65rem 0.75rem;">Balance</th>
+                                    <th style="padding: 0.65rem 0.75rem; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="u : ${users}" class="user-row" style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); transition: background 0.15s ease;">
+                                    <td style="padding: 0.8rem 0.75rem; font-family: var(--font-mono); color: var(--text-muted); font-size: 0.75rem;" th:text="'#' + ${u.id}">#1</td>
+                                    <td style="padding: 0.8rem 0.75rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="width: 26px; height: 26px; border-radius: 6px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
+                                                <span th:if="${u.role.name() == 'ROLE_ADMIN'}">🛡️</span>
+                                                <span th:if="${u.role.name() == 'ROLE_FARMER'}">🚜</span>
+                                                <span th:if="${u.role.name() == 'ROLE_HOUSEHOLD'}">🏡</span>
+                                            </div>
+                                            <div>
+                                                <div class="user-name" style="font-weight: 700; color: #fff; font-size: 0.82rem;" th:text="${u.name}">Name</div>
+                                                <div class="user-email" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);" th:text="${u.email}">user@example.com</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 0.8rem 0.75rem;">
+                                        <span class="pill-badge" 
+                                              th:classappend="${u.role.name() == 'ROLE_ADMIN' ? 'pill-admin' : (u.role.name() == 'ROLE_FARMER' ? 'pill-farmer' : 'pill-household')}"
+                                              th:text="${u.role.name().replace('ROLE_', '')}" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+                                            HOUSEHOLD
+                                        </span>
+                                    </td>
+                                    <td style="padding: 0.8rem 0.75rem;">
+                                        <span th:if="${u.enabled}" class="pill-badge pill-active" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+                                            <span class="status-dot dot-green"></span> Active
+                                        </span>
+                                        <span th:unless="${u.enabled}" class="pill-badge pill-disabled" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+                                            <span class="status-dot dot-red"></span> Disabled
+                                        </span>
+                                    </td>
+                                    <td style="padding: 0.8rem 0.75rem; font-family: var(--font-mono); font-weight: 600;">
+                                        <span th:if="${u.tokenBalance != null}" style="color: #60a5fa;" th:text="${u.tokenBalance + ' 🪙'}">0.00 🪙</span>
+                                        <span th:unless="${u.tokenBalance != null}" style="color: var(--text-muted);">—</span>
+                                    </td>
+                                    <td style="padding: 0.8rem 0.75rem; text-align: right;">
+                                        <div style="display: flex; gap: 0.35rem; justify-content: flex-end; align-items: center;">
+                                            <!-- Token Adjustment for Households -->
+                                            <div th:if="${u.role.name() == 'ROLE_HOUSEHOLD'}" style="position: relative; display: inline-block;">
+                                                <button type="button" class="btn btn-outline btn-sm" th:attr="onclick='toggleAdjustPopover(' + ${u.id} + ')'" style="padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">
+                                                    Adjust
+                                                </button>
+                                                <!-- Popover -->
+                                                <div th:id="'adjust-popover-' + ${u.id}" class="adjust-popover" style="display: none; position: absolute; right: 0; bottom: calc(100% + 8px); width: 260px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; z-index: 100; box-shadow: 0 16px 36px rgba(0,0,0,0.6); text-align: left;">
+                                                    <div style="font-weight: 700; font-size: 0.8rem; margin-bottom: 0.5rem; color: #fff;">Adjust Household Tokens</div>
+                                                    <form th:action="@{/admin/households/{id}/adjust-tokens(id=${u.id})}" method="post">
+                                                        <input type="hidden" name="redirect" value="/admin/dashboard">
+                                                        <div style="margin-bottom: 0.5rem;">
+                                                            <select name="direction" style="width: 100%; padding: 0.35rem; border-radius: 6px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-subtle); font-size: 0.75rem;">
+                                                                <option th:each="dir : ${directions}" th:value="${dir}" th:text="${dir}">CREDIT</option>
+                                                            </select>
+                                                        </div>
+                                                        <div style="margin-bottom: 0.5rem;">
+                                                            <input type="number" step="0.01" min="0.01" name="amount" placeholder="Amount (e.g. 10)" required style="width: 100%; padding: 0.35rem 0.5rem; border-radius: 6px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-subtle); font-size: 0.75rem;">
+                                                        </div>
+                                                        <div style="margin-bottom: 0.6rem;">
+                                                            <input type="text" name="reason" placeholder="Audit justification" required style="width: 100%; padding: 0.35rem 0.5rem; border-radius: 6px; background: var(--bg-primary); color: #fff; border: 1px solid var(--border-subtle); font-size: 0.75rem;">
+                                                        </div>
+                                                        <button type="submit" class="btn btn-primary btn-sm" style="width: 100%; padding: 0.4rem; font-size: 0.75rem; border-radius: 6px;">Submit Adjustment</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+
+                                            <!-- CSRF-safe POST Enable / Disable Buttons -->
+                                            <form th:if="${u.enabled}" th:action="@{/admin/users/{id}/disable(id=${u.id})}" method="post" style="display: inline;">
+                                                <input type="hidden" name="redirect" value="/admin/dashboard">
+                                                <button type="submit" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">
+                                                    Disable
+                                                </button>
+                                            </form>
+                                            <form th:unless="${u.enabled}" th:action="@{/admin/users/{id}/enable(id=${u.id})}" method="post" style="display: inline;">
+                                                <input type="hidden" name="redirect" value="/admin/dashboard">
+                                                <button type="submit" class="btn btn-sm" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">
+                                                    Enable
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Platform Access, Endpoints & Conditional Credentials -->
+            <section class="double-bezel">
+                <div class="bezel-inner">
+                    <span class="micro-eyebrow emerald">
+                        <span>🔐</span> ACCESS ARCHITECTURE
+                    </span>
+                    <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 0.2rem; margin-bottom: 1rem;">
+                        Platform Access & Endpoints
+                    </h3>
+
+                    <!-- Canonical Administrator Account Details (Production & Dev Safe) -->
+                    <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Canonical Administrator
+                            </span>
+                            <span class="pill-badge pill-admin" style="font-size: 0.65rem;">ROLE_ADMIN</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.85rem; color: #34d399;">
+                            <span>●</span>
+                            <span>admin@agroloop.com</span>
+                        </div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem;">
+                            Authoritative system administrator provisioned by DataInitializer.
+                        </div>
+                    </div>
+
+                    <!-- Connection Endpoints & Gateways -->
+                    <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 0.75rem;">
+                            <span style="color: var(--text-secondary);">REST API Gateway</span>
+                            <code style="color: #60a5fa; font-size: 0.72rem;">/api/v1/admin/*</code>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 0.75rem;">
+                            <span style="color: var(--text-secondary);">Desktop Operations IPC</span>
+                            <span style="color: #34d399; font-weight: 600;">Keychain Supported</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 0.75rem;">
+                            <span style="color: var(--text-secondary);">Database pgAdmin Host</span>
+                            <code style="color: #fbbf24; font-size: 0.72rem;">:5055</code>
+                        </div>
+                    </div>
+
+                    <!-- Active Admin Accounts Dynamic Badge Roster -->
+                    <div style="margin-bottom: 1.25rem;">
+                        <span style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 0.4rem;">
+                            Active Platform Administrators
+                        </span>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                            <span th:each="adm : ${adminUsers}" class="pill-badge pill-admin" style="font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                                <span class="status-dot dot-green"></span>
+                                <span th:text="${adm.email}">admin@agroloop.com</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!--/* CONDITIONAL: Dev/Demo Credentials Card (Gated strictly on demoCredentials existence) */-->
+                    <div th:if="${demoCredentials != null}" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.72rem; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.06em;">
+                                🛠️ Development / Demo Credentials
+                            </span>
+                            <span class="pill-badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 0.6rem; padding: 0.1rem 0.4rem;">
+                                Local Only
+                            </span>
+                        </div>
+                        <p style="font-size: 0.72rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+                            Pre-seeded demo credentials for local evaluation. Passwords suppressed when <code>DEMO_MODE=false</code>.
+                        </p>
+                        <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.75rem; font-family: var(--font-mono);">
+                            <div style="display: flex; justify-content: space-between; padding: 0.35rem 0.5rem; background: rgba(0,0,0,0.25); border-radius: 6px;">
+                                <span style="color: #c4b5fd;">🛡️ Admin:</span>
+                                <span style="color: #fff;"><span th:text="${demoCredentials.adminEmail}">admin@agroloop.com</span> / <span th:text="${demoCredentials.adminPassword}">admin123</span></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.35rem 0.5rem; background: rgba(0,0,0,0.25); border-radius: 6px;">
+                                <span style="color: #7dd3fc;">🏡 Household:</span>
+                                <span style="color: #fff;"><span th:text="${demoCredentials.householdEmail}">household@agroloop.com</span> / <span th:text="${demoCredentials.householdPassword}">household123</span></span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.35rem 0.5rem; background: rgba(0,0,0,0.25); border-radius: 6px;">
+                                <span style="color: #6ee7b7;">🚜 Farmer:</span>
+                                <span style="color: #fff;"><span th:text="${demoCredentials.farmerEmail}">farmer@agroloop.com</span> / <span th:text="${demoCredentials.farmerPassword}">farmer123</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Lower Section (50/50 Split): Farmer Moderation & Solvency Audit -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; margin-bottom: 2rem; align-items: start;">
+            
+            <!-- Lower Left: Farmer Conversion Moderation Queue -->
+            <section class="double-bezel">
+                <div class="bezel-inner">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <span class="micro-eyebrow emerald">
+                                <span>🚜</span> ONBOARDING MODERATION
+                            </span>
+                            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-top: 0.2rem;">
+                                Farmer Applications Queue
+                            </h3>
+                        </div>
+                        <span class="pill-badge pill-farmer" style="font-size: 0.72rem;" th:text="${pendingApplications != null ? #lists.size(pendingApplications) + ' Pending' : '0 Pending'}">
+                            0 Pending
+                        </span>
+                    </div>
+
+                    <div th:if="${pendingApplications != null and !pendingApplications.isEmpty()}">
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.68rem;">
+                                        <th style="padding: 0.5rem;">Applicant</th>
+                                        <th style="padding: 0.5rem;">Farm Name</th>
+                                        <th style="padding: 0.5rem; text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="app : ${pendingApplications}" style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                        <td style="padding: 0.65rem 0.5rem;">
+                                            <div style="font-weight: 700; color: #fff;" th:text="${app.user.name}">Applicant</div>
+                                            <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary);" th:text="${app.user.email}">email@example.com</div>
+                                        </td>
+                                        <td style="padding: 0.65rem 0.5rem; color: #34d399; font-weight: 600;" th:text="${app.farmName}">Green Acres</td>
+                                        <td style="padding: 0.65rem 0.5rem; text-align: right;">
+                                            <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
+                                                <form th:action="@{/admin/applications/{id}/approve(id=${app.id})}" method="post" style="display: inline;">
+                                                    <button type="submit" class="btn btn-primary btn-sm" style="background: #10b981; border: none; padding: 0.3rem 0.6rem; font-size: 0.72rem; border-radius: 6px;">Approve</button>
+                                                </form>
+                                                <form th:action="@{/admin/applications/{id}/reject(id=${app.id})}" method="post" style="display: inline;">
+                                                    <input type="hidden" name="reason" value="Application details could not be verified.">
+                                                    <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.3); padding: 0.3rem 0.6rem; font-size: 0.72rem; border-radius: 6px;">Reject</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div th:if="${pendingApplications == null or pendingApplications.isEmpty()}" style="text-align: center; padding: 2rem 1rem; color: var(--text-secondary);">
+                        <div style="font-size: 2rem; margin-bottom: 0.3rem;">🎉</div>
+                        <p style="font-weight: 700; color: #fff; font-size: 0.85rem;">Queue is clear</p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">No pending farmer conversion requests requiring administrative review.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lower Right: Solvency & Double-Entry Invariant Audit -->
+            <section class="double-bezel">
+                <div class="bezel-inner">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <span class="micro-eyebrow blue">
+                                <span>⚖️</span> DOUBLE-ENTRY RECONCILIATION
+                            </span>
+                            <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-top: 0.2rem;">
+                                Platform Solvency Audit <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">(Tier-2 EcoToken Solvency Invariant)</span>
+                            </h3>
+                        </div>
+                        <a th:href="@{/admin/ledger}" class="btn btn-outline btn-sm" style="border-radius: 8px; font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+                            Ledger ➔
+                        </a>
+                    </div>
+
+                    <div th:if="${solvencyMetrics != null}" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem;">
+                            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Total Household Wallets</div>
+                            <div style="font-size: 1.2rem; font-weight: 700; color: #60a5fa; font-family: var(--font-mono);" th:text="${solvencyMetrics.totalHouseholdBalances + ' tokens'}">0.00 tokens</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem;">
+                            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Expected Ledger Invariant</div>
+                            <div style="font-size: 1.2rem; font-weight: 700; color: #fff; font-family: var(--font-mono);" th:text="${solvencyMetrics.expectedBalance + ' tokens'}">0.00 tokens</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem;">
+                            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Historical Minted Credits</div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: #34d399; font-family: var(--font-mono);" th:text="${'+' + solvencyMetrics.totalCredits}">+0.00</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem;">
+                            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Historical Spent Debits</div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: #f87171; font-family: var(--font-mono);" th:text="${'-' + solvencyMetrics.totalDebits}">-0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Invariant Formula Bar -->
+                    <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 0.75rem; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                        <span>Invariant: Σ(Credits) - Σ(Debits) == Σ(Wallets)</span>
+                        <span th:if="${solvencyMetrics != null and solvencyMetrics.solvent}" style="color: #34d399; font-weight: 700;">✓ Invariant Holds</span>
+                        <span th:unless="${solvencyMetrics != null and solvencyMetrics.solvent}" style="color: #f87171; font-weight: 700;">⚠️ Invariant Violated</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Full-Width Bottom Section: Disputed & Bounded Recent Orders -->
+        <section class="double-bezel">
+            <div class="bezel-inner">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <span class="micro-eyebrow amber">
+                            <span>📦</span> COMMERCE AUDIT & ADJUDICATION
+                        </span>
+                        <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin-top: 0.2rem;">
+                            Marketplace Orders & Dispute Resolution
+                        </h3>
+                    </div>
+                    <a th:href="@{/admin/orders}" class="btn btn-outline btn-sm" style="border-radius: 8px; font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+                        View All Orders Queue ➔
+                    </a>
+                </div>
+
+                <!-- Active Disputed Orders (Priority) -->
+                <div th:if="${disputedOrders != null and !disputedOrders.isEmpty()}" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <span class="pill-badge pill-disabled" style="font-size: 0.7rem;">ACTION REQUIRED</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #fff;">Orders Flagged for Adjudication</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem;">
+                                    <th style="padding: 0.6rem;">Order ID</th>
+                                    <th style="padding: 0.6rem;">Household</th>
+                                    <th style="padding: 0.6rem;">Amount</th>
+                                    <th style="padding: 0.6rem;">Dispute Reason</th>
+                                    <th style="padding: 0.6rem; text-align: right;">Adjudicate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="order : ${disputedOrders}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(239, 68, 68, 0.04);">
+                                    <td style="padding: 0.75rem 0.6rem; font-family: var(--font-mono); color: #fff; font-weight: 700;" th:text="'#' + ${order.id}">#101</td>
+                                    <td style="padding: 0.75rem 0.6rem;" th:text="${order.household.name}">Jane Doe</td>
+                                    <td style="padding: 0.75rem 0.6rem; font-family: var(--font-mono); color: #fbbf24; font-weight: 700;" th:text="${order.totalTokens + ' 🪙'}">25.00 🪙</td>
+                                    <td style="padding: 0.75rem 0.6rem; color: #f87171;" th:text="${order.disputeReason != null ? order.disputeReason : 'Dispute raised by participant'}">Reason</td>
+                                    <td style="padding: 0.75rem 0.6rem; text-align: right;">
+                                        <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
+                                            <form th:action="@{/admin/orders/{id}/resolve-dispute(id=${order.id})}" method="post" style="display: inline;">
+                                                <input type="hidden" name="resolution" value="APPROVED_REFUND">
+                                                <input type="hidden" name="resolutionNotes" value="Adjudicated via Admin Operations Command Center">
+                                                <button type="submit" class="btn btn-sm" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">
+                                                    Approve Refund
+                                                </button>
+                                            </form>
+                                            <form th:action="@{/admin/orders/{id}/resolve-dispute(id=${order.id})}" method="post" style="display: inline;">
+                                                <input type="hidden" name="resolution" value="DISMISSED">
+                                                <input type="hidden" name="resolutionNotes" value="Dismissed via Admin Operations Command Center">
+                                                <button type="submit" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.25rem 0.55rem; font-size: 0.72rem; border-radius: 6px;">
+                                                    Dismiss
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bounded Recent Orders -->
                 <div>
-                    <span class="section-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">Moderation Queue</span>
-                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-top: 0.3rem;">🚜 Farmer Conversion Applications</h3>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.6rem;">
+                        Latest Marketplace Orders (Bounded)
+                    </span>
+                    <div th:if="${recentOrders != null and !recentOrders.isEmpty()}">
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem;">
+                                        <th style="padding: 0.5rem 0.6rem;">Order</th>
+                                        <th style="padding: 0.5rem 0.6rem;">Household</th>
+                                        <th style="padding: 0.5rem 0.6rem;">Items</th>
+                                        <th style="padding: 0.5rem 0.6rem;">Tokens</th>
+                                        <th style="padding: 0.5rem 0.6rem;">Status</th>
+                                        <th style="padding: 0.5rem 0.6rem; text-align: right;">Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="ord : ${recentOrders}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.03);">
+                                        <td style="padding: 0.6rem; font-family: var(--font-mono); color: #fff;" th:text="'#' + ${ord.id}">#1</td>
+                                        <td style="padding: 0.6rem;" th:text="${ord.household.name}">Household</td>
+                                        <td style="padding: 0.6rem; color: var(--text-secondary);" th:text="${#lists.size(ord.items) + ' items'}">1 items</td>
+                                        <td style="padding: 0.6rem; font-family: var(--font-mono); color: #60a5fa; font-weight: 600;" th:text="${ord.totalTokens + ' 🪙'}">10.00 🪙</td>
+                                        <td style="padding: 0.6rem;">
+                                            <span class="pill-badge" 
+                                                  th:classappend="${ord.status.name() == 'COMPLETED' ? 'pill-active' : (ord.status.name() == 'DISPUTED' ? 'pill-disabled' : 'pill-household')}"
+                                                  th:text="${ord.status.name()}" style="font-size: 0.68rem; padding: 0.15rem 0.5rem;">
+                                                PLACED
+                                            </span>
+                                        </td>
+                                        <td style="padding: 0.6rem; text-align: right; color: var(--text-muted); font-size: 0.72rem;" th:text="${#temporals.format(ord.createdAt, 'yyyy-MM-dd HH:mm')}">
+                                            2026-09-22 10:00
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div th:if="${recentOrders == null or recentOrders.isEmpty()}" style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+                        No orders recorded on the platform yet.
+                    </div>
                 </div>
-                <span class="badge phase-badge" th:text="${pendingApplications != null ? #lists.size(pendingApplications) + ' Pending' : '0 Pending'}">0 Pending</span>
             </div>
-
-            <div th:if="${pendingApplications != null and !pendingApplications.isEmpty()}">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">
-                                <th style="padding: 0.8rem 1rem;">Applicant</th>
-                                <th style="padding: 0.8rem 1rem;">Farm Name</th>
-                                <th style="padding: 0.8rem 1rem;">Farm Address</th>
-                                <th style="padding: 0.8rem 1rem;">Notes</th>
-                                <th style="padding: 0.8rem 1rem;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="app : ${pendingApplications}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                <td style="padding: 1rem;">
-                                    <div style="font-weight: 700; color: #fff;" th:text="${app.user.name}">John Doe</div>
-                                    <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary);" th:text="${app.user.email}">john@example.com</div>
-                                </td>
-                                <td style="padding: 1rem; font-weight: 600; color: #34d399;" th:text="${app.farmName}">Green Acres</td>
-                                <td style="padding: 1rem; color: var(--text-secondary);" th:text="${app.farmAddress}">Plot 14, Agri Zone</td>
-                                <td style="padding: 1rem; color: var(--text-muted); max-width: 250px;" th:text="${app.notes != null ? app.notes : '—'}">No notes</td>
-                                <td style="padding: 1rem;">
-                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                        <form th:action="@{/admin/applications/{id}/approve(id=${app.id})}" method="post" style="display: inline;">
-                                            <button type="submit" class="btn btn-primary btn-sm" style="background: #10b981; border: none; padding: 0.45rem 0.8rem; font-size: 0.8rem;">Approve</button>
-                                        </form>
-                                        <form th:action="@{/admin/applications/{id}/reject(id=${app.id})}" method="post" style="display: inline;">
-                                            <input type="hidden" name="reason" value="Application details could not be verified.">
-                                            <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); padding: 0.45rem 0.8rem; font-size: 0.8rem;">Reject</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div th:if="${pendingApplications == null or pendingApplications.isEmpty()}" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary);">
-                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
-                <p style="font-weight: 600; color: #fff;">Queue is clear!</p>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">No pending farmer conversion requests requiring administrative review.</p>
-            </div>
-        </div>
-
-        <div class="system-status-card">
-            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">Administrator Capabilities</h3>
-            <ul class="card-features">
-                <li>User management & account status moderation (Enabled / Disabled)</li>
-                <li>Waste category taxonomy & EcoToken reward multipliers</li>
-                <li>Dispute resolution for collected & verified pickups</li>
-                <li>System-wide circular economy metrics & transaction ledger audit</li>
-            </ul>
-        </div>
+        </section>
     </main>
 
+    <script>
+        function filterUsers() {
+            const query = document.getElementById('userDirectorySearch').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-row');
+            rows.forEach(row => {
+                const name = row.querySelector('.user-name')?.innerText.toLowerCase() || '';
+                const email = row.querySelector('.user-email')?.innerText.toLowerCase() || '';
+                if (name.includes(query) || email.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleAdjustPopover(userId) {
+            const popover = document.getElementById('adjust-popover-' + userId);
+            if (!popover) return;
+            const isVisible = popover.style.display === 'block';
+            document.querySelectorAll('.adjust-popover').forEach(p => p.style.display = 'none');
+            popover.style.display = isVisible ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.adjust-popover') && !e.target.closest('button[onclick*="toggleAdjustPopover"]')) {
+                document.querySelectorAll('.adjust-popover').forEach(p => p.style.display = 'none');
+            }
+        });
+    </script>
 </body>
 </html>

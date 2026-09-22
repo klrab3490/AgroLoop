@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { CartDrawer } from "./cart-drawer";
@@ -12,6 +13,9 @@ export function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const backendOrigin = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  const adminDashboardUrl = `${backendOrigin.replace(/\/+$/, "")}/admin/dashboard`;
+
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
@@ -20,9 +24,14 @@ export function Navbar() {
             {/* Logo */}
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg font-bold shadow-sm shadow-emerald-200 group-hover:scale-105 transition-transform">
-                  🌿
-                </div>
+                <Image
+                  src="/logo.png"
+                  alt="AgroLoop Logo"
+                  width={36}
+                  height={36}
+                  priority
+                  className="w-9 h-9 rounded-xl object-contain shadow-sm shadow-emerald-200 group-hover:scale-105 transition-transform"
+                />
                 <div>
                   <span className="font-extrabold text-lg text-slate-900 tracking-tight">AgroLoop</span>
                   <span className="hidden sm:inline-block ml-2 text-3xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
@@ -73,6 +82,16 @@ export function Navbar() {
                       Sales
                     </Link>
                   </>
+                )}
+
+                {user?.role === "ROLE_ADMIN" && (
+                  <a
+                    href={adminDashboardUrl}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition shadow-sm"
+                  >
+                    <span>🛡️</span>
+                    <span>Admin Portal</span>
+                  </a>
                 )}
               </nav>
             </div>
@@ -217,6 +236,15 @@ export function Navbar() {
                     Sales Orders
                   </Link>
                 </>
+              )}
+              {user?.role === "ROLE_ADMIN" && (
+                <a
+                  href={adminDashboardUrl}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-md text-sm font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                >
+                  🛡️ Admin Portal
+                </a>
               )}
             </div>
           )}

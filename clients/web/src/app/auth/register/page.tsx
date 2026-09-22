@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
@@ -34,7 +35,16 @@ export default function RegisterPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
         <div className="text-center space-y-1">
-          <div className="inline-block p-3 rounded-2xl bg-emerald-50 text-2xl mb-2">🌱</div>
+          <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-emerald-50 mb-2">
+            <Image
+              src="/logo.png"
+              alt="AgroLoop Logo"
+              width={44}
+              height={44}
+              priority
+              className="w-11 h-11 object-contain"
+            />
+          </div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">Join the Circular Mission</h2>
           <p className="text-xs text-slate-500">Register as a Household composter to earn EcoTokens</p>
         </div>

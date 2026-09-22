@@ -1,11 +1,13 @@
 package com.agroloop.controller.web;
 
+import com.agroloop.dto.DemoCredentials;
 import com.agroloop.dto.SolvencyMetricsDto;
 import com.agroloop.model.DisputeResolution;
 import com.agroloop.model.EcoTokenTransaction;
 import com.agroloop.model.FarmerApplication;
 import com.agroloop.model.Order;
 import com.agroloop.model.OrderStatus;
+import com.agroloop.model.Role;
 import com.agroloop.model.TransactionDirection;
 import com.agroloop.model.User;
 import com.agroloop.repository.FarmerRepository;
@@ -15,6 +17,7 @@ import com.agroloop.repository.UserRepository;
 import com.agroloop.service.AdminGovernanceService;
 import com.agroloop.service.MarketplaceService;
 import com.agroloop.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,6 +41,9 @@ import java.util.Objects;
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
+
+    @Value("${agroloop.demo-mode:true}")
+    private boolean demoMode;
 
     private final AdminGovernanceService adminGovernanceService;
     private final UserService userService;
@@ -74,6 +80,12 @@ public class AdminController {
         List<FarmerApplication> pendingApps = userService.getPendingFarmerApplications();
         SolvencyMetricsDto solvencyMetrics = adminGovernanceService.getPlatformSolvencyMetrics();
         List<Order> disputedOrders = adminGovernanceService.getDisputedOrders();
+        List<Order> recentOrders = adminGovernanceService.getRecentOrders(15);
+        List<User> users = userRepository.findAllByOrderByCreatedAtDesc();
+        List<User> adminUsers = users.stream().filter(u -> u.getRole() == Role.ROLE_ADMIN).toList();
+        BigDecimal totalTokensInCirculation = (solvencyMetrics != null && solvencyMetrics.getTotalHouseholdBalances() != null)
+                ? solvencyMetrics.getTotalHouseholdBalances()
+                : BigDecimal.ZERO;
 
         model.addAttribute("user", admin);
         model.addAttribute("totalUsers", userRepository.count());
@@ -83,6 +95,19 @@ public class AdminController {
         model.addAttribute("disputedOrdersCount", disputedOrders.size());
         model.addAttribute("pendingApplications", pendingApps);
         model.addAttribute("solvencyMetrics", solvencyMetrics);
+        model.addAttribute("users", users);
+        model.addAttribute("directions", TransactionDirection.values());
+        model.addAttribute("recentOrders", recentOrders);
+        model.addAttribute("disputedOrders", disputedOrders);
+        model.addAttribute("adminUsers", adminUsers);
+        model.addAttribute("totalTokensInCirculation", totalTokensInCirculation);
+        model.addAttribute("demoMode", demoMode);
+
+        // Security Invariant: Demo credentials object is strictly added ONLY when demoMode is true
+        if (demoMode) {
+            model.addAttribute("demoCredentials", DemoCredentials.createDefault(null));
+        }
+
         return "dashboard/admin";
     }
 
@@ -126,6 +151,10 @@ public class AdminController {
         List<User> users = userRepository.findAllByOrderByCreatedAtDesc();
         model.addAttribute("users", users);
         model.addAttribute("directions", TransactionDirection.values());
+        model.addAttribute("demoMode", demoMode);
+        if (demoMode) {
+            model.addAttribute("demoCredentials", DemoCredentials.createDefault(null));
+        }
         return "admin/users";
     }
 
@@ -135,6 +164,7 @@ public class AdminController {
     @PostMapping("/users/{id}/enable")
     public String enableUser(
             @PathVariable("id") Long id,
+            @RequestParam(value = "redirect", required = false) String redirectUrl,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
@@ -144,7 +174,7 @@ public class AdminController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to enable user: " + ex.getMessage());
         }
-        return "redirect:/admin/users";
+        return (redirectUrl != null && !redirectUrl.isBlank()) ? "redirect:" + redirectUrl : "redirect:/admin/users";
     }
 
     /**
@@ -153,6 +183,7 @@ public class AdminController {
     @PostMapping("/users/{id}/disable")
     public String disableUser(
             @PathVariable("id") Long id,
+            @RequestParam(value = "redirect", required = false) String redirectUrl,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
@@ -164,7 +195,7 @@ public class AdminController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to disable user: " + ex.getMessage());
         }
-        return "redirect:/admin/users";
+        return (redirectUrl != null && !redirectUrl.isBlank()) ? "redirect:" + redirectUrl : "redirect:/admin/users";
     }
 
     /**
@@ -176,6 +207,7 @@ public class AdminController {
             @RequestParam("amount") BigDecimal amount,
             @RequestParam("direction") TransactionDirection direction,
             @RequestParam("reason") String reason,
+            @RequestParam(value = "redirect", required = false) String redirectUrl,
             Authentication authentication,
             RedirectAttributes redirectAttributes
     ) {
@@ -186,7 +218,7 @@ public class AdminController {
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to adjust tokens: " + ex.getMessage());
         }
-        return "redirect:/admin/users";
+        return (redirectUrl != null && !redirectUrl.isBlank()) ? "redirect:" + redirectUrl : "redirect:/admin/users";
     }
 
     /**

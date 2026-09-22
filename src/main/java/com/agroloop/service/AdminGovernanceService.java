@@ -28,6 +28,8 @@ public interface AdminGovernanceService {
 
     List<Order> getAllOrders(OrderStatus statusFilter);
 
+    List<Order> getRecentOrders(int limit);
+
     List<Order> getDisputedOrders();
 
     Page<EcoTokenTransaction> getPlatformLedger(Pageable pageable);

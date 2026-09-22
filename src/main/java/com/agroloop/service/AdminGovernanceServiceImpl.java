@@ -15,7 +15,9 @@ import com.agroloop.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -151,6 +153,12 @@ public class AdminGovernanceServiceImpl implements AdminGovernanceService {
             return orderRepository.findByStatusOrderByCreatedAtDesc(statusFilter);
         }
         return orderRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Override
+    public List<Order> getRecentOrders(int limit) {
+        int boundedLimit = Math.max(1, Math.min(limit, 100));
+        return orderRepository.findAll(PageRequest.of(0, boundedLimit, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent();
     }
 
     @Override

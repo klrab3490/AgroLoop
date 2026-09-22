@@ -1,35 +1,68 @@
 # AgroLoop — Comprehensive Developer & Integration Hub
 
-Welcome to the **AgroLoop Developer Documentation Hub**. This central directory serves as the single source of truth for the project's architecture, object-oriented design standards, onboarding tutorials for freshers, and dedicated deep-dive documentation for every feature and integration.
+Welcome to the **AgroLoop Developer Documentation Hub**. This central directory serves as the definitive single source of truth for the project's architecture, object-oriented design standards, onboarding tutorials for freshers, exhaustive repository catalog, and dedicated deep-dive documentation for every feature, API, and cross-platform client in the ecosystem.
 
 ---
 
 ## Quick Navigation
 
-- [Freshers Onboarding & Installation Guide](#1-freshers-onboarding--installation-guide)
-  - [Installing Java (JDK 21+)](#step-1-installing-java-jdk-21)
-  - [Installing Docker & Docker Compose](#step-2-installing-docker--docker-compose)
-  - [Starting the Project Locally](#step-3-starting-the-project-locally)
-- [Object-Oriented Architecture Master Guide](#2-object-oriented-architecture-master-guide)
+- [1. Freshers Onboarding & Installation Guide](#1-freshers-onboarding--installation-guide)
+  - [Prerequisites Checklist](#prerequisites-checklist)
+  - [Step 1: Installing Java (JDK 21+)](#step-1-installing-java-jdk-21)
+  - [Step 2: Installing Docker & Docker Compose](#step-2-installing-docker--docker-compose)
+  - [Step 3: Installing Node.js & pnpm (Multi-Client Monorepo)](#step-3-installing-nodejs--pnpm-multi-client-monorepo)
+  - [Step 4: Starting the Project Locally](#step-4-starting-the-project-locally)
+    - [Option A: Local JVM + Docker PostgreSQL (Recommended for Backend Dev)](#option-a-run-postgresql-in-docker--app-on-local-jvm-recommended-for-fast-development)
+    - [Option B: Full Docker Stack (App + Database Containerized)](#option-b-run-full-docker-stack-app--database-containerized)
+    - [Option C: Postgres-Free Local Docker Stack (Host PostgreSQL)](#option-c-run-postgres-free-local-docker-stack-connect-to-host-postgresql)
+    - [Option D: Modern Multi-Client Workspace (Web, Mobile & Desktop)](#option-d-running-the-modern-multi-client-monorepo-web-mobile-and-desktop)
+  - [Step 5: Default Credentials Reference](#step-5-default-credentials-reference)
+- [2. Object-Oriented Architecture Master Guide](#2-object-oriented-architecture-master-guide)
   - [The Four Pillars in AgroLoop](#the-four-pillars-in-agroloop)
-  - [UML Class Diagram](#uml-class-diagram)
-- [Dedicated Integration Modules](#3-dedicated-integration-modules)
-- [Git & Release Strategy](#4-git--release-strategy)
+  - [Master UML Class Diagram](#master-uml-class-diagram)
+- [3. End-to-End System Architecture & Data Flow Mapping](#3-end-to-end-system-architecture--data-flow-mapping)
+  - [Full Multi-Tier Ecosystem Architecture](#full-multi-tier-ecosystem-architecture)
+  - [Core Architectural Workflows & Sequence Diagrams](#core-architectural-workflows--sequence-diagrams)
+    - [Workflow 1: Public Registration & Farmer Role Conversion](#workflow-1-public-registration--farmer-role-conversion)
+    - [Workflow 2: Ephemeral Server-Authoritative QR Pickup Handshake](#workflow-2-ephemeral-server-authoritative-qr-pickup-handshake)
+    - [Workflow 3: Deterministic Dual-Phase Marketplace Checkout & Atomic Refunds](#workflow-3-deterministic-dual-phase-marketplace-checkout--atomic-refunds)
+- [4. Master Repository File Structure & Function Catalog](#4-master-repository-file-structure--function-catalog)
+  - [4.1 Build, Infrastructure & Automation](#41-build-infrastructure--automation)
+  - [4.2 Backend Entrypoint & Spring Configuration](#42-backend-entrypoint--spring-configuration)
+  - [4.3 Security, Authentication & Infrastructure Services](#43-security-authentication--infrastructure-services)
+  - [4.4 Domain Models & Enums (JPA Entities & Value Objects)](#44-domain-models--enums-jpa-entities--value-objects)
+  - [4.5 Spring Data JPA Repositories](#45-spring-data-jpa-repositories)
+  - [4.6 Domain Service Interfaces & Business Logic](#46-domain-service-interfaces--business-logic)
+  - [4.7 REST API v1 Controllers & Error Handling](#47-rest-api-v1-controllers--error-handling)
+  - [4.8 Web (Thymeleaf) Controllers](#48-web-thymeleaf-controllers)
+  - [4.9 Flyway Database Migrations](#49-flyway-database-migrations)
+  - [4.10 Thymeleaf UI Views & Static Assets](#410-thymeleaf-ui-views--static-assets)
+  - [4.11 Multi-Client Monorepo: Core Config & Shared Packages](#411-multi-client-monorepo-core-config--shared-packages)
+  - [4.12 Multi-Client Monorepo: Next.js 15 Web Portal (`@agroloop/web`)](#412-multi-client-monorepo-nextjs-15-web-portal-agroloopweb)
+  - [4.13 Multi-Client Monorepo: React Native / Expo Mobile App (`@agroloop/mobile`)](#413-multi-client-monorepo-react-native--expo-mobile-app-agroloopmobile)
+  - [4.14 Multi-Client Monorepo: Tauri v2 Desktop Operations Console (`@agroloop/desktop`)](#414-multi-client-monorepo-tauri-v2-desktop-operations-console-agroloopdesktop)
+  - [4.15 Backend Test Suites & Quality Verification](#415-backend-test-suites--quality-verification)
+  - [4.16 Frontend & Cross-Platform Client Test Suites](#416-frontend--cross-platform-client-test-suites)
+- [5. Dedicated Integration Modules](#5-dedicated-integration-modules)
+- [6. Git & Pull Request (PR) Workflow](#6-git--pull-request-pr-workflow)
 
 ---
 
 ## 1. Freshers Onboarding & Installation Guide
 
-This section helps you get up and running on your local machine (macOS or Windows) from scratch.
+This section helps you get up and running on your local machine (macOS, Linux, or Windows) from a clean clone.
 
 ### Prerequisites Checklist
 
-| Component | Minimum Version | Recommended Version |
-| :--- | :--- | :--- |
-| **Java JDK** | Java 21 | Eclipse Temurin 21 or 26 |
-| **Build Tool** | Maven 3.9+ | Included via `./mvnw` wrapper |
-| **Docker Desktop** | Docker 24+ / Compose v2 | Docker Desktop latest |
-| **Git** | Git 2.30+ | Latest |
+| Component | Minimum Version | Recommended Version | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Java JDK** | Java 21 | Eclipse Temurin 21 or 26 | Backend runtime & Spring Boot execution |
+| **Build Tool** | Maven 3.9+ | Included via `./mvnw` wrapper | Backend dependency resolution & compilation |
+| **Docker Desktop** | Docker 24+ / Compose v2 | Docker Desktop latest | Local PostgreSQL & full-stack containerization |
+| **Node.js** | Node.js 20+ LTS | Node.js 22 LTS | Next.js Web, Expo Mobile, & Monorepo tooling |
+| **pnpm** | pnpm 9+ | pnpm 9.12+ | Fast workspace package manager for `clients/` |
+| **Rust & Cargo** | 1.77+ | Latest stable | Building Tauri v2 Desktop Operations Console |
+| **Git** | Git 2.30+ | Latest | Version control & branch management |
 
 ---
 
@@ -54,9 +87,7 @@ Using `winget` in Command Prompt / PowerShell:
 ```cmd
 winget install EclipseAdoptium.Temurin.21.JDK
 ```
-*Manual Download:* Visit [Adoptium Temurin Releases](https://adoptium.net/temurin/releases/?version=21), select **Windows x64**, download the `.msi` installer, ensure the checkbox **"Set JAVA_HOME variable"** is checked during installation, and restart your terminal.
-
-Verify installation:
+*Manual Download:* Visit [Adoptium Temurin Releases](https://adoptium.net/temurin/releases/?version=21), select **Windows x64**, download the `.msi` installer, ensure the checkbox **"Set JAVA_HOME variable"** is checked during installation, and restart your terminal. Verify:
 ```cmd
 java -version
 ```
@@ -65,7 +96,7 @@ java -version
 
 ### Step 2: Installing Docker & Docker Compose
 
-Docker runs PostgreSQL and (optionally) containerizes the entire AgroLoop application.
+Docker runs PostgreSQL and optionally containerizes the entire AgroLoop multi-tier stack.
 
 #### On macOS:
 1. Download **Docker Desktop for Mac**: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) (choose Apple Silicon or Intel chip).
@@ -81,9 +112,8 @@ Docker runs PostgreSQL and (optionally) containerizes the entire AgroLoop applic
    ```cmd
    wsl --install
    ```
-2. Download **Docker Desktop for Windows**: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/).
-3. Run the installer and ensure **"Use WSL 2 instead of Hyper-V"** is checked.
-4. Restart your PC, launch Docker Desktop, and verify:
+2. Download and run **Docker Desktop for Windows**: [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) (ensure **"Use WSL 2 instead of Hyper-V"** is checked).
+3. Restart your PC, launch Docker Desktop, and verify:
    ```cmd
    docker --version
    docker compose version
@@ -91,7 +121,26 @@ Docker runs PostgreSQL and (optionally) containerizes the entire AgroLoop applic
 
 ---
 
-### Step 3: Starting the Project Locally
+### Step 3: Installing Node.js & pnpm (Multi-Client Monorepo)
+
+To build or develop the Next.js Web Portal, Expo React Native mobile client, or Tauri desktop console:
+
+1. **Install Node.js 20+**:
+   - macOS: `brew install node`
+   - Windows: `winget install OpenJS.NodeJS.LTS`
+2. **Install pnpm**:
+   ```bash
+   npm install -g pnpm
+   ```
+3. **Verify versions**:
+   ```bash
+   node -v
+   pnpm -v
+   ```
+
+---
+
+### Step 4: Starting the Project Locally
 
 Clone the repository and enter the directory:
 ```bash
@@ -106,7 +155,7 @@ cd AgroLoop
    ```
    *(Default connection: `postgresql://postgres:7200@localhost:5432/agroloop`)*
 
-2. **Run the Application**:
+2. **Run the Spring Boot Backend**:
    - **macOS / Linux:**
      ```bash
      ./run.sh
@@ -119,14 +168,14 @@ cd AgroLoop
      ```
 
 3. **Open in Browser**:
-   Navigate to [http://localhost:8080](http://localhost:8080).
+   Navigate to [http://localhost:8080](http://localhost:8080) for the server-rendered portal, or access the Swagger UI at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
 
 #### Option B: Run Full Docker Stack (App + Database Containerized)
 ```bash
 docker compose up --build -d
 ```
-Logs: `docker compose logs -f app`  
-Stop: `docker compose down`
+- Logs: `docker compose logs -f app`
+- Stop: `docker compose down`
 
 #### Option C: Run Postgres-Free Local Docker Stack (Connect to Host PostgreSQL)
 If you already have PostgreSQL installed and running natively on your machine:
@@ -134,18 +183,44 @@ If you already have PostgreSQL installed and running natively on your machine:
 docker compose -f docker-compose.local.yml up --build -d
 ```
 This builds and starts the Spring Boot backend (`app`) and Next.js frontend (`web`) without spinning up a PostgreSQL container, securely routing database traffic to your host machine via `host.docker.internal:5432`.
-Logs: `docker compose -f docker-compose.local.yml logs -f app`  
-Stop: `docker compose -f docker-compose.local.yml down`
+
+#### Option D: Running the Modern Multi-Client Monorepo (Web, Mobile, and Desktop)
+The `clients/` directory contains a high-performance Turborepo monorepo:
+
+1. **Install Monorepo Dependencies & Build Shared Packages**:
+   ```bash
+   cd clients
+   pnpm install
+   pnpm build
+   ```
+
+2. **Run Next.js 15 Web Portal (`@agroloop/web`)**:
+   ```bash
+   pnpm --filter @agroloop/web dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000). Features server-side single-flight token refresh, HttpOnly cookies, and dynamic role routing.
+
+3. **Run React Native / Expo Mobile App (`@agroloop/mobile`)**:
+   ```bash
+   pnpm --filter @agroloop/mobile start
+   ```
+   Press `i` for iOS Simulator, `a` for Android Emulator, or scan the QR with Expo Go on a physical device.
+
+4. **Run Tauri v2 Desktop Operations Console (`@agroloop/desktop`)**:
+   ```bash
+   pnpm --filter @agroloop/desktop tauri dev
+   ```
+   Launches the native desktop management app with live Tier-1/Tier-2 solvency auditing, user governance, and fleet dispatch.
 
 ---
 
-### Step 4: Default Credentials Reference
+### Step 5: Default Credentials Reference
 
 | Service / Role | Username / Email | Password | Port / URL | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | **PostgreSQL Database** | `postgres` | `7200` | `localhost:5432` / `agroloop` | Pre-configured in `.env` & Docker |
 | **pgAdmin (Optional)** | `admin@agroloop.local` | `admin` | `http://localhost:5055` | Run with `--profile tools` |
-| **App: Admin (Seeded)** | `admin@agroloop.com` | `admin123` | `http://localhost:8080/login` | Full system administration |
+| **App: Admin (Seeded)** | `admin@agroloop.com` | `admin123` | `http://localhost:8080/login` | Full system administration & solvency |
 | **App: Household (Demo)** | `household@agroloop.com` | `household123` | `http://localhost:8080/login` | Waste submission & token spending |
 | **App: Farmer (Demo)** | `farmer@agroloop.com` | `farmer123` | `http://localhost:8080/login` | Pickup verification & marketplace |
 
@@ -153,101 +228,177 @@ Stop: `docker compose -f docker-compose.local.yml down`
 
 ## 2. Object-Oriented Architecture Master Guide
 
-AgroLoop is strictly designed around Object-Oriented Programming (OOP) principles. Domain classes are responsible for their internal state and business validation.
+AgroLoop is strictly architected around Object-Oriented Programming (OOP) principles. Domain classes are self-encapsulated aggregates responsible for their internal state, business invariants, and validation.
 
 ### The Four Pillars in AgroLoop
 
 1. **Encapsulation:**
    - All entity attributes use `private` access modifiers.
-   - Raw public setters are prohibited for sensitive state (`passwordHash`, `tokenBalance`, operational statuses).
-   - Mutations occur exclusively through business domain methods (e.g. `addTokens()`, `spendTokens()`, `accept()`, `verifyWaste()`).
+   - Raw public setters are strictly prohibited for sensitive state (`passwordHash`, `tokenBalance`, `status`, `balanceAfter`).
+   - State mutations occur exclusively through expressive domain methods (e.g. `Household.addTokens()`, `Household.spendTokens()`, `Product.deductStock()`, `Product.restock()`, `PickupRequest.accept()`, `PickupHandshake.consume()`, `Order.markCompleted()`, `Order.markRefunded()`).
+   - Immutable financial ledgers (`EcoTokenTransaction`) enforce database-level physical immutability triggers (`BEFORE UPDATE OR DELETE RAISE EXCEPTION`).
 
 2. **Inheritance:**
    - A polymorphic `User` abstract parent class mapped with `@Inheritance(strategy = InheritanceType.JOINED)`.
-   - Common identity, credentials, and role management live in `User`.
+   - Common identity, credentials, timestamps, and security authorities live in `User`.
    - Concrete subclasses (`Household`, `Farmer`, `Admin`) extend `User` and map to joined database tables (`households`, `farmers`, `admins`).
 
 3. **Polymorphism:**
-   - Extensible interfaces decouple business rules from implementations (e.g. `TokenCalculator`, `WasteMatcher`).
-   - Controllers and services treat subclasses polymorphically through their base abstractions.
+   - Strategy pattern decoupling business rules: `TokenCalculator` strategy interface with interchangeable `StandardTokenCalculator` and `PromotionalTokenCalculator` implementations.
+   - Storage abstraction: `FileStorageService` contract implemented by `LocalFileStorageServiceImpl` with UUID isolation and path-traversal prevention.
+   - Cross-client security abstraction: `TokenStorage` contract polymorphic across Web (cookies), Mobile (SecureStore), and Desktop (OS Keychain).
 
 4. **Abstraction:**
-   - Web controllers never interact with database queries directly.
-   - Service classes (`UserService`, `WasteSubmissionService`) define clean contracts for application operations.
+   - Controllers never execute database queries directly; services expose high-level transactional domain contracts (`UserService`, `WasteSubmissionService`, `PickupHandshakeService`, `MarketplaceService`, `AdminGovernanceService`).
+   - Dual security boundary: Stateless RSA-2048 Bearer JWT filter chain for mobile/web/desktop `/api/v1/**` cleanly abstracted from server-side session cookie authentication for SSR views.
 
 ---
 
-### UML Class Diagram
+### Master UML Class Diagram
 
 ```mermaid
 classDiagram
     class User {
+        <<abstract>>
         -Long id
         -String name
         -String email
         -String passwordHash
+        -Role role
+        -boolean enabled
+        -LocalDateTime createdAt
         +login()
+        +hasRole(role)
     }
 
     class Household {
-        -double tokenBalance
-        +submitWaste()
-        +requestPickup()
-        +cancelPickup()
-        +buyProduct()
+        -BigDecimal tokenBalance
+        -String address
+        +addTokens(amount)
+        +spendTokens(amount)
+        +hasSufficientTokens(amount)
     }
 
     class Farmer {
-        +acceptPickup()
-        +declinePickup()
-        +schedulePickup()
-        +verifyWaste()
-        +addProduct()
+        -String farmName
+        -String farmAddress
+        -String notes
+        +updateFarmDetails(name, address, notes)
     }
 
     class Admin {
         +manageUsers()
-        +manageWasteRules()
-        +managePickups()
-        +reviewDisputes()
+        +adjustTokens()
+        +adjudicateDispute()
+    }
+
+    class FarmerApplication {
+        -Long id
+        -User user
+        -String farmName
+        -String farmAddress
+        -String notes
+        -FarmerApplicationStatus status
+        +approve()
+        +reject(reason)
+    }
+
+    class AuthSession {
+        -Long id
+        -User user
+        -String refreshTokenHash
+        -String familyId
+        -ClientType clientType
+        -boolean revoked
+        -LocalDateTime expiresAt
+        +revoke()
+        +isExpired()
     }
 
     class WasteSubmission {
         -Long id
+        -Household household
         -WasteCategory category
-        -double estimatedWeight
-        -String imageUrl
+        -BigDecimal estimatedWeight
+        -String pickupAddress
+        -SubmissionStatus status
+        -MediaAsset photo
+        +markClaimed()
+        +markCollected()
+        +markVerified()
+    }
+
+    class MediaAsset {
+        -Long id
+        -String storagePath
+        -String mimeType
+        -long fileSizeBytes
+        -MediaPurpose purpose
+        -MediaStatus status
+        +confirm()
     }
 
     class PickupRequest {
         -Long id
+        -WasteSubmission wasteSubmission
+        -Farmer assignedFarmer
         -PickupStatus status
-        +accept()
-        +decline()
-        +cancel()
+        -LocalDateTime scheduledTime
+        -Long version
+        +accept(farmer)
+        +schedule(farmer, time)
+        +markCollected(farmer)
+        +recordVerification(farmer, weight, grade, notes)
+        +decline(farmer)
+        +cancel(user)
+    }
+
+    class PickupHandshake {
+        -Long id
+        -PickupRequest pickupRequest
+        -String tokenHash
+        -PickupHandshakeStatus status
+        -LocalDateTime expiresAt
+        -HandshakeVerificationMethod method
+        +consume(method)
+        +isExpired()
     }
 
     class WasteVerification {
-        -double verifiedWeight
-        -VerificationStatus status
-        +calculateTokens()
+        -Long id
+        -PickupRequest pickupRequest
+        -Farmer verifyingFarmer
+        -BigDecimal verifiedWeight
+        -QualityGrade qualityGrade
+        -String notes
     }
 
     class EcoTokenTransaction {
+        <<immutable>>
         -Long id
+        -Household household
         -BigDecimal amount
+        -TransactionDirection direction
         -TransactionType type
         -BigDecimal balanceAfter
+        -WasteVerification wasteVerification
+        -Order order
+        -LocalDateTime createdAt
     }
 
     class Product {
         -Long id
+        -Farmer farmer
         -String name
+        -String description
         -BigDecimal priceInTokens
         -int stock
+        -String unit
+        -ProductCategory category
         -boolean active
-        +deductStock(quantity)
-        +restock(quantity)
+        -Long version
+        +deductStock(qty)
+        +restock(qty)
         +deactivate()
         +activate()
     }
@@ -255,15 +406,23 @@ classDiagram
     class Order {
         -Long id
         -String orderNumber
+        -Household buyer
         -BigDecimal totalTokens
         -OrderStatus status
         -String deliveryAddress
+        -RefundReason refundReason
+        -DisputeResolution disputeResolution
         +addItem(item)
-        +complete()
+        +markCompleted()
+        +markCancelled(reason)
+        +markRefunded(reason)
+        +dispute(notes)
     }
 
     class OrderItem {
         -Long id
+        -Order order
+        -Product product
         -String productName
         -BigDecimal unitPrice
         -int quantity
@@ -271,324 +430,657 @@ classDiagram
         -String farmerName
     }
 
+    class IdempotencyKey {
+        -Long id
+        -String key
+        -String userEmail
+        -IdempotencyScope scope
+        -IdempotencyStatus status
+        -String responseBodyEncrypted
+        -int responseStatusCode
+        +complete(code, body)
+    }
+
+    class TokenCalculator {
+        <<interface>>
+        +calculateTokens(weight, category, grade) BigDecimal
+    }
+
+    class StandardTokenCalculator {
+        +calculateTokens(weight, category, grade) BigDecimal
+    }
+
+    class PromotionalTokenCalculator {
+        -BigDecimal surgeMultiplier
+        +calculateTokens(weight, category, grade) BigDecimal
+    }
+
     User <|-- Household
     User <|-- Farmer
     User <|-- Admin
+    TokenCalculator <|.. StandardTokenCalculator
+    TokenCalculator <|.. PromotionalTokenCalculator
 
+    User "1" --> "*" AuthSession
+    User "1" --> "0..1" FarmerApplication
     Household "1" --> "*" WasteSubmission
     Household "1" --> "*" EcoTokenTransaction
     Household "1" --> "*" Order
-    Farmer "1" --> "*" PickupRequest
     Farmer "1" --> "*" Product
-    Order "1" --> "*" OrderItem
-    Order "1" --> "0..1" EcoTokenTransaction
-    OrderItem "*" --> "1" Product
+    Farmer "1" --> "*" PickupRequest : assigned
+    Farmer "1" --> "*" WasteVerification : verifiedBy
 
+    WasteSubmission "1" --> "0..1" MediaAsset
     WasteSubmission "1" --> "*" PickupRequest
+    PickupRequest "1" --> "0..1" PickupHandshake
     PickupRequest "1" --> "0..1" WasteVerification
     WasteVerification "1" --> "0..1" EcoTokenTransaction
+
+    Order "1" --> "1..*" OrderItem
+    Order "1" --> "0..1" EcoTokenTransaction : purchase
+    Order "1" --> "0..1" EcoTokenTransaction : refund
+    OrderItem "*" --> "1" Product
 ```
+
+---
 
 ## 3. End-to-End System Architecture & Data Flow Mapping
 
-AgroLoop follows a clean, layered architectural pattern adhering to strict object-oriented design and separation of concerns. The diagram below illustrates how client interactions traverse the system:
+### Full Multi-Tier Ecosystem Architecture
+
+The modern AgroLoop ecosystem accommodates four distinct client runtimes interfacing with a high-assurance Spring Boot 3 backend and PostgreSQL 16 database:
 
 ```mermaid
 flowchart TD
-    subgraph Client["Client Browser (Thymeleaf UI)"]
-        UI_Home["Landing Page /"]
-        UI_Auth["Auth Views (/login, /register)"]
-        UI_Dash["Dashboards (/household, /farmer, /admin)"]
+    subgraph Clients["Client Tier"]
+        WebClient["Next.js 15 Web Portal (@agroloop/web)
+BFF Proxy • HttpOnly Cookies • SSR/Tailwind"]
+        MobileClient["React Native / Expo App (@agroloop/mobile)
+HMAC QR Pass • Offline Sync • Camera Scanner"]
+        DesktopClient["Tauri v2 Desktop App (@agroloop/desktop)
+Rust FFI • OS Keychain • Solvency Audit Console"]
+        ThymeleafClient["Server-Rendered Views
+HTML5 • Bootstrap/Tailwind • Thymeleaf SSR"]
     end
 
-    subgraph Security["Spring Security Layer"]
-        Filter["SecurityFilterChain"]
-        AuthManager["DaoAuthenticationProvider"]
-        UserDetailSvc["CustomUserDetailsService"]
-        SuccessHandler["CustomAuthenticationSuccessHandler"]
+    subgraph SecurityLayer["Security & Gateway Perimeter"]
+        direction TB
+        subgraph APISecurity["REST API Filter Chain (/api/v1/**)"]
+            RateLimit["AuthenticationRateLimiter
+IP & Account Brute Force Defenses"]
+            ReqFilter["RequestIdFilter
+X-Request-ID Distributed Tracing"]
+            JWTFilter["JwtAuthenticationFilter
+RSA-2048 Asymmetric Signature Verification"]
+            IdempFilter["IdempotencyService
+AES-GCM-256 Encrypted Payload Cache"]
+        end
+        subgraph WebSecurity["Web SSR Filter Chain (/**)"]
+            SessionAuth["DaoAuthenticationProvider
+BCrypt • Stateful Cookie • CSRF"]
+        end
     end
 
-    subgraph Controllers["Web Controllers"]
-        HomeCtrl["HomeController"]
-        AuthCtrl["AuthController"]
-        DashCtrl["DashboardController"]
+    subgraph Controllers["Controller Tier"]
+        ApiCtrl["REST Controllers (/api/v1/*)
+Auth • Household • Farmer • Pickup
+Marketplace • Order • Media • Admin • System"]
+        WebCtrl["Web Controllers
+HomeController • AuthController • DashboardController
+MarketplaceController • AdminController"]
     end
 
-    subgraph Services["Domain Service Layer"]
-        UserSvc["UserService / UserServiceImpl"]
+    subgraph Services["Domain Service Tier"]
+        UserSvc["UserService & CustomUserDetailsService"]
+        WasteSvc["WasteSubmissionService & StorageService"]
+        PickupSvc["PickupService & PickupHandshakeService"]
+        MediaSvc["MediaService & LocalFileStorageServiceImpl"]
+        TokenSvc["TokenRewardService & TokenCalculators"]
+        MarketSvc["MarketplaceService & CartService & ProductService"]
+        AdminSvc["AdminGovernanceService (Tier-1/Tier-2 Solvency)"]
     end
 
-    subgraph Domain["OOP Domain Models & JPA Entities"]
-        UserBase["User (Abstract Base)"]
-        Household["Household (Subclass)"]
-        Farmer["Farmer (Subclass)"]
-        Admin["Admin (Subclass)"]
-        FarmerApp["FarmerApplication (Entity)"]
+    subgraph Persistence["Persistence & Database Tier"]
+        Repos["Spring Data JPA Repositories (16 Interfaces)
+Pessimistic Locking (FOR UPDATE) • Joined Inheritance"]
+        FlywayMig["Flyway Migration Engine (V1 -> V9 Scripts)"]
+        Postgres[("PostgreSQL 16 Engine
+Immutable Ledger Triggers • Partial Unique Indexes
+Check Constraints • Joined Tables")]
     end
 
-    subgraph Repositories["Data Access Repositories"]
-        UserRepo["UserRepository"]
-        HouseholdRepo["HouseholdRepository"]
-        FarmerRepo["FarmerRepository"]
-        AdminRepo["AdminRepository"]
-        FarmerAppRepo["FarmerApplicationRepository"]
-    end
+    WebClient -->|"/api/proxy/**" HttpOnly| APISecurity
+    MobileClient -->|"Bearer JWT (RSA-2048)"| APISecurity
+    DesktopClient -->|"Bearer JWT (OS Keychain)"| APISecurity
+    ThymeleafClient -->|"Session Cookie"| WebSecurity
 
-    subgraph Persistence["PostgreSQL Database & Flyway"]
-        Flyway["Flyway Migrations (V1, V2)"]
-        T_Users[("users (Parent Table)")]
-        T_Households[("households (Joined Table)")]
-        T_Farmers[("farmers (Joined Table)")]
-        T_Admins[("admins (Joined Table)")]
-        T_FarmerApps[("farmer_applications")]
-    end
+    APISecurity --> ApiCtrl
+    WebSecurity --> WebCtrl
 
-    UI_Home --> Filter
-    UI_Auth --> Filter
-    UI_Dash --> Filter
+    ApiCtrl --> Services
+    WebCtrl --> Services
 
-    Filter --> AuthManager
-    AuthManager --> UserDetailSvc
-    UserDetailSvc --> UserRepo
-    Filter --> SuccessHandler
-
-    Filter --> HomeCtrl
-    Filter --> AuthCtrl
-    Filter --> DashCtrl
-
-    AuthCtrl --> UserSvc
-    DashCtrl --> UserSvc
-    DashCtrl --> HouseholdRepo
-    DashCtrl --> FarmerRepo
-    DashCtrl --> UserRepo
-
-    UserSvc --> HouseholdRepo
-    UserSvc --> FarmerAppRepo
-    UserSvc --> UserRepo
-
-    HouseholdRepo --> Household
-    FarmerRepo --> Farmer
-    AdminRepo --> Admin
-    FarmerAppRepo --> FarmerApp
-    UserRepo --> UserBase
-
-    UserBase <|-- Household
-    UserBase <|-- Farmer
-    UserBase <|-- Admin
-
-    Household --> T_Households
-    Farmer --> T_Farmers
-    Admin --> T_Admins
-    UserBase --> T_Users
-    FarmerApp --> T_FarmerApps
-    Flyway -.-> T_Users
-    Flyway -.-> T_FarmerApps
+    Services --> Repos
+    Repos --> Postgres
+    FlywayMig --> Postgres
 ```
 
-### Role Lifecycle & Conversion Workflow
+---
+
+### Core Architectural Workflows & Sequence Diagrams
+
+#### Workflow 1: Public Registration & Farmer Role Conversion
+
+Citizens default to the `ROLE_HOUSEHOLD` role upon registration. To become a supplier, households submit an application reviewed by platform administrators:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Citizen as New User
-    actor HouseholdUser as Household
-    actor AdminUser as Administrator
-    participant Browser as Web Browser
-    participant AuthCtrl as AuthController
-    participant DashCtrl as DashboardController
-    participant UserSvc as UserService
-    participant DB as PostgreSQL
+    actor HouseholdUser as Household User
+    actor AdminUser as Platform Admin
+    participant Client as Web / Mobile Client
+    participant AuthApi as AuthApiController
+    participant AdminApi as AdminApiController
+    participant UserSvc as UserServiceImpl
+    participant DB as PostgreSQL 16
 
-    Note over Citizen,DB: 1. Public Registration (Default to Household)
-    Citizen->>Browser: Visit /register
-    Browser->>AuthCtrl: GET /register
-    AuthCtrl-->>Browser: Render register.html (Notice: default role is Household)
-    Citizen->>Browser: Submit registration form
-    Browser->>AuthCtrl: POST /register (name, email, password, address)
-    AuthCtrl->>UserSvc: registerHousehold(RegisterRequest)
-    UserSvc->>DB: Save Household entity into users & households tables
-    UserSvc-->>AuthCtrl: Saved Household
-    AuthCtrl-->>Browser: Redirect to /login?registered=true
+    Note over Citizen,DB: Phase 1: Self-Service Registration
+    Citizen->>Client: Enter registration credentials (name, email, password, address)
+    Client->>AuthApi: POST /api/v1/auth/register
+    AuthApi->>UserSvc: registerHousehold(RegisterRequest)
+    UserSvc->>DB: INSERT INTO users & households (role = ROLE_HOUSEHOLD)
+    UserSvc-->>AuthApi: User Details & Initial 0.00 Balance
+    AuthApi-->>Client: 201 Created (Tokens & AuthSession)
 
-    Note over HouseholdUser,DB: 2. Farmer Conversion Application
-    HouseholdUser->>Browser: Login -> Redirect to /household/dashboard
-    HouseholdUser->>Browser: Fill "Apply to Become a Farmer" form
-    Browser->>DashCtrl: POST /household/apply-farmer (farmName, farmAddress, notes)
-    DashCtrl->>UserSvc: submitFarmerApplication(email, request)
-    UserSvc->>DB: Insert FarmerApplication with status = PENDING
-    UserSvc-->>DashCtrl: Saved FarmerApplication
-    DashCtrl-->>Browser: Redirect to /household/dashboard (Shows "Pending Review" banner)
+    Note over HouseholdUser,DB: Phase 2: Farmer Conversion Application
+    HouseholdUser->>Client: Fill Farmer Application (farmName, address, notes)
+    Client->>AuthApi: POST /api/v1/household/apply-farmer
+    AuthApi->>UserSvc: submitFarmerApplication(userId, dto)
+    UserSvc->>DB: INSERT INTO farmer_applications (status = PENDING)
+    UserSvc-->>AuthApi: FarmerApplication #ID
+    AuthApi-->>Client: 202 Accepted ("Application Under Review")
 
-    Note over AdminUser,DB: 3. Administrative Review & Role Conversion
-    AdminUser->>Browser: Login -> Access /admin/dashboard
-    Browser->>DashCtrl: GET /admin/dashboard
-    DashCtrl->>UserSvc: getPendingFarmerApplications()
-    UserSvc->>DB: SELECT * FROM farmer_applications WHERE status = 'PENDING'
-    DashCtrl-->>Browser: Render Moderation Queue table
-    AdminUser->>Browser: Click "Approve" for application #ID
-    Browser->>DashCtrl: POST /admin/applications/{id}/approve
-    DashCtrl->>UserSvc: approveFarmerApplication(id)
-    UserSvc->>DB: UPDATE farmer_applications SET status = 'APPROVED'
-    UserSvc->>DB: UPDATE users SET role = 'ROLE_FARMER' WHERE id = userId
-    UserSvc->>DB: INSERT INTO farmers (id, farm_name, farm_address, notes)
-    UserSvc-->>DashCtrl: Role conversion confirmed
-    DashCtrl-->>Browser: Redirect /admin/dashboard?success=Approved
+    Note over AdminUser,DB: Phase 3: Administrative Moderation & Atomic Role Promotion
+    AdminUser->>Client: Open Operations Console -> Review Pending Applications
+    Client->>AdminApi: GET /api/v1/admin/applications?status=PENDING
+    AdminApi->>DB: SELECT * FROM farmer_applications WHERE status = 'PENDING'
+    DB-->>AdminApi: List of applications
+    AdminApi-->>Client: Display applications
+    AdminUser->>Client: Click "Approve Application #ID"
+    Client->>AdminApi: POST /api/v1/admin/applications/{id}/approve
+    AdminApi->>UserSvc: approveFarmerApplication(id)
+    rect rgb(240, 248, 255)
+        Note over UserSvc,DB: Atomic Transactional Role Conversion
+        UserSvc->>DB: UPDATE farmer_applications SET status = 'APPROVED'
+        UserSvc->>DB: UPDATE users SET role = 'ROLE_FARMER' WHERE id = userId
+        UserSvc->>DB: INSERT INTO farmers (id, farm_name, farm_address, notes)
+    end
+    UserSvc-->>AdminApi: Conversion Confirmed
+    AdminApi-->>Client: 200 OK (User promoted to ROLE_FARMER)
+```
+
+---
+
+#### Workflow 2: Ephemeral Server-Authoritative QR Pickup Handshake
+
+Physical waste handoffs use an offline-capable, server-authoritative HMAC-SHA256 dynamic QR handshake with pessimistic locking to prevent double-claiming and verify weights on-site:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Household as Household
+    actor Farmer as Farmer
+    participant H_App as Household Mobile/Web
+    participant F_App as Farmer Mobile (Scanner)
+    participant Api as PickupApiController
+    participant HandshakeSvc as PickupHandshakeService
+    participant RewardSvc as TokenRewardService
+    participant DB as PostgreSQL 16
+
+    Note over Household,F_App: 1. Dynamic Pass Generation (5-minute TTL)
+    Household->>H_App: Tap "Show Pickup QR"
+    H_App->>Api: POST /api/v1/household/pickups/{id}/handshake/pass
+    Api->>HandshakeSvc: generatePass(pickupId, householdUser)
+    HandshakeSvc->>HandshakeSvc: Compute HMAC-SHA256(pickupId + timestamp + secret)
+    HandshakeSvc->>DB: INSERT INTO pickup_handshakes (token_hash, expires_at, status='ACTIVE')
+    HandshakeSvc-->>Api: Compact QR Payload: { "pId": 12, "sig": "a7b8c...", "exp": 1718000000 }
+    Api-->>H_App: Render Kazuhiko Arase QR Matrix
+
+    Note over Household,F_App: 2. Physical Inspection & Camera Scan
+    Farmer->>F_App: Inspect organic waste & weigh container (e.g. 14.5 kg)
+    Farmer->>F_App: Open QR Scanner -> Scan Household Screen
+    F_App->>Api: POST /api/v1/farmer/pickups/handshake/verify
+{ qrPayload, verifiedWeight: 14.5, grade: "GRADE_A" }
+
+    Note over Api,DB: 3. Authoritative Locked Verification & Reward Minting
+    rect rgb(235, 255, 235)
+        Api->>HandshakeSvc: verifyAndComplete(payload, farmerUser)
+        HandshakeSvc->>DB: SELECT * FROM pickup_requests WHERE id = pId FOR UPDATE
+        HandshakeSvc->>HandshakeSvc: Validate HMAC signature & ensure NOT expired
+        HandshakeSvc->>DB: UPDATE pickup_handshakes SET status = 'CONSUMED'
+        HandshakeSvc->>DB: UPDATE pickup_requests SET status = 'VERIFIED'
+        HandshakeSvc->>DB: INSERT INTO waste_verifications (weight=14.5, grade='GRADE_A')
+        HandshakeSvc->>RewardSvc: mintReward(verification)
+        RewardSvc->>DB: SELECT * FROM households WHERE id = hId FOR UPDATE
+        RewardSvc->>RewardSvc: Calculate reward (Standard: 14.5 * 1.5 * 1.2 = 26.10 tokens)
+        RewardSvc->>DB: UPDATE households SET token_balance = token_balance + 26.10
+        RewardSvc->>DB: INSERT INTO ecotoken_transactions (amount=26.10, direction='CREDIT', type='REWARD_MINTED')
+    end
+    RewardSvc-->>Api: Handshake Completed (Tokens Minted: 26.10)
+    Api-->>F_App: 200 OK: "Handoff Verified! 26.10 EcoTokens awarded to household"
+    Api-->>H_App: Push/Socket Alert: "Pickup Verified & Tokens Credited!"
+```
+
+---
+
+#### Workflow 3: Deterministic Dual-Phase Marketplace Checkout & Atomic Refunds
+
+Marketplace checkout uses strict lock ordering to avoid database deadlocks, followed by an atomic refund engine handling cancellations and dispute resolutions:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Buyer as Household Buyer
+    actor Admin as Admin / Dispute Arbiter
+    participant Client as Next.js Web / Mobile
+    participant MarketApi as MarketplaceApiController
+    participant OrderApi as OrderApiController
+    participant MarketSvc as MarketplaceServiceImpl
+    participant GovSvc as AdminGovernanceServiceImpl
+    participant DB as PostgreSQL 16
+
+    Note over Buyer,DB: Phase 1: Atomic Deterministic Checkout
+    Buyer->>Client: Click "Checkout Cart" (Items: A, B)
+    Client->>MarketApi: POST /api/v1/marketplace/checkout
+{ Idempotency-Key: "uuid-v4", items: [{pId: 1, qty: 2}, {pId: 5, qty: 1}] }
+    MarketApi->>MarketSvc: checkout(householdUser, request)
+    rect rgb(255, 248, 240)
+        Note over MarketSvc,DB: Deterministic Lock Hierarchy
+        MarketSvc->>DB: 1. SELECT * FROM households WHERE id = buyerId FOR UPDATE
+        MarketSvc->>DB: 2. SELECT * FROM products WHERE id IN (1, 5) ORDER BY id ASC FOR UPDATE
+        MarketSvc->>MarketSvc: Authoritative DB price sum & stock sufficiency verification
+        MarketSvc->>DB: Deduct stock from products: Product#1 (-2), Product#5 (-1)
+        MarketSvc->>DB: Deduct tokens: Household (-45.00)
+        MarketSvc->>DB: INSERT INTO orders & order_items
+        MarketSvc->>DB: INSERT INTO ecotoken_transactions (amount=45.00, direction='DEBIT', type='MARKETPLACE_PURCHASE')
+    end
+    MarketSvc-->>MarketApi: Order #ORD-12345 Created
+    MarketApi-->>Client: 201 Created (Order Receipt)
+
+    Note over Admin,DB: Phase 2: Order Dispute Adjudication & Atomic Restock Refund
+    Buyer->>Client: Raise Dispute on #ORD-12345 ("Item arrived spoiled")
+    Client->>OrderApi: POST /api/v1/orders/{id}/dispute { reason: "Damaged produce" }
+    OrderApi->>DB: UPDATE orders SET status = 'DISPUTED'
+    Admin->>Client: Review Dispute in Desktop Console -> Click "Approve Full Refund"
+    Client->>OrderApi: POST /api/v1/admin/orders/{id}/adjudicate { resolution: "APPROVED_REFUND" }
+    OrderApi->>GovSvc: refundOrder(orderId, "DISPUTE_APPROVED")
+    rect rgb(240, 255, 240)
+        Note over GovSvc,DB: Atomic Restock & Solvency Reconciliation
+        GovSvc->>DB: SELECT * FROM orders WHERE id = orderId FOR UPDATE
+        GovSvc->>DB: SELECT * FROM households WHERE id = buyerId FOR UPDATE
+        GovSvc->>DB: SELECT * FROM products WHERE id IN (orderItems) ORDER BY id ASC FOR UPDATE
+        GovSvc->>DB: Restock product inventories
+        GovSvc->>DB: Credit tokens back to household (+45.00)
+        GovSvc->>DB: INSERT INTO ecotoken_transactions (amount=45.00, direction='CREDIT', type='ORDER_REFUND')
+        GovSvc->>DB: UPDATE orders SET status = 'REFUNDED', dispute_resolution = 'APPROVED_REFUND'
+    end
+    GovSvc-->>OrderApi: Refund Processed
+    OrderApi-->>Client: 200 OK: "Order refunded, inventory restocked, and tokens restored."
 ```
 
 ---
 
 ## 4. Master Repository File Structure & Function Catalog
 
-The table below catalogs every key file in the AgroLoop codebase, providing a direct clickable link, its architectural responsibility, key classes and methods, and its mapping to documentation modules.
+The tables below provide a catalog of key files in the AgroLoop codebase. Every entry contains a clickable relative link, architectural layer, declared classes/interfaces, core responsibilities, and mapped documentation module.
+
+### 4.1 Build, Infrastructure & Automation
+
+| File Path | Component Layer | Core Entities / Formats | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`pom.xml`](../pom.xml)** | Build & Dependencies | Maven POM | Declares project dependencies: Spring Boot 3.3.4, Security, JPA, PostgreSQL, Flyway, H2 (test), JJWT 0.12.6, SpringDoc OpenAPI 2.6.0, Thymeleaf. | [01. Setup](modules/01_project_setup.md) |
+| **[`Dockerfile`](../Dockerfile)** | Containerization | Multi-stage Dockerfile | Optimized multi-stage build packaging the Spring Boot backend into an immutable Distroless/Alpine container. | [01. Setup](modules/01_project_setup.md) |
+| **[`docker-compose.yml`](../docker-compose.yml)** | Infrastructure | Docker Compose | Orchestrates local PostgreSQL 16, pgAdmin 4, and containerized Spring Boot backend with persistent healthchecks. | [01. Setup](modules/01_project_setup.md) |
+| **[`docker-compose.local.yml`](../docker-compose.local.yml)** | Infrastructure | Docker Compose | Runs backend and web frontend containers connecting directly to a native host PostgreSQL database without running a Postgres container. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`run.sh`](../run.sh)** | Dev Runner | Shell Script | Automates local execution on macOS/Linux with environment validation and PostgreSQL readiness probe. | [01. Setup](modules/01_project_setup.md) |
+| **[`run.bat`](../run.bat)** | Dev Runner | Batch Script | Automates local execution on Windows Command Prompt. | [01. Setup](modules/01_project_setup.md) |
+| **[`setup.sh`](../setup.sh)** | Environment Bootstrapper | Shell Script | Interactive bash setup assistant checking Java 21, Docker, pnpm, node, generating `.env`, and spinning up dependencies. | [01. Setup](modules/01_project_setup.md) |
+| **[`setup.bat`](../setup.bat)** | Environment Bootstrapper | Batch Script | Windows equivalent setup assistant for environment verification. | [01. Setup](modules/01_project_setup.md) |
+| **[`.github/workflows/ci.yml`](../.github/workflows/ci.yml)** | CI / Automation | GitHub Actions | Continuous integration executing Maven compilation and Java 21 test suites on PRs and dev branches. | [01. Setup](modules/01_project_setup.md) |
+| **[`.github/workflows/main-release.yml`](../.github/workflows/main-release.yml)** | CI / Packaging | GitHub Actions | Production release pipeline building backend and web Docker images and packaging standalone Android APK + Expo bundle. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`.github/pull_request_template.md`](../.github/pull_request_template.md)** | Code Review | PR Template | Standardized PR template enforcing OOP principles, test coverage, and documentation parity. | [01. Setup](modules/01_project_setup.md) |
+| **[`docker/init.sql`](../docker/init.sql)** | Database Schema | SQL Script | Standalone PostgreSQL schema initialization script for Docker container bootstrap. | [01. Setup](modules/01_project_setup.md) |
+
+---
+
+### 4.2 Backend Entrypoint & Spring Configuration
 
 | File Path | Component Layer | Core Classes / Interfaces | Key Functions & Responsibilities | Mapped Module |
 | :--- | :--- | :--- | :--- | :--- |
-| **[`pom.xml`](../pom.xml)** | Build & Dependencies | Maven POM | Declares project dependencies: Spring Boot 3.3.4, Security, JPA, PostgreSQL, Flyway, H2 (test), Thymeleaf. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`.github/workflows/ci.yml`](../.github/workflows/ci.yml)** | CI / Automation | GitHub Actions | Automated continuous integration running Java 21 test suites on PRs and dev branch. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`.github/workflows/main-release.yml`](../.github/workflows/main-release.yml)** | CI / Packaging | GitHub Actions | Production release pipeline triggered on main branch push; builds backend & web Docker containers and packages standalone Android APK + Expo bundle. | [08. Clients](../docs/modules/08_cross_platform_clients.md) |
-| **[`.github/pull_request_template.md`](../.github/pull_request_template.md)** | Code Review | PR Template | Standardized Pull Request template enforcing OOP principles, documentation updates, and test verification. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`run.sh`](../run.sh)** | Dev Runner | Shell Script | Automates local execution on macOS/Linux with environment checks and PostgreSQL readiness verification. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`run.bat`](../run.bat)** | Dev Runner | Batch Script | Automates local execution on Windows Command Prompt. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`docker-compose.yml`](../docker-compose.yml)** | Infrastructure | Compose Config | Orchestrates PostgreSQL container and full application stack with healthchecks and volumes. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`docker-compose.local.yml`](../docker-compose.local.yml)** | Infrastructure | Compose Config | Runs backend and web frontend containers connecting directly to a native/host PostgreSQL database without running a Postgres container. | [08. Clients](../docs/modules/08_cross_platform_clients.md) |
-| **[`docker/init.sql`](../docker/init.sql)** | Database Schema | SQL Script | Standalone PostgreSQL schema initialization script for Docker container bootstrap. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`application.properties`](../../src/main/resources/application.properties)** | Config | Properties | Configures PostgreSQL datasource (`localhost:5432/agroloop`), Flyway migrations, multipart limits (10MB). | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`AgroLoopApplication.java`](../../src/main/java/com/agroloop/AgroLoopApplication.java)** | Application Entrypoint | `AgroLoopApplication` | Bootstraps the Spring Boot application context (`main` method). | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`Role.java`](../../src/main/java/com/agroloop/model/Role.java)** | Domain Model | `enum Role` | Defines ecosystem security authorities: `ROLE_HOUSEHOLD`, `ROLE_FARMER`, `ROLE_ADMIN`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`User.java`](../../src/main/java/com/agroloop/model/User.java)** | Domain Model | `abstract class User` | Base JPA entity with Joined Table inheritance (`users` table). Encapsulates identity, email, password hash, role, timestamps. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`Household.java`](../../src/main/java/com/agroloop/model/Household.java)** | Domain Model | `class Household extends User` | Joined subtype for households (`households` table). Encapsulates `tokenBalance`, `address`, `addTokens()`, `spendTokens()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`Farmer.java`](../../src/main/java/com/agroloop/model/Farmer.java)** | Domain Model | `class Farmer extends User` | Joined subtype for farmers (`farmers` table). Encapsulates `farmName`, `farmAddress`, `notes`, `updateFarmDetails()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`Admin.java`](../../src/main/java/com/agroloop/model/Admin.java)** | Domain Model | `class Admin extends User` | Joined subtype for system administrators (`admins` table). Holds administrative authority. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`FarmerApplicationStatus.java`](../../src/main/java/com/agroloop/model/FarmerApplicationStatus.java)** | Domain Model | `enum FarmerApplicationStatus` | Status lifecycle for role conversion: `PENDING`, `APPROVED`, `REJECTED`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`FarmerApplication.java`](../../src/main/java/com/agroloop/model/FarmerApplication.java)** | Domain Model | `class FarmerApplication` | JPA entity encapsulating farmer conversion requests. Contains domain methods `approve()` and `reject(reason)`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`UserRepository.java`](../../src/main/java/com/agroloop/repository/UserRepository.java)** | Persistence | `UserRepository` | Spring Data JPA queries for base `User`: `findByEmail()`, `existsByEmail()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`HouseholdRepository.java`](../../src/main/java/com/agroloop/repository/HouseholdRepository.java)** | Persistence | `HouseholdRepository` | Spring Data JPA queries for `Household` entities: `findByEmail()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`FarmerRepository.java`](../../src/main/java/com/agroloop/repository/FarmerRepository.java)** | Persistence | `FarmerRepository` | Spring Data JPA queries for `Farmer` entities: `findByEmail()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`AdminRepository.java`](../../src/main/java/com/agroloop/repository/AdminRepository.java)** | Persistence | `AdminRepository` | Spring Data JPA queries for `Admin` entities: `findByEmail()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`FarmerApplicationRepository.java`](../../src/main/java/com/agroloop/repository/FarmerApplicationRepository.java)** | Persistence | `FarmerApplicationRepository` | Spring Data JPA queries: `findByStatus()`, `findTopByUserIdOrderByCreatedAtDesc()`, `existsByUserIdAndStatus()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`RegisterRequest.java`](../../src/main/java/com/agroloop/dto/RegisterRequest.java)** | DTO | `class RegisterRequest` | Form backing object with Jakarta validation: `name`, `email`, `password`, `confirmPassword`, `address`, `isPasswordMatching()`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`FarmerApplicationRequest.java`](../../src/main/java/com/agroloop/dto/FarmerApplicationRequest.java)** | DTO | `class FarmerApplicationRequest` | Form backing object for role conversion: `farmName`, `farmAddress`, `notes`. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`UserService.java`](../../src/main/java/com/agroloop/service/UserService.java)** | Service Contract | `interface UserService` | Service contract for registration (`registerHousehold`), application (`submitFarmerApplication`), and review (`approveFarmerApplication`, `rejectFarmerApplication`). | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`UserServiceImpl.java`](../../src/main/java/com/agroloop/service/UserServiceImpl.java)** | Service Logic | `class UserServiceImpl` | Implements business logic, BCrypt encryption, transactional role conversion, and L1 cache management. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`CustomUserDetailsService.java`](../../src/main/java/com/agroloop/service/CustomUserDetailsService.java)** | Security Integration | `CustomUserDetailsService` | Implements Spring Security's `UserDetailsService`. Maps domain `User` to `UserDetails` with authorities. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`CustomAuthenticationSuccessHandler.java`](../../src/main/java/com/agroloop/config/CustomAuthenticationSuccessHandler.java)** | Security Routing | `CustomAuthenticationSuccessHandler` | Dynamically redirects authenticated users based on role (`ROLE_ADMIN` ➔ `/admin/dashboard`, `ROLE_FARMER` ➔ `/farmer/dashboard`, `ROLE_HOUSEHOLD` ➔ `/household/dashboard`). | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`SecurityConfig.java`](../../src/main/java/com/agroloop/config/SecurityConfig.java)** | Security Config | `SecurityConfig` | Configures `SecurityFilterChain`, `BCryptPasswordEncoder`, form login, role-based URL protection, and permitted public routes (`/`, `/login/**`, `/register/**`). | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`DataInitializer.java`](../../src/main/java/com/agroloop/config/DataInitializer.java)** | Data Bootstrap | `DataInitializer` | `CommandLineRunner` that idempotently seeds default demo accounts (`admin@agroloop.com`, `household@agroloop.com`, `farmer@agroloop.com`) on startup. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`HomeController.java`](../../src/main/java/com/agroloop/controller/HomeController.java)** | Web Controller | `HomeController` | Serves public landing page (`GET /`) with live PostgreSQL connection diagnostics. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`AuthController.java`](../../src/main/java/com/agroloop/controller/AuthController.java)** | Web Controller | `AuthController` | Handles `GET /login`, `GET /register`, and `POST /register` with validation and flash alerts. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`DashboardController.java`](../../src/main/java/com/agroloop/controller/DashboardController.java)** | Web Controller | `DashboardController` | Serves role dashboards (`/household/dashboard`, `/farmer/dashboard`, `/admin/dashboard`), handles `POST /household/apply-farmer`, and Admin approval/rejection endpoints. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`V1__create_user_tables.sql`](../../src/main/resources/db/migration/V1__create_user_tables.sql)** | Migration | SQL Migration | Flyway script creating tables for `users`, `households`, `farmers`, and `admins` with joined foreign keys. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`V2__create_farmer_applications_table.sql`](../../src/main/resources/db/migration/V2__create_farmer_applications_table.sql)** | Migration | SQL Migration | Flyway script creating the `farmer_applications` table and indexes for tracking conversion requests. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`images/logo.png`](../../src/main/resources/static/images/logo.png)** | Static Asset | PNG Image | High-resolution official AgroLoop logo artwork and browser favicon icon. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`css/style.css`](../../src/main/resources/static/css/style.css)** | Static Asset | CSS Stylesheet | Global responsive stylesheet with dark-mode palette, typography, glassmorphism cards, and logo effects. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`index.html`](../../src/main/resources/templates/index.html)** | UI View | Thymeleaf Template | Public landing page featuring brand logo, dynamic DB diagnostics, role navigation, and roadmap timeline. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`login.html`](../../src/main/resources/templates/login.html)** | UI View | Thymeleaf Template | Styled authentication view with brand logo, demo quick-fill buttons, error banners, and register link. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`register.html`](../../src/main/resources/templates/register.html)** | UI View | Thymeleaf Template | Registration view with brand logo, default Household role explanation, address input, and validation hints. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`dashboard/household.html`](../../src/main/resources/templates/dashboard/household.html)** | UI View | Thymeleaf Template | Household portal showing EcoToken balance, pickup address, pending farmer application status, and conversion form. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`dashboard/farmer.html`](../../src/main/resources/templates/dashboard/farmer.html)** | UI View | Thymeleaf Template | Farmer partner portal showing farm profile, collection summary, and produce listing placeholders. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`dashboard/admin.html`](../../src/main/resources/templates/dashboard/admin.html)** | UI View | Thymeleaf Template | Administrator portal displaying system counts and the Pending Farmer Applications moderation queue with Approve/Reject actions. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`UserModelTest.java`](../../src/test/java/com/agroloop/model/UserModelTest.java)** | Test | JUnit 5 Test | Unit tests verifying OOP encapsulation, token arithmetic, domain validations, and polymorphic roles. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`AuthControllerTest.java`](../../src/test/java/com/agroloop/controller/AuthControllerTest.java)** | Test | MockMvc Test | Integration tests verifying `/login` rendering, role-based redirects, invalid credentials, and access control. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`UserRegistrationAndConversionTest.java`](../../src/test/java/com/agroloop/controller/UserRegistrationAndConversionTest.java)** | Test | MockMvc Test | Integration tests verifying default household registration, farmer conversion application, and admin approval. | [02. Auth](../docs/modules/02_user_management_and_auth.md) |
-| **[`HomeControllerTest.java`](../../src/test/java/com/agroloop/controller/HomeControllerTest.java)** | Test | MockMvc Test | Integration test verifying public landing page and database status indicator. | [01. Setup](../docs/modules/01_project_setup.md) |
-| **[`WasteCategory.java`](../../src/main/java/com/agroloop/model/WasteCategory.java)** | Domain Model | `enum WasteCategory` | Organic waste classification taxonomy (`FOOD_SCRAPS`, `GARDEN_WASTE`, `AGRICULTURAL_ORGANIC`, `COFFEE_GROUNDS`) with metadata and reward multipliers. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`SubmissionStatus.java`](../../src/main/java/com/agroloop/model/SubmissionStatus.java)** | Domain Model | `enum SubmissionStatus` | Lifecycle state machine (`SUBMITTED`, `CLAIMED`, `COLLECTED`, `VERIFIED`, `REJECTED`) and terminal-state query methods. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmission.java`](../../src/main/java/com/agroloop/model/WasteSubmission.java)** | Domain Model | `class WasteSubmission` | JPA entity encapsulating category, BigDecimal weight, pickup address, image path, notes, timestamps, and domain transition methods. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`FileStorageService.java`](../../src/main/java/com/agroloop/service/storage/FileStorageService.java)** | Storage Abstraction | `interface FileStorageService` | Abstract contract for storing, loading, and deleting media files. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`LocalFileStorageServiceImpl.java`](../../src/main/java/com/agroloop/service/storage/LocalFileStorageServiceImpl.java)** | Storage Logic | `class LocalFileStorageServiceImpl` | Local filesystem storage implementation enforcing UUID naming, MIME validation, and path traversal defense. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WebMvcConfig.java`](../../src/main/java/com/agroloop/config/WebMvcConfig.java)** | Web Configuration | `class WebMvcConfig` | Maps `/uploads/**` static resource handler to the physical uploads directory. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionRepository.java`](../../src/main/java/com/agroloop/repository/WasteSubmissionRepository.java)** | Persistence | `WasteSubmissionRepository` | Spring Data JPA queries by household and status. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`V3__create_waste_submissions_table.sql`](../../src/main/resources/db/migration/V3__create_waste_submissions_table.sql)** | Migration | SQL Migration | Flyway script creating `waste_submissions` table with foreign keys, check constraints, and indexes. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionRequest.java`](../../src/main/java/com/agroloop/dto/WasteSubmissionRequest.java)** | DTO | `class WasteSubmissionRequest` | Form backing object with Jakarta validation: category, BigDecimal weight, optional address, notes, photo. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionService.java`](../../src/main/java/com/agroloop/service/WasteSubmissionService.java)** | Service Contract | `interface WasteSubmissionService` | Contract for submitting waste, querying submissions by household, and counting records. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionServiceImpl.java`](../../src/main/java/com/agroloop/service/WasteSubmissionServiceImpl.java)** | Service Logic | `class WasteSubmissionServiceImpl` | Implements transactional submission handling, photo storage delegation, and address inheritance. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionModelTest.java`](../../src/test/java/com/agroloop/model/WasteSubmissionModelTest.java)** | Test | JUnit 5 Test | Unit tests verifying domain entity state transitions, weight invariants, and address fallback logic. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionRepositoryTest.java`](../../src/test/java/com/agroloop/repository/WasteSubmissionRepositoryTest.java)** | Test | DataJpaTest | Database slice tests verifying repository queries, household cascades, and status filtering. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`FileStorageServiceTest.java`](../../src/test/java/com/agroloop/service/FileStorageServiceTest.java)** | Test | JUnit 5 Test | Unit tests verifying UUID naming, traversal rejection, and MIME checking. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`WasteSubmissionServiceTest.java`](../../src/test/java/com/agroloop/service/WasteSubmissionServiceTest.java)** | Test | Mockito Test | Unit tests verifying service workflows, address inheritance, and exception handling. | [03. Waste Submission](../docs/modules/03_waste_submission.md) |
-| **[`PickupStatus.java`](../../src/main/java/com/agroloop/model/PickupStatus.java)** | Domain Model | `enum PickupStatus` | Lifecycle state machine (`REQUESTED`, `ASSIGNED`, `SCHEDULED`, `COLLECTED`, `VERIFIED`, `CANCELLED`) with cancellation and claim helpers. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`QualityGrade.java`](../../src/main/java/com/agroloop/model/QualityGrade.java)** | Domain Model | `enum QualityGrade` | Inspection quality grading taxonomy (`GRADE_A`, `GRADE_B`, `GRADE_C`, `REJECTED`) with reward multipliers. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupRequest.java`](../../src/main/java/com/agroloop/model/PickupRequest.java)** | Domain Model | `class PickupRequest` | JPA entity encapsulating state transitions (`accept()`, `schedule()`, `markCollected()`, `recordVerification()`, `decline()`, `cancel()`), optimistic locking (`@Version`), and audit tracking (`declinedAt`). | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`WasteVerification.java`](../../src/main/java/com/agroloop/model/WasteVerification.java)** | Domain Model | `class WasteVerification` | JPA entity capturing verified weight, quality grade, inspection notes, and verifying farmer link. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`V4__create_pickup_and_verification_tables.sql`](../../src/main/resources/db/migration/V4__create_pickup_and_verification_tables.sql)** | Migration | SQL Migration | Flyway script creating `pickup_requests` and `waste_verifications` tables with foreign keys, unique constraint, optimistic lock `version`, and check constraints. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupRequestRepository.java`](../../src/main/java/com/agroloop/repository/PickupRequestRepository.java)** | Persistence | `PickupRequestRepository` | Spring Data JPA queries by status, assigned farmer, and waste submission. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`WasteVerificationRepository.java`](../../src/main/java/com/agroloop/repository/WasteVerificationRepository.java)** | Persistence | `WasteVerificationRepository` | Spring Data JPA queries by pickup request and verifying farmer. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`SchedulePickupRequest.java`](../../src/main/java/com/agroloop/dto/SchedulePickupRequest.java)** | DTO | `class SchedulePickupRequest` | Validation form backing object for collection appointments. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`WasteVerificationRequest.java`](../../src/main/java/com/agroloop/dto/WasteVerificationRequest.java)** | DTO | `class WasteVerificationRequest` | Validation form backing object for post-collection weight and grading. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`CancelPickupRequest.java`](../../src/main/java/com/agroloop/dto/CancelPickupRequest.java)** | DTO | `class CancelPickupRequest` | Form backing object for cancellation reasons. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupService.java`](../../src/main/java/com/agroloop/service/PickupService.java)** | Service Contract | `interface PickupService` | Contract for claiming, scheduling, collecting, verifying, declining, and cancelling pickups. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupServiceImpl.java`](../../src/main/java/com/agroloop/service/PickupServiceImpl.java)** | Service Logic | `class PickupServiceImpl` | Implements transactional orchestration, farmer authorization, and domain entity delegation. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupController.java`](../../src/main/java/com/agroloop/controller/PickupController.java)** | Web Controller | `class PickupController` | Handles farmer pickup operations (`/farmer/pickups/**`) and household cancellation (`/household/pickups/**`). | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupRequestModelTest.java`](../../src/test/java/com/agroloop/model/PickupRequestModelTest.java)** | Test | JUnit 5 Test | Unit tests verifying domain entity state machine, decline re-queue, cancellation windows, and invariants. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`WasteVerificationModelTest.java`](../../src/test/java/com/agroloop/model/WasteVerificationModelTest.java)** | Test | JUnit 5 Test | Unit tests verifying positive weight enforcement, quality grade multipliers, and null-safety. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupRequestRepositoryTest.java`](../../src/test/java/com/agroloop/repository/PickupRequestRepositoryTest.java)** | Test | DataJpaTest | Database slice tests verifying repository queries, status filters, and foreign key cascades. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupServiceTest.java`](../../src/test/java/com/agroloop/service/PickupServiceTest.java)** | Test | Mockito Test | Unit tests verifying service orchestration and role authorization guards. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`PickupIntegrationTest.java`](../../src/test/java/com/agroloop/controller/PickupIntegrationTest.java)** | Test | MockMvc Test | Integration tests verifying claim ➔ schedule ➔ collect ➔ verify lifecycle and household cancellation. | [04. Pickups](../docs/modules/04_pickup_and_verification.md) |
-| **[`TransactionType.java`](../../src/main/java/com/agroloop/model/TransactionType.java)** | Domain Model | `enum TransactionType` | Ledger transaction types (`REWARD_MINTED` for Phase 5 rewards). | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`EcoTokenTransaction.java`](../../src/main/java/com/agroloop/model/EcoTokenTransaction.java)** | Domain Model | `class EcoTokenTransaction` | Immutable audit entity recording token amounts, balance snapshots, and verification references. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`TokenCalculator.java`](../../src/main/java/com/agroloop/service/token/TokenCalculator.java)** | Strategy Interface | `interface TokenCalculator` | Polymorphic contract for reward calculation strategies. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`StandardTokenCalculator.java`](../../src/main/java/com/agroloop/service/token/StandardTokenCalculator.java)** | Strategy Implementation | `class StandardTokenCalculator` | Standard algorithm (`weight * categoryMultiplier * qualityMultiplier`). | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`PromotionalTokenCalculator.java`](../../src/main/java/com/agroloop/service/token/PromotionalTokenCalculator.java)** | Strategy Implementation | `class PromotionalTokenCalculator` | Promotional surge campaign reward calculation strategy. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`V5__create_ecotoken_transactions_table.sql`](../../src/main/resources/db/migration/V5__create_ecotoken_transactions_table.sql)** | Migration | SQL Migration | Flyway DDL creating `ecotoken_transactions` table with unique constraint on `waste_verification_id`. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`EcoTokenTransactionRepository.java`](../../src/main/java/com/agroloop/repository/EcoTokenTransactionRepository.java)** | Persistence | `EcoTokenTransactionRepository` | Spring Data JPA queries for ledger history and idempotency verification. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`TokenRewardService.java`](../../src/main/java/com/agroloop/service/TokenRewardService.java)** | Service Contract | `interface TokenRewardService` | Business contract for reward minting, idempotency checks, and household ledger auditing. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`TokenRewardServiceImpl.java`](../../src/main/java/com/agroloop/service/TokenRewardServiceImpl.java)** | Service Logic | `class TokenRewardServiceImpl` | Transactional coordinator executing strategy calculations, pessimistic locking, and ledger persistence. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`TokenCalculatorTest.java`](../../src/test/java/com/agroloop/service/TokenCalculatorTest.java)** | Test | JUnit 5 Test | Strategy unit tests verifying standard and promotional reward calculations and rejection zero-rewards. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`EcoTokenTransactionTest.java`](../../src/test/java/com/agroloop/model/EcoTokenTransactionTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying entity immutability, non-negative balance invariants, and scale normalization. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`TokenRewardServiceTest.java`](../../src/test/java/com/agroloop/service/TokenRewardServiceTest.java)** | Test | Mockito Test | Unit tests verifying reward minting, pessimistic write lock acquisition, idempotency, and rejection audit entries. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`TokenRewardServiceIntegrationTest.java`](../../src/test/java/com/agroloop/service/TokenRewardServiceIntegrationTest.java)** | Test | SpringBootTest | Multithreaded concurrency tests asserting pessimistic write locking, idempotency, and lost-update prevention with the default test profile (in-memory H2 and Flyway disabled). |
-| **[`DashboardIntegrationTest.java`](../../src/test/java/com/agroloop/controller/DashboardIntegrationTest.java)** | Test | MockMvc Test | Controller integration tests verifying populated EcoToken ledger rendering and eager fetch resolution with `open-in-view=false`. | [05. EcoTokens](../docs/modules/05_ecotokens.md) |
-| **[`ProductCategory.java`](../../src/main/java/com/agroloop/model/ProductCategory.java)** | Domain Model | `enum ProductCategory` | Taxonomy of farm goods: `ORGANIC_VEGETABLES`, `FRESH_FRUITS`, `COMPOST_AND_SOIL`, `SEEDS_AND_PLANTS`, `DAIRY_AND_EGGS`, `HERBS_AND_SPICES`, `HONEY_AND_PRESERVES`. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`Product.java`](../../src/main/java/com/agroloop/model/Product.java)** | Domain Model | `class Product` | Encapsulated marketplace listing managing stock deductions (`deductStock`), replenishment (`restock`), pricing, soft archival (`deactivate`), and `@Version` optimistic locking. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`OrderStatus.java`](../../src/main/java/com/agroloop/model/OrderStatus.java)** | Domain Model | `enum OrderStatus` | Lifecycle states for orders: `PLACED`, `COMPLETED`. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`Order.java`](../../src/main/java/com/agroloop/model/Order.java)** | Domain Model | `class Order` | Aggregate root encapsulating line items, total tokens, buyer relationship, and profile address fallback. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`OrderItem.java`](../../src/main/java/com/agroloop/model/OrderItem.java)** | Domain Model | `class OrderItem` | Historical snapshot line item preserving product title, unit price, category, unit, and farmer name independently of subsequent edits. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`InsufficientStockException.java`](../../src/main/java/com/agroloop/exception/InsufficientStockException.java)** | Domain Exception | `InsufficientStockException` | Thrown when requested purchase quantity exceeds available product inventory. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`InsufficientTokensException.java`](../../src/main/java/com/agroloop/exception/InsufficientTokensException.java)** | Domain Exception | `InsufficientTokensException` | Thrown when household token balance is insufficient for authoritative server-side checkout total. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`V6__create_marketplace_tables.sql`](../../src/main/resources/db/migration/V6__create_marketplace_tables.sql)** | Migration | SQL Migration | Flyway DDL creating `products`, `orders`, `order_items`, and adding `order_id` to `ecotoken_transactions` with mutual exclusivity check constraint. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`ProductRepository.java`](../../src/main/java/com/agroloop/repository/ProductRepository.java)** | Persistence | `ProductRepository` | Spring Data JPA queries with pessimistic write locking (`findByIdForUpdate`), active listings, and farmer listings. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`OrderRepository.java`](../../src/main/java/com/agroloop/repository/OrderRepository.java)** | Persistence | `OrderRepository` | Queries orders by buyer, order number, and farmer sales history. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`OrderItemRepository.java`](../../src/main/java/com/agroloop/repository/OrderItemRepository.java)** | Persistence | `OrderItemRepository` | Data access repository for individual order line items. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`ProductFormRequest.java`](../../src/main/java/com/agroloop/dto/ProductFormRequest.java)** | DTO | `class ProductFormRequest` | Form validation backing object for farmer product listings. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`CartItemDto.java`](../../src/main/java/com/agroloop/dto/CartItemDto.java)** | DTO | `class CartItemDto` | Session cart item representation enforcing positive quantities. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`CartDto.java`](../../src/main/java/com/agroloop/dto/CartDto.java)** | DTO | `class CartDto` | Session shopping cart with helper methods for item counting and total calculations. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`CheckoutRequest.java`](../../src/main/java/com/agroloop/dto/CheckoutRequest.java)** | DTO | `class CheckoutRequest` | Captures delivery address and optional instructions during checkout. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`ProductService.java`](../../src/main/java/com/agroloop/service/ProductService.java)** | Service Contract | `interface ProductService` | Product catalog querying, creation, updating, and soft archival. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`ProductServiceImpl.java`](../../src/main/java/com/agroloop/service/ProductServiceImpl.java)** | Service Logic | `class ProductServiceImpl` | Implements farmer ownership checks, positive stock checks, and catalog filtering. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`CartService.java`](../../src/main/java/com/agroloop/service/CartService.java)** | Service Contract | `interface CartService` | Session shopping cart contract for adding, modifying, and clearing items. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`CartServiceImpl.java`](../../src/main/java/com/agroloop/service/CartServiceImpl.java)** | Service Logic | `class CartServiceImpl` | HTTP session-backed implementation managing cart state. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceService.java`](../../src/main/java/com/agroloop/service/MarketplaceService.java)** | Service Contract | `interface MarketplaceService` | Transactional checkout orchestration and order lookup contract. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceServiceImpl.java`](../../src/main/java/com/agroloop/service/MarketplaceServiceImpl.java)** | Service Logic | `class MarketplaceServiceImpl` | Deterministic dual-phase pessimistic locking (household row -> ascending product rows), validation-before-mutation, and atomic checkout transaction. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceController.java`](../../src/main/java/com/agroloop/controller/MarketplaceController.java)** | Web Controller | `class MarketplaceController` | Catalog browsing, cart management, checkout execution with post-commit cart clearing, and order receipts. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`FarmerProductController.java`](../../src/main/java/com/agroloop/controller/FarmerProductController.java)** | Web Controller | `class FarmerProductController` | Farmer product management, listing forms, active/archive toggles, and sales order view with strict farmer authorization. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`ProductModelTest.java`](../../src/test/java/com/agroloop/model/ProductModelTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying stock deductions, restock, metadata updates, and activation toggles. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`OrderModelTest.java`](../../src/test/java/com/agroloop/model/OrderModelTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying order items, address fallback, and historical snapshot immutability. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`CartServiceTest.java`](../../src/test/java/com/agroloop/service/CartServiceTest.java)** | Test | JUnit 5 Test | Unit tests verifying session cart mutations, quantity bounds, and clearing. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`ProductServiceTest.java`](../../src/test/java/com/agroloop/service/ProductServiceTest.java)** | Test | Mockito Test | Unit tests verifying farmer ownership authorization, catalog filters, and soft archival. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceServiceTest.java`](../../src/test/java/com/agroloop/service/MarketplaceServiceTest.java)** | Test | Mockito Test | Unit tests verifying checkout pipeline, server-side pricing, solvency checks, and lock ordering. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceConcurrencyIntegrationTest.java`](../../src/test/java/com/agroloop/service/MarketplaceConcurrencyIntegrationTest.java)** | Test | SpringBootTest | 10 concurrent threads competing for 2 units of stock with real pessimistic locks; exactly 2 succeed and 8 fail. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceDeadlockAndRollbackIntegrationTest.java`](../../src/test/java/com/agroloop/service/MarketplaceDeadlockAndRollbackIntegrationTest.java)** | Test | SpringBootTest | Concurrency integration testing inverted cart deadlocks [A,B] vs [B,A] and transactional rollback on insufficient tokens. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`MarketplaceControllerTest.java`](../../src/test/java/com/agroloop/controller/MarketplaceControllerTest.java)** | Test | MockMvc Test | Integration tests verifying catalog, cart, checkout flows, and post-commit cart clearing. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`FarmerProductControllerTest.java`](../../src/test/java/com/agroloop/controller/FarmerProductControllerTest.java)** | Test | MockMvc Test | Integration tests verifying farmer product management, role protection, and cross-farmer authorization guards. | [06. Marketplace](../docs/modules/06_marketplace.md) |
-| **[`V7__create_admin_and_refund_governance.sql`](../../src/main/resources/db/migration/V7__create_admin_and_refund_governance.sql)** | Migration | SQL Migration | Flyway DDL adding `token_balance >= 0` check, order lifecycle/dispute columns, staged `farmer_id` snapshot with assertion guard, partial unique indexes for `ORDER_REFUND` and `MARKETPLACE_PURCHASE`, and PostgreSQL physical immutability trigger on ledger. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`TransactionDirection.java`](../../src/main/java/com/agroloop/model/TransactionDirection.java)** | Domain Model | `enum TransactionDirection` | Defines financial ledger flow directions: `CREDIT`, `DEBIT`. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`RefundReason.java`](../../src/main/java/com/agroloop/model/RefundReason.java)** | Domain Model | `enum RefundReason` | Explicit taxonomy for refund authorization: `HOUSEHOLD_CANCELLATION`, `ADMIN_CANCELLATION`, `DISPUTE_APPROVED`. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`DisputeResolution.java`](../../src/main/java/com/agroloop/model/DisputeResolution.java)** | Domain Model | `enum DisputeResolution` | Administrative adjudication outcome taxonomy: `APPROVED_REFUND`, `DISMISSED`. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`SolvencyMetricsDto.java`](../../src/main/java/com/agroloop/dto/SolvencyMetricsDto.java)** | DTO | `class SolvencyMetricsDto` | Encapsulates Tier-2 platform solvency metrics: total household balances, system credits/debits, net ledger delta, and mathematical solvency boolean. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`AdminGovernanceService.java`](../../src/main/java/com/agroloop/service/AdminGovernanceService.java)** | Service Contract | `interface AdminGovernanceService` | Governance contract for user moderation (`enableUser`, `disableUser`), manual token adjustment under lock (`adjustTokens`), and platform solvency reconciliation (`getPlatformSolvencyMetrics`). | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`AdminGovernanceServiceImpl.java`](../../src/main/java/com/agroloop/service/AdminGovernanceServiceImpl.java)** | Service Logic | `class AdminGovernanceServiceImpl` | Implements serialized last-admin protection via deterministic `PESSIMISTIC_WRITE` query, lock hierarchy token adjustment, and paginated audit ledger queries. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`AdminController.java`](../../src/main/java/com/agroloop/controller/AdminController.java)** | Web Controller | `class AdminController` | Dedicated administrative portal controller serving `/admin/users`, `/admin/orders`, `/admin/ledger`, token adjustment POST, and dispute adjudication POST. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`users.html`](../../src/main/resources/templates/admin/users.html)** | UI View | Thymeleaf Template | Admin user management view featuring role badges, status toggles, and secure modal form for manual token adjustment. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`orders.html`](../../src/main/resources/templates/admin/orders.html)** | UI View | Thymeleaf Template | Admin marketplace orders view with status filtering, direct cancellation modal, and dispute adjudication modal. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`ledger.html`](../../src/main/resources/templates/admin/ledger.html)** | UI View | Thymeleaf Template | Admin platform-wide immutable ledger viewer with credit/debit color chips, actor links, and pagination. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`OrderLifecycleTest.java`](../../src/test/java/com/agroloop/model/OrderLifecycleTest.java)** | Test | JUnit 5 Test | Domain unit tests verifying Order state transitions, cancellation windows, single-dispute invariant, and dispute adjudication. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`OrderAtomicRefundTest.java`](../../src/test/java/com/agroloop/service/OrderAtomicRefundTest.java)** | Test | SpringBootTest | Integration tests verifying atomic refund mechanics: inventory restock, token credit, ORDER_REFUND ledger insertion, and double-refund rejection. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`OrderLifecycleConcurrencyTest.java`](../../src/test/java/com/agroloop/service/OrderLifecycleConcurrencyTest.java)** | Test | SpringBootTest | Multithreaded concurrency test executing simultaneous cancel, dispute, and complete on the same order; asserts exactly one terminal transition wins without corrupting state. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`ConcurrentHouseholdLedgerMutationTest.java`](../../src/test/java/com/agroloop/service/ConcurrentHouseholdLedgerMutationTest.java)** | Test | SpringBootTest | High-concurrency stress test with 15 concurrent threads performing credits, debits, adjustments; validates Tier-1 running balance in `id ASC` order. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`ConcurrentLastAdminProtectionTest.java`](../../src/test/java/com/agroloop/service/ConcurrentLastAdminProtectionTest.java)** | Test | SpringBootTest | Concurrency test verifying mutual serialized last-admin defense; prevents concurrent requests from reducing active admins to 0. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`AdminGovernanceServiceTest.java`](../../src/test/java/com/agroloop/service/AdminGovernanceServiceTest.java)** | Test | Mockito Test | Unit tests verifying user enabling/disabling, self-disable guard, token adjustment balance invariant, and Tier-2 solvency calculation. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`AdminControllerTest.java`](../../src/test/java/com/agroloop/controller/AdminControllerTest.java)** | Test | MockMvc Test | Web slice integration tests verifying `/admin/**` endpoints, role enforcement, flash attributes, and error responses. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
-| **[`MarketplaceOrderLifecycleSecurityTest.java`](../../src/test/java/com/agroloop/controller/MarketplaceOrderLifecycleSecurityTest.java)** | Test | MockMvc Test | Security integration tests verifying cross-household cancellation/dispute rejection (403/redirect) and farmer cross-order protection. | [07. Admin & Governance](../docs/modules/07_admin_and_testing.md) |
+| **[`application.properties`](../src/main/resources/application.properties)** | Configuration | Spring Properties | Configures datasource, Flyway migrations, multipart limits (10MB), JWT expiration, and OpenAPI metadata. | [01. Setup](modules/01_project_setup.md) |
+| **[`AgroLoopApplication.java`](../src/main/java/com/agroloop/AgroLoopApplication.java)** | Application Entrypoint | `class AgroLoopApplication` | Bootstraps the Spring Boot application context (`main` method). | [01. Setup](modules/01_project_setup.md) |
+| **[`SecurityConfig.java`](../src/main/java/com/agroloop/config/SecurityConfig.java)** | Security Architecture | `class SecurityConfig` | Configures dual filter chains: stateless Bearer JWT for `/api/v1/**` and stateful session-based form login for `/**`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`ApiCorsConfiguration.java`](../src/main/java/com/agroloop/config/ApiCorsConfiguration.java)** | Security Policy | `class ApiCorsConfiguration` | Defines permissive CORS origins and methods for Next.js Web, Expo Mobile, and Tauri Desktop clients. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`OpenApiConfig.java`](../src/main/java/com/agroloop/config/OpenApiConfig.java)** | API Documentation | `class OpenApiConfig` | Configures SpringDoc OpenAPI 3.1 specification, Bearer JWT scheme, and endpoint groupings. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`WebMvcConfig.java`](../src/main/java/com/agroloop/config/WebMvcConfig.java)** | Resource Mapping | `class WebMvcConfig` | Maps `/uploads/**` static resource handler to the physical local upload storage directory. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`DataInitializer.java`](../src/main/java/com/agroloop/config/DataInitializer.java)** | Data Bootstrap | `class DataInitializer` | `CommandLineRunner` idempotently seeding default demo accounts (`admin@`, `household@`, `farmer@`) on startup. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`CustomAuthenticationSuccessHandler.java`](../src/main/java/com/agroloop/config/CustomAuthenticationSuccessHandler.java)** | Security Routing | `CustomAuthenticationSuccessHandler` | Dynamically redirects authenticated SSR users based on role (`/admin/dashboard`, `/farmer/dashboard`, `/household/dashboard`). | [02. Auth](modules/02_user_management_and_auth.md) |
+
+---
+
+### 4.3 Security, Authentication & Infrastructure Services
+
+| File Path | Component Layer | Core Classes / Interfaces | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`TokenService.java`](../src/main/java/com/agroloop/security/TokenService.java)** | Cryptography / JWT | `class TokenService` | Signs and parses RSA-2048 JWT access tokens, rotates refresh tokens, and enforces replay attack family revocation. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`AuthenticationRateLimiter.java`](../src/main/java/com/agroloop/security/AuthenticationRateLimiter.java)** | API Defense | `class AuthenticationRateLimiter` | Sliding-window IP and email brute-force defense throttling abuse on authentication and QR endpoints. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`RequestIdFilter.java`](../src/main/java/com/agroloop/security/RequestIdFilter.java)** | Observability | `class RequestIdFilter` | Injects and propagates unique `X-Request-ID` across HTTP requests, MDC logging, and error envelopes. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`RestAuthenticationEntryPoint.java`](../src/main/java/com/agroloop/security/RestAuthenticationEntryPoint.java)** | API Security | `RestAuthenticationEntryPoint` | Converts unauthenticated REST requests into structured 401 JSON envelopes with RFC 7807 problem details. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`RestAccessDeniedHandler.java`](../src/main/java/com/agroloop/security/RestAccessDeniedHandler.java)** | API Security | `class RestAccessDeniedHandler` | Emits structured 403 Forbidden JSON envelopes on unauthorized role access. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`OrderSecurityEvaluator.java`](../src/main/java/com/agroloop/security/authorization/OrderSecurityEvaluator.java)** | Method Security | `class OrderSecurityEvaluator` | SpEL security evaluator asserting household ownership and farmer order item authorization. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`PickupSecurityEvaluator.java`](../src/main/java/com/agroloop/security/authorization/PickupSecurityEvaluator.java)** | Method Security | `class PickupSecurityEvaluator` | SpEL security evaluator asserting household pickup cancellation rights and farmer claim authorization. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`IdempotencyService.java`](../src/main/java/com/agroloop/security/idempotency/IdempotencyService.java)** | Infrastructure | `class IdempotencyService` | Coordinates `Idempotency-Key` tracking, duplicate suppression, and cached response replay. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`IdempotencyEncryptionService.java`](../src/main/java/com/agroloop/security/idempotency/IdempotencyEncryptionService.java)** | Cryptography | `class IdempotencyEncryptionService` | Encrypts cached response payloads at rest using AES-GCM-256 with authenticated additional data (AAD). | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`IdempotencyScope.java`](../src/main/java/com/agroloop/security/idempotency/IdempotencyScope.java)** | Security Model | `enum IdempotencyScope` | Scopes idempotency keys across `CHECKOUT`, `PICKUP_HANDSHAKE`, and `ORDER_ACTION`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+
+---
+
+### 4.4 Domain Models & Enums (JPA Entities & Value Objects)
+
+| File Path | Component Layer | Core Classes / Enums | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`Role.java`](../src/main/java/com/agroloop/model/Role.java)** | Domain Enum | `enum Role` | Ecosystem security authorities: `ROLE_HOUSEHOLD`, `ROLE_FARMER`, `ROLE_ADMIN`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`User.java`](../src/main/java/com/agroloop/model/User.java)** | Domain Aggregate | `abstract class User` | Base JPA entity with Joined Table inheritance (`users`). Encapsulates identity, email, password hash, role, enabled flag. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`Household.java`](../src/main/java/com/agroloop/model/Household.java)** | Domain Subclass | `class Household extends User` | Joined subtype for households (`households`). Encapsulates `tokenBalance`, `address`, `addTokens()`, `spendTokens()`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`Farmer.java`](../src/main/java/com/agroloop/model/Farmer.java)** | Domain Subclass | `class Farmer extends User` | Joined subtype for farmers (`farmers`). Encapsulates `farmName`, `farmAddress`, `notes`, `updateFarmDetails()`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`Admin.java`](../src/main/java/com/agroloop/model/Admin.java)** | Domain Subclass | `class Admin extends User` | Joined subtype for system administrators (`admins`). Holds administrative governance authority. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`FarmerApplication.java`](../src/main/java/com/agroloop/model/FarmerApplication.java)** | Domain Entity | `class FarmerApplication` | Captures farmer conversion requests with status lifecycle, approval, and rejection reason tracking. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`FarmerApplicationStatus.java`](../src/main/java/com/agroloop/model/FarmerApplicationStatus.java)** | Domain Enum | `enum FarmerApplicationStatus` | Status lifecycle for role conversion: `PENDING`, `APPROVED`, `REJECTED`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`AuthSession.java`](../src/main/java/com/agroloop/model/AuthSession.java)** | Security Entity | `class AuthSession` | Tracks active client refresh token families, hashes, revocation status, client type, and expiration. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`ClientType.java`](../src/main/java/com/agroloop/model/ClientType.java)** | Security Enum | `enum ClientType` | Distinguishes connecting client runtimes: `WEB`, `MOBILE`, `DESKTOP`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`WasteCategory.java`](../src/main/java/com/agroloop/model/WasteCategory.java)** | Domain Enum | `enum WasteCategory` | Waste classification taxonomy (`FOOD_SCRAPS`, `GARDEN_WASTE`, `AGRICULTURAL_ORGANIC`, `COFFEE_GROUNDS`) with reward multipliers. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`SubmissionStatus.java`](../src/main/java/com/agroloop/model/SubmissionStatus.java)** | Domain Enum | `enum SubmissionStatus` | Waste submission lifecycle (`SUBMITTED`, `CLAIMED`, `COLLECTED`, `VERIFIED`, `REJECTED`). | [03. Submissions](modules/03_waste_submission.md) |
+| **[`WasteSubmission.java`](../src/main/java/com/agroloop/model/WasteSubmission.java)** | Domain Entity | `class WasteSubmission` | Encapsulates category, estimated weight, address inheritance, photo media link, and state transitions. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`MediaAsset.java`](../src/main/java/com/agroloop/model/MediaAsset.java)** | Domain Entity | `class MediaAsset` | Tracks uploaded files, MIME verification, physical storage paths, ownership, and upload confirmation status. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`MediaPurpose.java`](../src/main/java/com/agroloop/model/MediaPurpose.java)** | Domain Enum | `enum MediaPurpose` | Scopes upload tickets: `WASTE_SUBMISSION_PHOTO`, `PRODUCT_IMAGE`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`MediaStatus.java`](../src/main/java/com/agroloop/model/MediaStatus.java)** | Domain Enum | `enum MediaStatus` | Media asset lifecycle: `PENDING_CONFIRMATION`, `CONFIRMED`, `ABANDONED`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`PickupStatus.java`](../src/main/java/com/agroloop/model/PickupStatus.java)** | Domain Enum | `enum PickupStatus` | Pickup lifecycle (`REQUESTED`, `ASSIGNED`, `SCHEDULED`, `COLLECTED`, `VERIFIED`, `CANCELLED`). | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`QualityGrade.java`](../src/main/java/com/agroloop/model/QualityGrade.java)** | Domain Enum | `enum QualityGrade` | Quality grading taxonomy (`GRADE_A`, `GRADE_B`, `GRADE_C`, `REJECTED`) with multiplier calculation. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`PickupRequest.java`](../src/main/java/com/agroloop/model/PickupRequest.java)** | Domain Entity | `class PickupRequest` | Encapsulates farmer claims, scheduling, optimistic lock `@Version`, and verification recording. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`PickupHandshake.java`](../src/main/java/com/agroloop/model/PickupHandshake.java)** | Domain Entity | `class PickupHandshake` | Ephemeral server-authoritative handshake entity storing token hashes, TTL, and consumption status. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`PickupHandshakeStatus.java`](../src/main/java/com/agroloop/model/PickupHandshakeStatus.java)** | Domain Enum | `enum PickupHandshakeStatus` | Handshake status machine: `ACTIVE`, `CONSUMED`, `EXPIRED`. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`HandshakeVerificationMethod.java`](../src/main/java/com/agroloop/model/HandshakeVerificationMethod.java)** | Domain Enum | `enum HandshakeVerificationMethod` | Verification audit trail method: `QR_SCAN`, `MANUAL_FALLBACK`. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`WasteVerification.java`](../src/main/java/com/agroloop/model/WasteVerification.java)** | Domain Entity | `class WasteVerification` | Captures verified weight, quality grade, inspection notes, and verifying farmer association. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`TransactionType.java`](../src/main/java/com/agroloop/model/TransactionType.java)** | Domain Enum | `enum TransactionType` | Financial transaction classification: `REWARD_MINTED`, `MARKETPLACE_PURCHASE`, `ORDER_REFUND`, `ADMIN_ADJUSTMENT`. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`TransactionDirection.java`](../src/main/java/com/agroloop/model/TransactionDirection.java)** | Domain Enum | `enum TransactionDirection` | Financial flow indicators: `CREDIT`, `DEBIT`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`EcoTokenTransaction.java`](../src/main/java/com/agroloop/model/EcoTokenTransaction.java)** | Domain Entity | `class EcoTokenTransaction` | Immutable financial ledger entry recording token amounts, balance snapshots, and order/verification foreign keys. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`ProductCategory.java`](../src/main/java/com/agroloop/model/ProductCategory.java)** | Domain Enum | `enum ProductCategory` | Farm goods taxonomy (`ORGANIC_VEGETABLES`, `FRESH_FRUITS`, `COMPOST_AND_SOIL`, `SEEDS_AND_PLANTS`, etc.). | [06. Marketplace](modules/06_marketplace.md) |
+| **[`Product.java`](../src/main/java/com/agroloop/model/Product.java)** | Domain Aggregate | `class Product` | Manages stock deductions (`deductStock`), replenishment (`restock`), pricing, soft archival, and `@Version` locking. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderStatus.java`](../src/main/java/com/agroloop/model/OrderStatus.java)** | Domain Enum | `enum OrderStatus` | Order state machine: `PLACED`, `COMPLETED`, `CANCELLED`, `DISPUTED`, `REFUNDED`. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`RefundReason.java`](../src/main/java/com/agroloop/model/RefundReason.java)** | Domain Enum | `enum RefundReason` | Refund taxonomy: `HOUSEHOLD_CANCELLATION`, `ADMIN_CANCELLATION`, `DISPUTE_APPROVED`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`DisputeResolution.java`](../src/main/java/com/agroloop/model/DisputeResolution.java)** | Domain Enum | `enum DisputeResolution` | Administrative adjudication outcome: `APPROVED_REFUND`, `DISMISSED`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`Order.java`](../src/main/java/com/agroloop/model/Order.java)** | Domain Aggregate | `class Order` | Aggregate root for customer orders, snapshot lines, delivery addresses, disputes, and refund state. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderItem.java`](../src/main/java/com/agroloop/model/OrderItem.java)** | Domain Entity | `class OrderItem` | Historical line item preserving product title, unit price, category, and farmer name snapshot. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`IdempotencyKey.java`](../src/main/java/com/agroloop/model/IdempotencyKey.java)** | Domain Entity | `class IdempotencyKey` | Persists idempotency hashes, execution status, and AES-GCM-256 encrypted response caches. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`IdempotencyStatus.java`](../src/main/java/com/agroloop/model/IdempotencyStatus.java)** | Domain Enum | `enum IdempotencyStatus` | Execution state: `IN_PROGRESS`, `COMPLETED`, `FAILED`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+
+---
+
+### 4.5 Spring Data JPA Repositories
+
+| File Path | Component Layer | Interface | Key Query Capabilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`UserRepository.java`](../src/main/java/com/agroloop/repository/UserRepository.java)** | Persistence | `UserRepository` | Base `User` queries: `findByEmail()`, `existsByEmail()`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`HouseholdRepository.java`](../src/main/java/com/agroloop/repository/HouseholdRepository.java)** | Persistence | `HouseholdRepository` | Queries household entity with `findByIdForUpdate()` pessimistic write locks. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`FarmerRepository.java`](../src/main/java/com/agroloop/repository/FarmerRepository.java)** | Persistence | `FarmerRepository` | Queries farmer profiles and verifies farm details. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`AdminRepository.java`](../src/main/java/com/agroloop/repository/AdminRepository.java)** | Persistence | `AdminRepository` | Serialized last-admin defense via `countActiveAdminsForUpdate()`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`FarmerApplicationRepository.java`](../src/main/java/com/agroloop/repository/FarmerApplicationRepository.java)** | Persistence | `FarmerApplicationRepository` | Moderation queries by status (`findByStatus()`) and applicant lookups. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`AuthSessionRepository.java`](../src/main/java/com/agroloop/repository/AuthSessionRepository.java)** | Persistence | `AuthSessionRepository` | Refresh token validation, family-based batch revocation (`revokeAllInFamily()`). | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`WasteSubmissionRepository.java`](../src/main/java/com/agroloop/repository/WasteSubmissionRepository.java)** | Persistence | `WasteSubmissionRepository` | Household waste submissions filtered by status and creation time. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`MediaAssetRepository.java`](../src/main/java/com/agroloop/repository/MediaAssetRepository.java)** | Persistence | `MediaAssetRepository` | Upload tickets lookup, garbage-collection cleanup of abandoned media. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`PickupRequestRepository.java`](../src/main/java/com/agroloop/repository/PickupRequestRepository.java)** | Persistence | `PickupRequestRepository` | Pickup claims and scheduling queries with `findByIdForUpdate()` locking. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`PickupHandshakeRepository.java`](../src/main/java/com/agroloop/repository/PickupHandshakeRepository.java)** | Persistence | `PickupHandshakeRepository` | Lookups for active handshake tokens and expiry invalidation. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`WasteVerificationRepository.java`](../src/main/java/com/agroloop/repository/WasteVerificationRepository.java)** | Persistence | `WasteVerificationRepository` | Verification audits and farmer verification performance metrics. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`EcoTokenTransactionRepository.java`](../src/main/java/com/agroloop/repository/EcoTokenTransactionRepository.java)** | Persistence | `EcoTokenTransactionRepository` | Immutable audit ledger queries, idempotency checks, and Tier-1/Tier-2 financial sums. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`ProductRepository.java`](../src/main/java/com/agroloop/repository/ProductRepository.java)** | Persistence | `ProductRepository` | Active catalog browsing and sorted batch pessimistic locking (`findByIdInOrderByIdAscForUpdate`). | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderRepository.java`](../src/main/java/com/agroloop/repository/OrderRepository.java)** | Persistence | `OrderRepository` | Order history by buyer, farmer sales lookups, and dispute filtering. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderItemRepository.java`](../src/main/java/com/agroloop/repository/OrderItemRepository.java)** | Persistence | `OrderItemRepository` | Snapshot order items querying for fulfillment tracking. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`IdempotencyKeyRepository.java`](../src/main/java/com/agroloop/repository/IdempotencyKeyRepository.java)** | Persistence | `IdempotencyKeyRepository` | Atomic reservation and retrieval of `Idempotency-Key` records. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+
+---
+
+### 4.6 Domain Service Interfaces & Business Logic
+
+| File Path | Component Layer | Core Classes / Interfaces | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`UserService.java`](../src/main/java/com/agroloop/service/UserService.java)** | Service Contract | `interface UserService` | Contracts for registration, farmer application submission, and admin approval/rejection. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`UserServiceImpl.java`](../src/main/java/com/agroloop/service/UserServiceImpl.java)** | Service Logic | `class UserServiceImpl` | Implements BCrypt password hashing, transactional role conversion, and user lookup. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`CustomUserDetailsService.java`](../src/main/java/com/agroloop/service/CustomUserDetailsService.java)** | Security Integration | `CustomUserDetailsService` | Implements Spring Security's `UserDetailsService`, mapping `User` to `UserDetails`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`WasteSubmissionService.java`](../src/main/java/com/agroloop/service/WasteSubmissionService.java)** | Service Contract | `WasteSubmissionService` | Contract for submitting waste, address inheritance, and submission history. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`WasteSubmissionServiceImpl.java`](../src/main/java/com/agroloop/service/WasteSubmissionServiceImpl.java)** | Service Logic | `WasteSubmissionServiceImpl` | Transactional waste recording, address fallback, and media asset linkage. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`FileStorageService.java`](../src/main/java/com/agroloop/service/storage/FileStorageService.java)** | Storage Abstraction | `interface FileStorageService` | Abstract interface for storing, resolving, and deleting uploaded binary files. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`LocalFileStorageServiceImpl.java`](../src/main/java/com/agroloop/service/storage/LocalFileStorageServiceImpl.java)** | Storage Logic | `LocalFileStorageServiceImpl` | Local filesystem implementation enforcing UUID renaming, MIME validation, and traversal defense. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`PickupService.java`](../src/main/java/com/agroloop/service/PickupService.java)** | Service Contract | `interface PickupService` | Contract for farmer claims, scheduling, collection, verification, and cancellation. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`PickupServiceImpl.java`](../src/main/java/com/agroloop/service/PickupServiceImpl.java)** | Service Logic | `class PickupServiceImpl` | Transactional coordination of pickup state transitions and role authorization guards. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`PickupHandshakeService.java`](../src/main/java/com/agroloop/service/PickupHandshakeService.java)** | Service Logic | `PickupHandshakeService` | Issues HMAC-SHA256 dynamic passes, verifies scanned QR codes under lock, and invokes token minting. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`PickupHandshakeCanonicalizer.java`](../src/main/java/com/agroloop/service/PickupHandshakeCanonicalizer.java)** | Utility | `PickupHandshakeCanonicalizer` | Generates deterministic canonical signature strings across heterogeneous client runtimes. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`MediaService.java`](../src/main/java/com/agroloop/service/MediaService.java)** | Service Logic | `class MediaService` | Manages pre-authenticated 3-phase upload tickets, temporary file storage, and asset confirmation. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`TokenRewardService.java`](../src/main/java/com/agroloop/service/TokenRewardService.java)** | Service Contract | `interface TokenRewardService` | Business contract for reward minting, idempotency checks, and ledger auditing. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`TokenRewardServiceImpl.java`](../src/main/java/com/agroloop/service/TokenRewardServiceImpl.java)** | Service Logic | `class TokenRewardServiceImpl` | Transactional coordinator executing strategy calculations, pessimistic locking, and ledger persistence. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`TokenCalculator.java`](../src/main/java/com/agroloop/service/token/TokenCalculator.java)** | Strategy Interface | `interface TokenCalculator` | Polymorphic contract for reward calculation strategies. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`StandardTokenCalculator.java`](../src/main/java/com/agroloop/service/token/StandardTokenCalculator.java)** | Strategy Implementation | `StandardTokenCalculator` | Standard algorithm (`weight * categoryMultiplier * qualityMultiplier`). | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`PromotionalTokenCalculator.java`](../src/main/java/com/agroloop/service/token/PromotionalTokenCalculator.java)** | Strategy Implementation | `PromotionalTokenCalculator` | Promotional surge campaign reward calculation strategy. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`ProductService.java`](../src/main/java/com/agroloop/service/ProductService.java)** | Service Contract | `interface ProductService` | Product catalog querying, creation, updating, and soft archival. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`ProductServiceImpl.java`](../src/main/java/com/agroloop/service/ProductServiceImpl.java)** | Service Logic | `class ProductServiceImpl` | Implements farmer listing ownership checks, positive stock checks, and catalog filtering. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`CartService.java`](../src/main/java/com/agroloop/service/CartService.java)** | Service Contract | `interface CartService` | Session shopping cart contract for adding, modifying, and clearing items. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`CartServiceImpl.java`](../src/main/java/com/agroloop/service/CartServiceImpl.java)** | Service Logic | `class CartServiceImpl` | HTTP session-backed implementation managing cart state. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`MarketplaceService.java`](../src/main/java/com/agroloop/service/MarketplaceService.java)** | Service Contract | `interface MarketplaceService` | Transactional checkout orchestration and order lookup contract. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`MarketplaceServiceImpl.java`](../src/main/java/com/agroloop/service/MarketplaceServiceImpl.java)** | Service Logic | `class MarketplaceServiceImpl` | Deterministic dual-phase pessimistic locking (household row -> ascending product rows) and atomic checkout. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`AdminGovernanceService.java`](../src/main/java/com/agroloop/service/AdminGovernanceService.java)** | Service Contract | `AdminGovernanceService` | Platform solvency reconciliation, manual token adjustments under lock, and order dispute adjudication. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`AdminGovernanceServiceImpl.java`](../src/main/java/com/agroloop/service/AdminGovernanceServiceImpl.java)** | Service Logic | `AdminGovernanceServiceImpl` | Implements serialized last-admin defense, lock hierarchy token adjustment, and atomic refund restock. | [07. Admin](modules/07_admin_and_testing.md) |
+
+---
+
+### 4.7 REST API v1 Controllers & Error Handling
+
+| File Path | Component Layer | Core Classes / Interfaces | Key Endpoints & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`RestExceptionHandler.java`](../src/main/java/com/agroloop/controller/api/RestExceptionHandler.java)** | Exception Handling | `@RestControllerAdvice` | Translates domain exceptions into RFC 7807 problem details with `X-Request-ID`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`AuthApiController.java`](../src/main/java/com/agroloop/controller/api/v1/AuthApiController.java)** | REST Controller | `class AuthApiController` | `/api/v1/auth/login`, `/register`, `/refresh`, `/logout`, `/me`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`HouseholdApiController.java`](../src/main/java/com/agroloop/controller/api/v1/HouseholdApiController.java)** | REST Controller | `HouseholdApiController` | `/api/v1/household/submissions`, `/balance`, `/ledger`, `/apply-farmer`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`FarmerApiController.java`](../src/main/java/com/agroloop/controller/api/v1/FarmerApiController.java)** | REST Controller | `class FarmerApiController` | `/api/v1/farmer/products`, `/orders`, `/collections`, `/profile`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`PickupApiController.java`](../src/main/java/com/agroloop/controller/api/v1/PickupApiController.java)** | REST Controller | `class PickupApiController` | `/api/v1/pickups/**`, `/handshake/pass`, `/handshake/verify`. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`MarketplaceApiController.java`](../src/main/java/com/agroloop/controller/api/v1/MarketplaceApiController.java)** | REST Controller | `MarketplaceApiController` | `/api/v1/marketplace/products`, `/checkout` (Idempotent). | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderApiController.java`](../src/main/java/com/agroloop/controller/api/v1/OrderApiController.java)** | REST Controller | `class OrderApiController` | `/api/v1/orders/{id}`, `/cancel`, `/dispute`, `/adjudicate`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`MediaApiController.java`](../src/main/java/com/agroloop/controller/api/v1/MediaApiController.java)** | REST Controller | `class MediaApiController` | `/api/v1/media/ticket`, `/upload`, `/confirm`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`AdminApiController.java`](../src/main/java/com/agroloop/controller/api/v1/AdminApiController.java)** | REST Controller | `class AdminApiController` | `/api/v1/admin/users`, `/token-adjustment`, `/solvency`, `/ledger`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`SystemApiController.java`](../src/main/java/com/agroloop/controller/api/v1/SystemApiController.java)** | REST Controller | `class SystemApiController` | `/api/v1/system/health`, `/meta`, `/diagnostics`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+
+---
+
+### 4.8 Web (Thymeleaf) Controllers
+
+| File Path | Component Layer | Core Classes / Interfaces | Key Routes & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`HomeController.java`](../src/main/java/com/agroloop/controller/web/HomeController.java)** | Web Controller | `class HomeController` | Serves public landing page (`GET /`) with dynamic database connection diagnostics. | [01. Setup](modules/01_project_setup.md) |
+| **[`AuthController.java`](../src/main/java/com/agroloop/controller/web/AuthController.java)** | Web Controller | `class AuthController` | Handles `GET /login`, `GET /register`, and `POST /register` with validation flash attributes. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`DashboardController.java`](../src/main/java/com/agroloop/controller/web/DashboardController.java)** | Web Controller | `class DashboardController` | Serves role dashboards (`/household/dashboard`, `/farmer/dashboard`, `/admin/dashboard`). | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`FarmerProductController.java`](../src/main/java/com/agroloop/controller/web/FarmerProductController.java)** | Web Controller | `FarmerProductController` | Farmer product management, listing creation forms, and sales history. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`MarketplaceController.java`](../src/main/java/com/agroloop/controller/web/MarketplaceController.java)** | Web Controller | `MarketplaceController` | Marketplace catalog browsing, cart operations, and web checkout flow. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`PickupController.java`](../src/main/java/com/agroloop/controller/web/PickupController.java)** | Web Controller | `class PickupController` | Handles farmer pickup operations (`/farmer/pickups/**`) and household cancellation. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`AdminController.java`](../src/main/java/com/agroloop/controller/web/AdminController.java)** | Web Controller | `class AdminController` | Dedicated admin portal serving `/admin/users`, `/admin/orders`, `/admin/ledger`. | [07. Admin](modules/07_admin_and_testing.md) |
+
+---
+
+### 4.9 Flyway Database Migrations
+
+| File Path | Component Layer | Migration Version | Database Schema Modifications | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`V1__create_user_tables.sql`](../src/main/resources/db/migration/V1__create_user_tables.sql)** | DB Migration | `V1` | Creates base `users` table and joined tables `households`, `farmers`, and `admins`. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`V2__create_farmer_applications_table.sql`](../src/main/resources/db/migration/V2__create_farmer_applications_table.sql)** | DB Migration | `V2` | Creates `farmer_applications` table with user foreign keys and status checks. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`V3__create_waste_submissions_table.sql`](../src/main/resources/db/migration/V3__create_waste_submissions_table.sql)** | DB Migration | `V3` | Creates `waste_submissions` table with category, status, weight, and image paths. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`V4__create_pickup_and_verification_tables.sql`](../src/main/resources/db/migration/V4__create_pickup_and_verification_tables.sql)** | DB Migration | `V4` | Creates `pickup_requests` (with `@Version` column) and `waste_verifications` tables. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`V5__create_ecotoken_transactions_table.sql`](../src/main/resources/db/migration/V5__create_ecotoken_transactions_table.sql)** | DB Migration | `V5` | Creates `ecotoken_transactions` audit ledger with unique verification constraints. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`V6__create_marketplace_tables.sql`](../src/main/resources/db/migration/V6__create_marketplace_tables.sql)** | DB Migration | `V6` | Creates `products`, `orders`, `order_items`, and adds `order_id` to ledger. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`V7__create_admin_and_refund_governance.sql`](../src/main/resources/db/migration/V7__create_admin_and_refund_governance.sql)** | DB Migration | `V7` | Implements `token_balance >= 0` check, refund columns, and PostgreSQL ledger immutability trigger. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`V8__api_sessions_idempotency_media.sql`](../src/main/resources/db/migration/V8__api_sessions_idempotency_media.sql)** | DB Migration | `V8` | Creates `auth_sessions`, `idempotency_keys`, and `media_assets` tables. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`V9__pickup_handshake.sql`](../src/main/resources/db/migration/V9__pickup_handshake.sql)** | DB Migration | `V9` | Creates `pickup_handshakes` table for server-authoritative QR codes. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+
+---
+
+### 4.10 Thymeleaf UI Views & Static Assets
+
+| File Path | Component Layer | Core Classes / View | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`index.html`](../src/main/resources/templates/index.html)** | UI View | Thymeleaf Template | Public landing page featuring brand logo, DB status indicator, and role cards. | [01. Setup](modules/01_project_setup.md) |
+| **[`login.html`](../src/main/resources/templates/login.html)** | UI View | Thymeleaf Template | Styled authentication view with demo credential autofill buttons and error banners. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`register.html`](../src/main/resources/templates/register.html)** | UI View | Thymeleaf Template | Registration view with default Household role notice and address validation. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`household.html`](../src/main/resources/templates/dashboard/household.html)** | UI View | Thymeleaf Template | Household portal showing EcoToken balance, pickups, and farmer conversion form. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`farmer.html`](../src/main/resources/templates/dashboard/farmer.html)** | UI View | Thymeleaf Template | Farmer portal showing farm profile, collection summary, and produce listing links. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`admin.html`](../src/main/resources/templates/dashboard/admin.html)** | UI View | Thymeleaf Template | Administrator portal displaying pending farmer conversion application queues. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`users.html`](../src/main/resources/templates/admin/users.html)** | UI View | Thymeleaf Template | Admin user management view with status toggles and manual token adjustment modals. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`orders.html`](../src/main/resources/templates/admin/orders.html)** | UI View | Thymeleaf Template | Admin order view with cancellation and dispute adjudication modals. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`ledger.html`](../src/main/resources/templates/admin/ledger.html)** | UI View | Thymeleaf Template | Admin immutable ledger viewer with credit/debit chips and pagination. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`css/style.css`](../src/main/resources/static/css/style.css)** | Static Stylesheet | CSS | Global responsive stylesheet with dark-mode palette, typography, and glassmorphism. | [01. Setup](modules/01_project_setup.md) |
+| **[`images/logo.png`](../src/main/resources/static/images/logo.png)** | Static Asset | PNG Image | High-resolution official AgroLoop brand artwork and browser favicon. | [01. Setup](modules/01_project_setup.md) |
+
+---
+
+### 4.11 Multi-Client Monorepo: Core Config & Shared Packages
+
+| File Path | Component Layer | Core Packages | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`package.json`](../clients/package.json)** | Monorepo Root | Root Package | Turborepo monorepo root defining client package workspaces and dev scripts. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`pnpm-workspace.yaml`](../clients/pnpm-workspace.yaml)** | Workspace Config | PNPM Config | Defines package boundaries: `packages/*`, `web`, `mobile`, `desktop`. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`turbo.json`](../clients/turbo.json)** | Build Orchestration | Turborepo Pipeline | Configures caching, task pipelines, and topological builds across clients. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`openapi.json`](../clients/openapi/openapi.json)** | API Contract | OpenAPI 3.1 Spec | Exported REST API specification driving type generation and client SDKs. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`api-types/src/index.ts`](../clients/packages/api-types/src/index.ts)** | Shared Library | `@agroloop/api-types` | Generated TypeScript types matching backend API responses and requests. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`api-client/src/client.ts`](../clients/packages/api-client/src/client.ts)** | Shared Library | `@agroloop/api-client` | Typed HTTP client with single-flight refresh mutex and idempotency injection. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`qr/src/qr-matrix.ts`](../clients/packages/qr/src/qr-matrix.ts)** | Shared Library | `@agroloop/qr` | Pure TypeScript QR matrix generator using Kazuhiko Arase algorithms. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+
+---
+
+### 4.12 Multi-Client Monorepo: Next.js 15 Web Portal (`@agroloop/web`)
+
+| File Path | Component Layer | Core Classes / Routes | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`page.tsx`](../clients/web/src/app/page.tsx)** | Web Page | Next.js Page | Public landing page featuring responsive hero, live diagnostics, and navigation. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`route.ts (Proxy)`](../clients/web/src/app/api/proxy/[...path]/route.ts)** | BFF Security Proxy | Route Handler | Server-side proxy injecting Bearer tokens from HttpOnly cookies and forwarding calls. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`route.ts (Login)`](../clients/web/src/app/api/auth/login/route.ts)** | BFF Auth | Route Handler | Authenticates against backend and sets secure HttpOnly cookie session. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`route.ts (Refresh)`](../clients/web/src/app/api/auth/refresh/route.ts)** | BFF Auth | Route Handler | Rotates refresh token under server-side single-flight mutex. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`household/page.tsx`](../clients/web/src/app/household/page.tsx)** | Web Portal | Household Page | Household dashboard displaying EcoToken wallet, active pickups, and submissions. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`farmer/page.tsx`](../clients/web/src/app/farmer/page.tsx)** | Web Portal | Farmer Page | Farmer dashboard displaying collection schedules and product inventory. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`marketplace/page.tsx`](../clients/web/src/app/marketplace/page.tsx)** | Web Portal | Marketplace Page | Organic farm produce catalog with filtering, stock badges, and cart drawer. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`cart-drawer.tsx`](../clients/web/src/components/cart-drawer.tsx)** | UI Component | React Component | Sliding shopping cart drawer with live token balance and checkout button. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`auth-context.tsx`](../clients/web/src/lib/auth-context.tsx)** | State Management | React Context | Manages user profile, authentication status, and role-based route protection. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`cart-context.tsx`](../clients/web/src/lib/cart-context.tsx)** | State Management | React Context | Manages local shopping cart items, quantities, and persistent state. | [08. Clients](modules/08_cross_platform_clients.md) |
+
+---
+
+### 4.13 Multi-Client Monorepo: React Native / Expo Mobile App (`@agroloop/mobile`)
+
+| File Path | Component Layer | Core Classes / Screens | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`_layout.tsx`](../clients/mobile/app/_layout.tsx)** | App Layout | Expo Router | Root navigation layout providing AuthContext and offline network indicators. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`server-setup.tsx`](../clients/mobile/app/server-setup.tsx)** | Configuration | Screen | Dynamic backend discovery screen configuring API URLs for emulators & physical devices. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`qr-handshake.ts`](../clients/mobile/src/services/qr-handshake.ts)** | Mobile Service | Handshake Service | Requests server-authoritative HMAC-SHA256 passes and parses scanned payloads. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`qr-code-view.tsx`](../clients/mobile/src/components/qr-code-view.tsx)** | UI Component | React Native Component | High-contrast QR matrix display using Kazuhiko Arase algorithm without webviews. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`qr-scanner-modal.tsx`](../clients/mobile/src/components/qr-scanner-modal.tsx)** | UI Component | React Native Component | Camera barcode scanner with viewfinder overlay and payload validation. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`secure-store.ts`](../clients/mobile/src/storage/secure-store.ts)** | Storage Security | Secure Vault | Wraps `expo-secure-store` for hardware-backed token storage on iOS/Android. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`offline-queue.ts`](../clients/mobile/src/storage/offline-queue.ts)** | Offline Sync | Queue Service | Stores mutations during network dropouts and flushes idempotently on reconnect. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`media-upload.ts`](../clients/mobile/src/services/media-upload.ts)** | Media Handling | Upload Service | Executes 3-phase ticketed image uploads with resizing before submission. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+
+---
+
+### 4.14 Multi-Client Monorepo: Tauri v2 Desktop Operations Console (`@agroloop/desktop`)
+
+| File Path | Component Layer | Core Classes / Components | Key Functions & Responsibilities | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`App.tsx`](../clients/desktop/src/App.tsx)** | Desktop Entrypoint | React Component | Main administrative shell featuring tabbed navigation and server connectivity indicator. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`tauri.conf.json`](../clients/desktop/src-tauri/tauri.conf.json)** | Tauri Configuration | Native App Config | Configures Tauri v2 desktop window, security permissions, and OS keychain plugins. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`SolvencyAudit.tsx`](../clients/desktop/src/components/SolvencyAudit.tsx)** | Desktop View | React Component | Real-time platform solvency console reconciling Tier-1 user balances with Tier-2 ledgers. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`UserGovernance.tsx`](../clients/desktop/src/components/UserGovernance.tsx)** | Desktop View | React Component | User management view with status toggles and manual token adjustment modals. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`LedgerExplorer.tsx`](../clients/desktop/src/components/LedgerExplorer.tsx)** | Desktop View | React Component | Immutable financial audit ledger viewer with transaction filtering and pagination. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`FleetDispatch.tsx`](../clients/desktop/src/components/FleetDispatch.tsx)** | Desktop View | React Component | Live pickup collection dispatch board showing real-time pickup statuses. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`OrderDisputes.tsx`](../clients/desktop/src/components/OrderDisputes.tsx)** | Desktop View | React Component | Order dispute arbitration console allowing admins to review and approve refunds. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`desktop-storage.ts`](../clients/desktop/src/storage/desktop-storage.ts)** | Storage Security | Storage Adapter | Native OS Keychain delegation storing administrative credentials securely. | [08. Clients](modules/08_cross_platform_clients.md) |
+
+---
+
+### 4.15 Backend Test Suites & Quality Verification
+
+| File Path | Test Category | Target Component | Verifications & Test Assertions | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`UserModelTest.java`](../src/test/java/com/agroloop/model/UserModelTest.java)** | Domain Unit | `User`, `Household`, `Farmer` | Verifies OOP encapsulation, token arithmetic, non-negative invariants, and roles. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`WasteSubmissionModelTest.java`](../src/test/java/com/agroloop/model/WasteSubmissionModelTest.java)** | Domain Unit | `WasteSubmission` | Verifies state transitions, weight invariants, and address fallback logic. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`PickupRequestModelTest.java`](../src/test/java/com/agroloop/model/PickupRequestModelTest.java)** | Domain Unit | `PickupRequest` | Tests state machine, decline re-queue, cancellation windows, and invariants. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`WasteVerificationModelTest.java`](../src/test/java/com/agroloop/model/WasteVerificationModelTest.java)** | Domain Unit | `WasteVerification` | Verifies weight positivity enforcement, quality multipliers, and null-safety. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`EcoTokenTransactionTest.java`](../src/test/java/com/agroloop/model/EcoTokenTransactionTest.java)** | Domain Unit | `EcoTokenTransaction` | Domain tests verifying immutability, direction invariants, and balance snapshots. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`ProductModelTest.java`](../src/test/java/com/agroloop/model/ProductModelTest.java)** | Domain Unit | `Product` | Tests stock deductions, restock, metadata updates, and activation toggles. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderModelTest.java`](../src/test/java/com/agroloop/model/OrderModelTest.java)** | Domain Unit | `Order`, `OrderItem` | Tests order line items, address fallback, and historical snapshot immutability. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderLifecycleTest.java`](../src/test/java/com/agroloop/model/OrderLifecycleTest.java)** | Domain Unit | `Order` | Verifies cancellation windows, dispute single-entry invariant, and adjudication. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`TokenCalculatorTest.java`](../src/test/java/com/agroloop/service/TokenCalculatorTest.java)** | Strategy Unit | `TokenCalculator` | Strategy tests verifying standard/promotional reward calculations and zero-rejections. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`FileStorageServiceTest.java`](../src/test/java/com/agroloop/service/FileStorageServiceTest.java)** | Storage Unit | `LocalFileStorageServiceImpl` | Verifies UUID renaming, traversal rejection, and MIME checking. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`CartServiceTest.java`](../src/test/java/com/agroloop/service/CartServiceTest.java)** | Service Unit | `CartServiceImpl` | Unit tests verifying session cart mutations, quantity bounds, and clearing. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`PickupHandshakeTest.java`](../src/test/java/com/agroloop/service/PickupHandshakeTest.java)** | Cryptography Unit | `PickupHandshakeService` | Verifies HMAC pass issuance, tamper detection, and TTL expiration. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`WasteSubmissionRepositoryTest.java`](../src/test/java/com/agroloop/repository/WasteSubmissionRepositoryTest.java)** | JPA Slice | `WasteSubmissionRepository` | Database slice tests verifying repository queries, household cascades, and filters. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`PickupRequestRepositoryTest.java`](../src/test/java/com/agroloop/repository/PickupRequestRepositoryTest.java)** | JPA Slice | `PickupRequestRepository` | Database slice tests verifying repository queries, status filters, and foreign keys. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`TokenRewardServiceTest.java`](../src/test/java/com/agroloop/service/TokenRewardServiceTest.java)** | Mockito Unit | `TokenRewardServiceImpl` | Tests reward minting, lock acquisition, idempotency, and audit entries. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`PickupServiceTest.java`](../src/test/java/com/agroloop/service/PickupServiceTest.java)** | Mockito Unit | `PickupServiceImpl` | Tests service orchestration and role authorization guards. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`ProductServiceTest.java`](../src/test/java/com/agroloop/service/ProductServiceTest.java)** | Mockito Unit | `ProductServiceImpl` | Tests farmer ownership authorization, catalog filters, and soft archival. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`MarketplaceServiceTest.java`](../src/test/java/com/agroloop/service/MarketplaceServiceTest.java)** | Mockito Unit | `MarketplaceServiceImpl` | Tests checkout pipeline, server-side pricing, solvency checks, and lock ordering. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`AdminGovernanceServiceTest.java`](../src/test/java/com/agroloop/service/AdminGovernanceServiceTest.java)** | Mockito Unit | `AdminGovernanceServiceImpl` | Tests user enabling/disabling, self-disable guard, and Tier-2 solvency calculation. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`WasteSubmissionServiceTest.java`](../src/test/java/com/agroloop/service/WasteSubmissionServiceTest.java)** | Mockito Unit | `WasteSubmissionServiceImpl` | Tests service workflows, address inheritance, and exception handling. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`AuthControllerTest.java`](../src/test/java/com/agroloop/controller/AuthControllerTest.java)** | Web Integration | `AuthController` | Tests login rendering, role-based redirects, invalid credentials, and access. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`HomeControllerTest.java`](../src/test/java/com/agroloop/controller/HomeControllerTest.java)** | Web Integration | `HomeController` | Integration test verifying public landing page and database status indicator. | [01. Setup](modules/01_project_setup.md) |
+| **[`UserRegistrationAndConversionTest.java`](../src/test/java/com/agroloop/controller/UserRegistrationAndConversionTest.java)** | Web Integration | `UserController` | Integration tests verifying household registration, farmer application, and approval. | [02. Auth](modules/02_user_management_and_auth.md) |
+| **[`WasteSubmissionIntegrationTest.java`](../src/test/java/com/agroloop/controller/WasteSubmissionIntegrationTest.java)** | Web Integration | `WasteSubmissionController` | Tests multipart file upload and waste recording workflow. | [03. Submissions](modules/03_waste_submission.md) |
+| **[`PickupIntegrationTest.java`](../src/test/java/com/agroloop/controller/PickupIntegrationTest.java)** | Web Integration | `PickupController` | Tests claim -> schedule -> collect -> verify lifecycle and household cancellation. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`DashboardIntegrationTest.java`](../src/test/java/com/agroloop/controller/DashboardIntegrationTest.java)** | Web Integration | `DashboardController` | Tests populated EcoToken ledger rendering with `open-in-view=false`. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`MarketplaceControllerTest.java`](../src/test/java/com/agroloop/controller/MarketplaceControllerTest.java)** | Web Integration | `MarketplaceController` | Tests catalog browsing, cart operations, checkout, and post-commit cart clear. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`FarmerProductControllerTest.java`](../src/test/java/com/agroloop/controller/FarmerProductControllerTest.java)** | Web Integration | `FarmerProductController` | Tests farmer product management, role protection, and cross-farmer guards. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`AdminControllerTest.java`](../src/test/java/com/agroloop/controller/AdminControllerTest.java)** | Web Integration | `AdminController` | Tests `/admin/**` endpoints, role enforcement, flash attributes, and error handling. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`AdminControllerProductionModeTest.java`](../src/test/java/com/agroloop/controller/AdminControllerProductionModeTest.java)** | Web Integration | `AdminController` | Asserts development test credentials button is hidden in production mode. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`MarketplaceOrderLifecycleSecurityTest.java`](../src/test/java/com/agroloop/controller/MarketplaceOrderLifecycleSecurityTest.java)** | Web Integration | `OrderController` | Tests cross-household cancellation/dispute rejection (403) and farmer protection. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`AuthApiControllerTest.java`](../src/test/java/com/agroloop/controller/api/v1/AuthApiControllerTest.java)** | REST Integration | `AuthApiController` | Tests `/api/v1/auth/login`, token pair issuance, refresh rotation, and 401 handling. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`AdminApiControllerTest.java`](../src/test/java/com/agroloop/controller/api/v1/AdminApiControllerTest.java)** | REST Integration | `AdminApiController` | Tests admin REST endpoints, token adjustments, and solvency queries. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`SystemApiControllerTest.java`](../src/test/java/com/agroloop/controller/api/v1/SystemApiControllerTest.java)** | REST Integration | `SystemApiController` | Tests `/api/v1/system/health` and `/meta` endpoint responses. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`ApiAuthorizationTest.java`](../src/test/java/com/agroloop/security/ApiAuthorizationTest.java)** | Security Integration | Security Architecture | Comprehensive validation of role-based authorization across all `/api/v1/**` endpoints. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`IdempotencyIntegrationTest.java`](../src/test/java/com/agroloop/security/IdempotencyIntegrationTest.java)** | Concurrency / Security | `IdempotencyService` | Multithreaded test verifying duplicate execution prevention and encrypted replay. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`RefreshConcurrencyTest.java`](../src/test/java/com/agroloop/security/RefreshConcurrencyTest.java)** | Concurrency / Security | `TokenService` | Tests concurrent refresh requests, family revocation, and single-flight grace periods. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`OpenApiContractTest.java`](../src/test/java/com/agroloop/config/OpenApiContractTest.java)** | Contract Integration | OpenAPI Specification | Asserts Swagger / OpenAPI 3.1 JSON conforms to exported `openapi.json` contract. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`TokenRewardServiceIntegrationTest.java`](../src/test/java/com/agroloop/service/TokenRewardServiceIntegrationTest.java)** | Concurrency Stress | `TokenRewardService` | Asserts pessimistic write locking, idempotency, and lost-update prevention. | [05. EcoTokens](modules/05_ecotokens.md) |
+| **[`MarketplaceConcurrencyIntegrationTest.java`](../src/test/java/com/agroloop/service/MarketplaceConcurrencyIntegrationTest.java)** | Concurrency Stress | `MarketplaceService` | 10 concurrent threads competing for 2 stock units; exactly 2 succeed, 8 fail gracefully. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`MarketplaceDeadlockAndRollbackIntegrationTest.java`](../src/test/java/com/agroloop/service/MarketplaceDeadlockAndRollbackIntegrationTest.java)** | Concurrency Stress | `MarketplaceService` | Concurrency testing inverted carts [A,B] vs [B,A] and rollback on insufficient tokens. | [06. Marketplace](modules/06_marketplace.md) |
+| **[`OrderAtomicRefundTest.java`](../src/test/java/com/agroloop/service/OrderAtomicRefundTest.java)** | Concurrency Stress | `AdminGovernanceService` | Asserts atomic inventory restock, token credit, and double-refund prevention. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`OrderLifecycleConcurrencyTest.java`](../src/test/java/com/agroloop/service/OrderLifecycleConcurrencyTest.java)** | Concurrency Stress | `Order` Lifecycle | Simultaneous cancel, dispute, and complete on same order; exactly one wins. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`ConcurrentHouseholdLedgerMutationTest.java`](../src/test/java/com/agroloop/service/ConcurrentHouseholdLedgerMutationTest.java)** | Concurrency Stress | Financial Ledger | 15 concurrent threads performing credits, debits, adjustments; asserts running balance. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`ConcurrentLastAdminProtectionTest.java`](../src/test/java/com/agroloop/service/ConcurrentLastAdminProtectionTest.java)** | Concurrency Stress | `AdminGovernanceService` | Verifies serialized last-admin defense; prevents concurrent requests from 0 admins. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`AgroLoopApplicationTests.java`](../src/test/java/com/agroloop/AgroLoopApplicationTests.java)** | Smoke Test | Spring Context | Bootstraps full Spring Boot context to ensure all beans and configurations load cleanly. | [01. Setup](modules/01_project_setup.md) |
+
+---
+
+### 4.16 Frontend & Cross-Platform Client Test Suites
+
+| File Path | Test Framework | Target Client | Key Verifications | Mapped Module |
+| :--- | :--- | :--- | :--- | :--- |
+| **[`security.test.ts`](../clients/web/src/security.test.ts)** | Vitest | `@agroloop/web` | BFF route authentication, token stripping, and secure cookie headers. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`auth.test.ts`](../clients/web/src/tests/auth.test.ts)** | Vitest | `@agroloop/web` | Login state transitions, error handling, and redirection. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`cart.test.ts`](../clients/web/src/tests/cart.test.ts)** | Vitest | `@agroloop/web` | Cart item additions, stock bounding, total calculations, and clearing. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`bff-proxy.test.ts`](../clients/web/src/tests/bff-proxy.test.ts)** | Vitest | `@agroloop/web` | Backend proxy path rewrites, headers forwarding, and error bubbling. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`auth-context.test.ts`](../clients/mobile/src/context/auth-context.test.ts)** | Jest | `@agroloop/mobile` | Mobile auth lifecycle, token restoration from SecureStore, and logout. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`secure-store.test.ts`](../clients/mobile/src/storage/secure-store.test.ts)** | Jest | `@agroloop/mobile` | Hardware-backed keychain abstraction reads, writes, and deletions. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`offline-queue.test.ts`](../clients/mobile/src/storage/offline-queue.test.ts)** | Jest | `@agroloop/mobile` | Enqueueing offline mutations, persistence, and idempotent replay on network restore. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`qr-handshake.test.ts`](../clients/mobile/src/services/qr-handshake.test.ts)** | Jest | `@agroloop/mobile` | QR payload canonicalization, signature checking, and error flows. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`media-upload.test.ts`](../clients/mobile/src/services/media-upload.test.ts)** | Jest | `@agroloop/mobile` | Ticket acquisition, chunked binary transmission, and confirmation steps. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`farmer-verification.test.ts`](../clients/mobile/src/services/farmer-verification.test.ts)** | Jest | `@agroloop/mobile` | Farmer on-site verification workflow, weight inputs, and grading. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`household-pickup.test.ts`](../clients/mobile/src/services/household-pickup.test.ts)** | Jest | `@agroloop/mobile` | Household pickup requests, active pass generation, and cancellation. | [04. Pickups](modules/04_pickup_and_verification.md) |
+| **[`admin-ops.test.ts`](../clients/desktop/src/tests/admin-ops.test.ts)** | Vitest | `@agroloop/desktop` | Solvency calculations, user governance actions, and order dispute decisions. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`desktop-storage.test.ts`](../clients/desktop/src/storage/desktop-storage.test.ts)** | Vitest | `@agroloop/desktop` | Native OS Keychain adapter storage and token retrieval. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`qr.test.ts`](../clients/packages/qr/src/qr.test.ts)** | Vitest | `@agroloop/qr` | Matrix dimension calculations, error correction encoding, and quiet zone rules. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`client.test.ts`](../clients/packages/api-client/src/client.test.ts)** | Vitest | `@agroloop/api-client` | HTTP method execution, automatic header injection, and response parsing. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`server-verification.test.ts`](../clients/packages/api-client/src/server-verification.test.ts)** | Vitest | `@agroloop/api-client` | Server discovery handshake and public key verification routines. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 
 ---
 
@@ -598,16 +1090,16 @@ Each feature and integration in AgroLoop has its own dedicated documentation fil
 
 | Module Document | Phase & Topic | Status | Description |
 | :--- | :--- | :--- | :--- |
-| **[01. Project Setup & Baseline](../docs/modules/01_project_setup.md)** | Phase 1: Setup | ✅ Completed | Spring Boot 3.3.4 scaffolding, Maven wrapper, PostgreSQL Docker integration, and cross-platform runners. |
-| **[02. User Management & Security](../docs/modules/02_user_management_and_auth.md)** | Phase 2: Auth | ✅ Completed | JPA Joined Inheritance (`User`, `Household`, `Farmer`, `Admin`), Spring Security, BCrypt hashing, public registration defaulting to Household, Farmer conversion request workflow with Admin review/approval, and logo branding. |
-| **[03. Waste Submission & Media](../docs/modules/03_waste_submission.md)** | Phase 3: Submissions | ✅ Completed | Multipart photo uploads, category classification taxonomy, address inheritance, UUID storage with traversal defense, and household dashboard tracking. |
-| **[04. Pickup & Verification Engine](../docs/modules/04_pickup_and_verification.md)** | Phase 4: Pickups | ✅ Completed | Farmer pickup claims, collection state machine, quality grading, decline re-queuing, and post-collection verification. |
-| **[05. EcoTokens & Rewards](../docs/modules/05_ecotokens.md)** | Phase 5: Rewards | ✅ Completed | Polymorphic `TokenCalculator` strategy, atomic wallet updates, pessimistic locking, idempotent reward minting, and household ledger. |
-| **[06. Marketplace & Commerce](../docs/modules/06_marketplace.md)** | Phase 6: Commerce | ✅ Completed | Farmer product catalog, soft-archive lifecycle, session cart, authoritative DB pricing, deterministic dual-phase pessimistic locking, atomic stock/token/order/ledger checkout, and sales tracking. |
-| **[07. Admin Governance & Testing](../docs/modules/07_admin_and_testing.md)** | Phase 7: Governance | ✅ Completed | Order lifecycle state machine, atomic refund engine, deterministic lock hierarchy (`Order` ➔ `Household` ➔ `Products ASC`), double-refund prevention, physical immutability trigger, serialized last-admin protection, two-tier financial reconciliation, admin portal, and 241 passing tests. |
-| **[7.5. Client/API Boundary & Architecture](../docs/modules/07_5_client_api_boundary.md)** | Phase 7.5: Client/API | ✅ Completed | Versioned `/api/v1` REST contract layer for Web, Mobile, and Desktop. Dual Spring Security filter chains, RSA-2048 JWT, refresh rotation with replay defense, AES-GCM-256 encrypted idempotency, media management, OpenAPI 3.1, and 265 green tests. |
-| **[08. Mobile QR Handshake Architecture](../docs/modules/08_mobile_qr_handshake.md)** | Phase 8: Mobile Handshake | ✅ Completed | Ephemeral server-authoritative HMAC-SHA256 dynamic QR passes, pessimistic locked verification, zero-PII compact payloads, brute-force rate-limiting, and pure React Native Kazuhiko Arase QR matrix integration. |
-| **[08. Cross-Platform Clients Architecture](../docs/modules/08_cross_platform_clients.md)** | Phase 8: Web & Desktop Clients | ✅ Completed | Multi-client ecosystem: Next.js 15 Web Portal (`@agroloop/web` with BFF boundary, HttpOnly cookie rotation, server-side single-flight refresh mutex, and allowlist proxy) & Tauri v2 Desktop Operations Console (`@agroloop/desktop` with native OS Keychain delegation, live Tier-1 & Tier-2 Solvency Reconciliation, User Governance, Order Disputes, Ledger Explorer, and Fleet Telemetry). |
+| **[01. Project Setup & Baseline](modules/01_project_setup.md)** | Phase 1: Setup | Completed | Spring Boot 3.3.4 scaffolding, Maven wrapper, PostgreSQL Docker integration, and cross-platform runners. |
+| **[02. User Management & Security](modules/02_user_management_and_auth.md)** | Phase 2: Auth | Completed | JPA Joined Inheritance (`User`, `Household`, `Farmer`, `Admin`), Spring Security, BCrypt hashing, public registration defaulting to Household, Farmer conversion request workflow with Admin review/approval, and logo branding. |
+| **[03. Waste Submission & Media](modules/03_waste_submission.md)** | Phase 3: Submissions | Completed | Multipart photo uploads, category classification taxonomy, address inheritance, UUID storage with traversal defense, and household dashboard tracking. |
+| **[04. Pickup & Verification Engine](modules/04_pickup_and_verification.md)** | Phase 4: Pickups | Completed | Farmer pickup claims, collection state machine, quality grading, decline re-queuing, and post-collection verification. |
+| **[05. EcoTokens & Rewards](modules/05_ecotokens.md)** | Phase 5: Rewards | Completed | Polymorphic `TokenCalculator` strategy, atomic wallet updates, pessimistic locking, idempotent reward minting, and household ledger. |
+| **[06. Marketplace & Commerce](modules/06_marketplace.md)** | Phase 6: Commerce | Completed | Farmer product catalog, soft-archive lifecycle, session cart, authoritative DB pricing, deterministic dual-phase pessimistic locking, atomic stock/token/order/ledger checkout, and sales tracking. |
+| **[07. Admin Governance & Testing](modules/07_admin_and_testing.md)** | Phase 7: Governance | Completed | Order lifecycle state machine, atomic refund engine, deterministic lock hierarchy (`Order` -> `Household` -> `Products ASC`), double-refund prevention, physical immutability trigger, serialized last-admin protection, two-tier financial reconciliation, and admin portal. |
+| **[07.5. Client/API Boundary & Architecture](modules/07_5_client_api_boundary.md)** | Phase 7.5: Client/API | Completed | Versioned `/api/v1` REST contract layer for Web, Mobile, and Desktop. Dual Spring Security filter chains, RSA-2048 JWT, refresh rotation with replay defense, AES-GCM-256 encrypted idempotency, media management, OpenAPI 3.1, and 265 green tests. |
+| **[08. Mobile QR Handshake Architecture](modules/08_mobile_qr_handshake.md)** | Phase 8: Mobile Handshake | Completed | Ephemeral server-authoritative HMAC-SHA256 dynamic QR passes, pessimistic locked verification, zero-PII compact payloads, brute-force rate-limiting, and pure React Native Kazuhiko Arase QR matrix integration. |
+| **[08. Cross-Platform Clients Architecture](modules/08_cross_platform_clients.md)** | Phase 8: Web & Desktop Clients | Completed | Multi-client ecosystem: Next.js 15 Web Portal (`@agroloop/web` with BFF boundary, HttpOnly cookie rotation, server-side single-flight refresh mutex, and allowlist proxy) & Tauri v2 Desktop Operations Console (`@agroloop/desktop` with native OS Keychain delegation, live Tier-1 & Tier-2 Solvency Reconciliation, User Governance, Order Disputes, Ledger Explorer, and Fleet Telemetry). |
 
 ---
 
@@ -641,6 +1133,10 @@ feature/<phase-name> (Individual feature branch)
      ```bash
      ./mvnw clean test
      ```
+   - For client changes, ensure TypeScript and Vitest/Jest tests pass:
+     ```bash
+     cd clients && pnpm test
+     ```
 3. **Commit & Push:**
    - Commit following Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`).
    - Push to remote:
@@ -662,5 +1158,4 @@ feature/<phase-name> (Individual feature branch)
    - Builds multi-stage production Docker images for Backend (`agroloop-backend:latest`) and Next.js Web (`agroloop-web:latest`).
    - Packages `@agroloop/mobile` cross-platform Expo JS/assets bundle (`agroloop-mobile-expo-export`) and compiles the standalone Android debug APK (`agroloop-mobile-android-debug`).
    - Attaches built packages as downloadable GitHub Actions run artifacts.
-
 

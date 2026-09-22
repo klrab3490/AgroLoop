@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
@@ -9,7 +10,13 @@ export function Footer() {
           {/* Brand Info */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🌿</span>
+              <Image
+                src="/logo.png"
+                alt="AgroLoop Logo"
+                width={24}
+                height={24}
+                className="w-6 h-6 rounded-md object-contain"
+              />
               <span className="text-white font-extrabold text-lg tracking-tight">AgroLoop</span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">

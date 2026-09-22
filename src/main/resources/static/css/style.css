@@ -1,18 +1,19 @@
 :root {
-    --bg-primary: #0b0f19;
-    --bg-secondary: #111827;
-    --bg-card: #1f2937;
-    --bg-card-hover: #263345;
-    --text-primary: #f9fafb;
-    --text-secondary: #9ca3af;
-    --text-muted: #6b7280;
+    --bg-primary: #070b14;
+    --bg-secondary: #0d1322;
+    --bg-card: #111827;
+    --bg-card-hover: #162035;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
     --accent-emerald: #10b981;
     --accent-emerald-glow: rgba(16, 185, 129, 0.2);
     --accent-emerald-dark: #059669;
+    --accent-teal: #14b8a6;
     --accent-blue: #3b82f6;
     --accent-amber: #f59e0b;
     --accent-red: #ef4444;
-    --border-color: #374151;
+    --border-color: rgba(255, 255, 255, 0.1);
     --border-subtle: rgba(255, 255, 255, 0.08);
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
@@ -556,4 +557,414 @@ body {
     border-radius: 4px;
     font-family: var(--font-mono);
     color: var(--accent-emerald);
+}
+
+/* ==========================================================================
+   AgroLoop Agency-Grade Dark-Tech Admin Design System
+   ========================================================================== */
+
+.admin-container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Double-Bezel Card Architecture */
+.double-bezel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 1px;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.double-bezel:hover {
+    border-color: rgba(16, 185, 129, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 25px -5px rgba(16, 185, 129, 0.1);
+}
+
+.bezel-inner {
+    background: #0d1322;
+    border-radius: 19px;
+    padding: 1.75rem;
+    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.07);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Micro-Eyebrow Headers */
+.micro-eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.micro-eyebrow.emerald {
+    color: var(--accent-emerald);
+}
+
+.micro-eyebrow.blue {
+    color: var(--accent-blue);
+}
+
+.micro-eyebrow.amber {
+    color: var(--accent-amber);
+}
+
+/* KPI Metrics Grid */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.kpi-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1px;
+}
+
+.kpi-inner {
+    background: #0d1322;
+    border-radius: 15px;
+    padding: 1.35rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.kpi-val {
+    font-size: 2.2rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    line-height: 1.1;
+    margin: 0.5rem 0 0.25rem 0;
+    letter-spacing: -0.03em;
+}
+
+/* Credential Deck */
+.cred-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.cred-card {
+    background: rgba(13, 19, 34, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1.25rem;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.cred-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(17, 24, 39, 0.95);
+    transform: translateY(-2px);
+}
+
+.cred-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.cred-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+}
+
+.cred-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.copy-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.copy-chip:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: var(--accent-emerald);
+}
+
+.copy-chip .copy-label {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.copy-chip:hover .copy-label {
+    color: var(--accent-emerald);
+}
+
+/* Solvency Status Card */
+.solvency-box {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 1.25rem;
+}
+
+.solvency-item-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+}
+
+.solvency-item-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+/* Invariant mathematical bar */
+.invariant-formula-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(16, 185, 129, 0.05);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 10px;
+    padding: 0.75rem 1.25rem;
+    margin-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+/* Sleek Tables */
+.nexus-table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nexus-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.88rem;
+}
+
+.nexus-table thead {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.nexus-table th {
+    padding: 0.85rem 1.15rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nexus-table td {
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+
+.nexus-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.nexus-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+/* User Avatar Glyphs */
+.user-avatar-glyph {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.glyph-admin {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.glyph-farmer {
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.glyph-household {
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+}
+
+/* Modern Pill Badges */
+.pill-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.pill-admin {
+    background: rgba(139, 92, 246, 0.15);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.pill-farmer {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.pill-household {
+    background: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pill-active {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.pill-disabled {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.pill-pending {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* Pulsing Status Dot */
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-green {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.dot-red {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+}
+
+.dot-amber {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+}
+
+/* Popover Token Adjustment */
+.adjust-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 1.25rem;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(16, 185, 129, 0.1);
+    z-index: 100;
+    min-width: 300px;
+    text-align: left;
+}
+
+/* Subnav pill bar */
+.admin-subnav {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 2.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    overflow-x: auto;
+}
+
+.admin-nav-item {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.admin-nav-item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-nav-item.active {
+    color: #fff;
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
 }

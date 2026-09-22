@@ -4,6 +4,7 @@ import com.agroloop.dto.SolvencyMetricsDto;
 import com.agroloop.dto.api.v1.request.CancelOrderApiRequest;
 import com.agroloop.dto.api.v1.request.ResolveDisputeApiRequest;
 import com.agroloop.dto.api.v1.request.TokenAdjustmentApiRequest;
+import com.agroloop.dto.api.v1.request.UserStatusApiRequest;
 import com.agroloop.dto.api.v1.response.EcoTokenTransactionApiResponse;
 import com.agroloop.dto.api.v1.response.HouseholdBalanceResponse;
 import com.agroloop.dto.api.v1.response.OrderApiResponse;
@@ -31,6 +32,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -92,7 +94,7 @@ public class AdminApiController {
         }
 
         Long adminId = orderSecurityEvaluator.extractUserId(auth);
-        String adminEmail = auth.getName();
+        String adminEmail = extractAdminEmail(auth);
         IdempotencyScope scope = new IdempotencyScope.UserScope(adminId);
 
         OrderApiResponse response = idempotencyService.executeIdempotent(
@@ -124,9 +126,9 @@ public class AdminApiController {
         }
 
         Long adminId = orderSecurityEvaluator.extractUserId(auth);
-        String adminEmail = auth.getName();
+        String adminEmail = extractAdminEmail(auth);
         IdempotencyScope scope = new IdempotencyScope.UserScope(adminId);
-
+ 
         OrderApiResponse response = idempotencyService.executeIdempotent(
                 scope,
                 idempotencyKey,
@@ -153,11 +155,11 @@ public class AdminApiController {
     @PostMapping("/users/{id}/status")
     public ResponseEntity<UserApiResponse> setUserStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, Boolean> body,
+            @Valid @RequestBody UserStatusApiRequest request,
             Authentication auth
     ) {
-        String adminEmail = auth.getName();
-        boolean active = body.getOrDefault("active", true);
+        String adminEmail = extractAdminEmail(auth);
+        boolean active = request.isEnabled();
         if (active) {
             adminGovernanceService.enableUser(id, adminEmail);
         } else {
@@ -180,7 +182,7 @@ public class AdminApiController {
         }
 
         Long adminId = orderSecurityEvaluator.extractUserId(auth);
-        String adminEmail = auth.getName();
+        String adminEmail = extractAdminEmail(auth);
         IdempotencyScope scope = new IdempotencyScope.UserScope(adminId);
 
         HouseholdBalanceResponse response = idempotencyService.executeIdempotent(
@@ -217,8 +219,21 @@ public class AdminApiController {
             @RequestParam(defaultValue = "20") int size
     ) {
         Page<EcoTokenTransaction> ledgerPage = adminGovernanceService.getPlatformLedger(
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
         return ResponseEntity.ok(PageApiResponse.from(ledgerPage, EcoTokenTransactionApiResponse::from));
+    }
+
+    private String extractAdminEmail(Authentication auth) {
+        if (auth == null) {
+            return null;
+        }
+        if (auth.getPrincipal() instanceof Jwt jwt) {
+            String email = jwt.getClaimAsString("email");
+            if (email != null && !email.isBlank()) {
+                return email;
+            }
+        }
+        return auth.getName();
     }
 }

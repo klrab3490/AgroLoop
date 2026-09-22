@@ -223,4 +223,59 @@ class AdminControllerTest {
                 .andExpect(model().attributeExists("ledgerPage", "solvencyMetrics"))
                 .andExpect(content().string(containsString("Global EcoToken Ledger")));
     }
+
+    @Test
+    @WithMockUser(username = "admin@agroloop.com", authorities = {"ROLE_ADMIN"})
+    @DisplayName("GET on state-mutating endpoints is rejected with 405 Method Not Allowed")
+    void adminDashboard_mutations_rejectGet() throws Exception {
+        mockMvc.perform(get("/admin/users/" + household.getId() + "/enable"))
+                .andExpect(status().isMethodNotAllowed());
+
+        mockMvc.perform(get("/admin/users/" + household.getId() + "/disable"))
+                .andExpect(status().isMethodNotAllowed());
+
+        mockMvc.perform(get("/admin/households/" + household.getId() + "/adjust-tokens"))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@agroloop.com", authorities = {"ROLE_ADMIN"})
+    @DisplayName("POST mutations without CSRF token are blocked with 403 Forbidden")
+    void adminDashboard_csrfProtection() throws Exception {
+        mockMvc.perform(post("/admin/users/" + household.getId() + "/disable"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/admin/users/" + household.getId() + "/enable"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/admin/households/" + household.getId() + "/adjust-tokens")
+                        .param("amount", "10.00")
+                        .param("direction", TransactionDirection.CREDIT.name())
+                        .param("reason", "Test without CSRF"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@agroloop.com", authorities = {"ROLE_ADMIN"})
+    @DisplayName("In demo mode (default), GET /admin/dashboard supplies demoCredentials and renders demo secrets")
+    void adminDashboard_demoModeTrue_showsDemoCredentials() throws Exception {
+        mockMvc.perform(get("/admin/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("demoMode", true))
+                .andExpect(model().attributeExists("demoCredentials"))
+                .andExpect(content().string(containsString("Development / Demo Credentials")))
+                .andExpect(content().string(containsString("admin123")));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@agroloop.com", authorities = {"ROLE_ADMIN"})
+    @DisplayName("POST /admin/users/{id}/disable with custom redirect URL redirects back to specified path")
+    void adminDashboard_mutation_withRedirect_redirectsToSpecifiedUrl() throws Exception {
+        mockMvc.perform(post("/admin/users/" + household.getId() + "/disable")
+                        .param("redirect", "/admin/dashboard")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/dashboard"))
+                .andExpect(flash().attributeExists("successMessage"));
+    }
 }

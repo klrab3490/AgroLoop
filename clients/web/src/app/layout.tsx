@@ -7,6 +7,9 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "AgroLoop — Circular Waste-to-Reward Platform",
   description: "Bridging households and farmers in a circular waste-to-reward ecosystem powered by EcoTokens.",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({

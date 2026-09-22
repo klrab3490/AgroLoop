@@ -14,8 +14,8 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showServerManager, setShowServerManager] = useState(false);
   const [activeServer, setActiveServer] = useState<DesktopServerProfile>(getActiveServerProfile());
-  const [email, setEmail] = useState("admin@agroloop.local");
-  const [password, setPassword] = useState("AdminSecure2026!");
+  const [email, setEmail] = useState("admin@agroloop.com");
+  const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,20 +61,19 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
+          <img
+            src="/logo.png"
+            alt="AgroLoop Logo"
             style={{
               width: "36px",
               height: "36px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #059669, #0d9488)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "18px",
+              objectFit: "contain",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              background: "rgba(16, 185, 129, 0.1)",
+              padding: "2px",
             }}
-          >
-            🛡️
-          </div>
+          />
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <h1 style={{ fontSize: "16px", fontWeight: "800", letterSpacing: "-0.02em" }}>
@@ -233,9 +232,33 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
 
             <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px" }}>
-                  Operator Email
-                </label>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)" }}>
+                    Operator Email
+                  </label>
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <span style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: "600" }}>
+                      Development / Demo Operator Quick-Fill:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => { setEmail("admin@agroloop.com"); setPassword("admin123"); }}
+                      style={{
+                        fontSize: "10px",
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        background: "rgba(16, 185, 129, 0.15)",
+                        color: "var(--accent-emerald)",
+                        border: "1px solid rgba(16, 185, 129, 0.3)",
+                        cursor: "pointer",
+                        fontWeight: "600",
+                      }}
+                      title="Load development demo administrator credentials"
+                    >
+                      🛡️ admin@agroloop.com (Demo)
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="email"
                   required

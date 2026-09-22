@@ -990,6 +990,9 @@ export interface components {
             /** Format: date-time */
             lastAuditedLedgerTimestamp?: string;
         };
+        UserStatusApiRequest: {
+            enabled?: boolean;
+        };
         UserApiResponse: {
             /** Format: int64 */
             id?: number;
@@ -1700,9 +1703,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: boolean;
-                };
+                "application/json": components["schemas"]["UserStatusApiRequest"];
             };
         };
         responses: {
