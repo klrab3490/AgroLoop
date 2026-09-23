@@ -5,3 +5,10 @@ packages:
   - 'desktop'
 allowBuilds:
   esbuild: true
+overrides:
+  '@xmldom/xmldom': '>=0.8.15'
+  tar: '>=7.5.22'
+  postcss: '>=8.5.18'
+  image-size: '2.0.4'
+patchedDependencies:
+  image-size@2.0.4: patches/image-size@2.0.4.patch
