@@ -14,6 +14,7 @@ WORKDIR /app
 
 # Copy monorepo workspace configuration, lockfile, and package sources
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
+COPY patches ./patches
 COPY openapi ./openapi
 COPY packages ./packages
 COPY web ./web
