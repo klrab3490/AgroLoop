@@ -110,7 +110,9 @@ jobs:
           retention-days: 14
 
       - name: Generate Android Native Project (Expo Prebuild)
-        run: pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean --no-install
+        run: |
+          pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean --no-install
+          test -d mobile/android || { echo "::error::Native android directory was not created by expo prebuild!"; exit 1; }
 
       - name: Configure Android Kotlin & Compose Compatibility
         working-directory: clients/mobile/android

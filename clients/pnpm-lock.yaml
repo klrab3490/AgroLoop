@@ -12,6 +12,7 @@ overrides:
 
 patchedDependencies:
   image-size@2.0.4: 59dd2b46a5db59ed6dc1a956ab591e774636f1fb3681d7059d4e70ba13b84f2c
+  tar@7.5.22: af136f9ad63acf03673833036e0eea9dfc9a63331d8ebee1b49977796df624a6
 
 importers:
 
@@ -6266,7 +6267,7 @@ snapshots:
       source-map-support: 0.5.21
       stacktrace-parser: 0.1.11
       structured-headers: 0.4.1
-      tar: 7.5.22
+      tar: 7.5.22(patch_hash=af136f9ad63acf03673833036e0eea9dfc9a63331d8ebee1b49977796df624a6)
       temp-dir: 2.0.0
       tempy: 0.7.1
       terminal-link: 2.1.1
@@ -7706,7 +7707,7 @@ snapshots:
       minipass-pipeline: 1.2.4
       p-map: 4.0.0
       ssri: 10.0.6
-      tar: 7.5.22
+      tar: 7.5.22(patch_hash=af136f9ad63acf03673833036e0eea9dfc9a63331d8ebee1b49977796df624a6)
       unique-filename: 3.0.0
 
   call-bind-apply-helpers@1.0.2:
@@ -10045,7 +10046,7 @@ snapshots:
       - tsx
       - yaml
 
-  tar@7.5.22:
+  tar@7.5.22(patch_hash=af136f9ad63acf03673833036e0eea9dfc9a63331d8ebee1b49977796df624a6):
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
