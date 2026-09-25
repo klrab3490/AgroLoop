@@ -91,6 +91,29 @@ services:
     profiles:
       - tools
 
+  # ==========================================================
+  # ngrok Public Tunnel Service (activate with: --profile tunnel or docker compose up ngrok)
+  # ==========================================================
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: agroloop-ngrok
+    restart: unless-stopped
+    command:
+      - "http"
+      - "${NGROK_TARGET:-web:3000}"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    ports:
+      - "${NGROK_PORT:-4040}:4040"
+    depends_on:
+      - web
+    networks:
+      - agroloop-network
+    profiles:
+      - tunnel
+      - tools
+
+
 volumes:
   agroloop_pgdata:
     name: agroloop_pgdata
