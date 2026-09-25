@@ -3,7 +3,8 @@
 # ==============================================================================
 
 FROM node:24-alpine AS base
-RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
+ENV PNPM_CONFIG_UPDATE_NOTIFIER=false
+RUN corepack enable && corepack prepare pnpm@12.6.0 --activate
 WORKDIR /app
 
 # ------------------------------------------------------------------------------
