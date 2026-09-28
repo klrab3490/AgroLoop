@@ -114,64 +114,11 @@ jobs:
           pnpm --filter @agroloop/mobile exec expo prebuild --platform android --clean --no-install
           test -d mobile/android || { echo "::error::Native android directory was not created by expo prebuild!"; exit 1; }
 
-      - name: Configure Android Kotlin & Compose Compatibility
-        working-directory: clients/mobile/android
-        run: |
-          cat << 'EOF' >> build.gradle
-
-          rootProject.ext.kotlinVersion = '1.9.25'
-
-          allprojects {
-              plugins.withId('kotlin-android') {
-                  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                      kotlinOptions {
-                          freeCompilerArgs += [
-                              "-P",
-                              "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-                          ]
-                      }
-                  }
-              }
-
-              tasks.matching { it.name.toLowerCase().contains("packagelist") }.configureEach {
-                  doLast {
-                      if (rootProject.projectDir.exists()) {
-                          fileTree(dir: rootProject.projectDir, includes: ['**/PackageList.java']).each { f ->
-                              if (f.exists()) {
-                                  def text = f.text
-                                  if (text.contains("expo.core.ExpoModulesPackage")) {
-                                      println "Fixing expo.core.ExpoModulesPackage in PackageList task: ${f}"
-                                      f.text = text.replaceAll("expo\\.core\\.ExpoModulesPackage", "expo.modules.ExpoModulesPackage")
-                                  }
-                              }
-                          }
-                      }
-                  }
-              }
-
-              tasks.withType(JavaCompile).configureEach {
-                  doFirst {
-                      if (rootProject.projectDir.exists()) {
-                          fileTree(dir: rootProject.projectDir, includes: ['**/PackageList.java']).each { f ->
-                              if (f.exists()) {
-                                  def text = f.text
-                                  if (text.contains("expo.core.ExpoModulesPackage")) {
-                                      println "Fixing expo.core.ExpoModulesPackage in JavaCompile: ${f}"
-                                      f.text = text.replaceAll("expo\\.core\\.ExpoModulesPackage", "expo.modules.ExpoModulesPackage")
-                                  }
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-          EOF
-
       - name: Build Standalone Android Debug APK
         working-directory: clients/mobile/android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug -Pandroid.kotlinVersion=1.9.25 -PkotlinVersion=1.9.25 --no-daemon
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload Standalone Android APK Artifact
         uses: actions/upload-artifact@v4
