@@ -186,5 +186,32 @@ describe("Server Discovery & Verification Protocol", () => {
         expect.anything()
       );
     });
+
+    it("verifyServer safely invokes fetch when fetch requires strict Window/globalThis context", async () => {
+      function webkitFetch(this: any) {
+        const isWindowOrGlobal = this === globalThis || (typeof window !== "undefined" && this === window);
+        if (!isWindowOrGlobal) {
+          throw new TypeError("Can only call Window.fetch on instances of Window");
+        }
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              status: "UP",
+              service: "agroloop",
+              api_version: "v1",
+              minimum_client_version: "1.0.0",
+              server_version: "1.0.0",
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
+        );
+      }
+
+      const result = await verifyServer("http://localhost:8080", {
+        fetchFn: webkitFetch as any,
+      });
+
+      expect(result.ok).toBe(true);
+    });
   });
 });

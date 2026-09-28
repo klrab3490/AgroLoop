@@ -25,7 +25,9 @@ export function createMediaEndpoints(client: AgroLoopApiClient): MediaEndpoints 
       const headers = new Headers({
         "Content-Type": contentType,
       });
-      const response = await fetch(uploadUrl, {
+      const fetchTarget = typeof window !== "undefined" ? window : globalThis;
+      const rawFetch = globalThis.fetch;
+      const response = await rawFetch.call(fetchTarget, uploadUrl, {
         method: "PUT",
         headers,
         body: data as BodyInit,

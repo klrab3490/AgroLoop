@@ -58,6 +58,12 @@ public class WasteSubmission {
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
 
+    @Column(name = "latitude")
+    private Double latitude = 10.8505;
+
+    @Column(name = "longitude")
+    private Double longitude = 76.2711;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -76,12 +82,27 @@ public class WasteSubmission {
             String imagePath,
             String notes
     ) {
+        this(household, category, estimatedWeight, pickupAddress, imagePath, notes, 10.8505, 76.2711);
+    }
+
+    public WasteSubmission(
+            Household household,
+            WasteCategory category,
+            BigDecimal estimatedWeight,
+            String pickupAddress,
+            String imagePath,
+            String notes,
+            Double latitude,
+            Double longitude
+    ) {
         this.household = Objects.requireNonNull(household, "Household cannot be null");
         this.category = Objects.requireNonNull(category, "Waste category cannot be null");
         this.estimatedWeight = validateWeight(estimatedWeight);
         this.pickupAddress = requireText(pickupAddress, "Pickup address");
         this.imagePath = sanitizePath(imagePath);
         this.notes = notes != null ? notes.trim() : null;
+        this.latitude = latitude != null ? latitude : 10.8505;
+        this.longitude = longitude != null ? longitude : 76.2711;
         this.status = SubmissionStatus.SUBMITTED;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
@@ -205,6 +226,23 @@ public class WasteSubmission {
 
     public String getRejectionReason() {
         return rejectionReason;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void updateLocation(Double latitude, Double longitude) {
+        if (latitude != null) {
+            this.latitude = latitude;
+        }
+        if (longitude != null) {
+            this.longitude = longitude;
+        }
     }
 
     public LocalDateTime getCreatedAt() {

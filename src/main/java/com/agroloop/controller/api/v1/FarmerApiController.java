@@ -23,6 +23,13 @@ import com.agroloop.service.MarketplaceService;
 import com.agroloop.service.MediaService;
 import com.agroloop.service.PickupService;
 import com.agroloop.service.ProductService;
+import com.agroloop.dto.api.v1.request.CreateRouteApiRequest;
+import com.agroloop.dto.api.v1.request.UpdateFarmerLocationApiRequest;
+import com.agroloop.dto.api.v1.response.CollectionRouteApiResponse;
+import com.agroloop.dto.api.v1.response.WasteMatchApiResponse;
+import com.agroloop.model.CollectionRoute;
+import com.agroloop.service.RouteService;
+import com.agroloop.service.matching.WasteMatchResult;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +51,7 @@ public class FarmerApiController {
     private final MediaService mediaService;
     private final IdempotencyService idempotencyService;
     private final PickupSecurityEvaluator pickupSecurityEvaluator;
+    private final RouteService routeService;
 
     public FarmerApiController(
             PickupService pickupService,
@@ -52,7 +60,8 @@ public class FarmerApiController {
             FarmerRepository farmerRepository,
             MediaService mediaService,
             IdempotencyService idempotencyService,
-            PickupSecurityEvaluator pickupSecurityEvaluator
+            PickupSecurityEvaluator pickupSecurityEvaluator,
+            RouteService routeService
     ) {
         this.pickupService = pickupService;
         this.productService = productService;
@@ -61,6 +70,7 @@ public class FarmerApiController {
         this.mediaService = mediaService;
         this.idempotencyService = idempotencyService;
         this.pickupSecurityEvaluator = pickupSecurityEvaluator;
+        this.routeService = routeService;
     }
 
     @GetMapping("/pickups/available")
@@ -265,6 +275,99 @@ public class FarmerApiController {
         Farmer farmer = getAuthenticatedFarmer(auth);
         List<Order> orders = marketplaceService.getFarmerOrders(farmer.getEmail());
         return ResponseEntity.ok(orders.stream().map(OrderApiResponse::from).toList());
+    }
+
+    // --- Phase 9: Dynamic Matching & Collection Route APIs ---
+
+    @GetMapping("/matching/recommendations")
+    public ResponseEntity<List<WasteMatchApiResponse>> getPickupRecommendations(
+            @RequestParam(value = "strategy", defaultValue = "COMPOSITE") String strategy,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        List<WasteMatchResult> matches = routeService.getPickupRecommendations(farmer.getId(), strategy);
+        return ResponseEntity.ok(matches.stream().map(WasteMatchApiResponse::from).toList());
+    }
+
+    @PostMapping("/routes/optimize")
+    public ResponseEntity<CollectionRouteApiResponse> createOptimizedRoute(
+            @Valid @RequestBody CreateRouteApiRequest request,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        CollectionRoute route = routeService.createOptimizedRoute(
+                farmer.getId(),
+                request.routeDate(),
+                request.pickupIds(),
+                request.notes()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(CollectionRouteApiResponse.from(route));
+    }
+
+    @GetMapping("/routes/active")
+    public ResponseEntity<List<CollectionRouteApiResponse>> getActiveRoutes(Authentication auth) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        List<CollectionRoute> routes = routeService.getActiveRoutes(farmer.getId());
+        return ResponseEntity.ok(routes.stream().map(CollectionRouteApiResponse::from).toList());
+    }
+
+    @GetMapping("/routes/{id}")
+    public ResponseEntity<CollectionRouteApiResponse> getRouteDetails(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        CollectionRoute route = routeService.getRouteDetails(id, farmer.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Collection route not found with ID: " + id));
+        return ResponseEntity.ok(CollectionRouteApiResponse.from(route));
+    }
+
+    @PostMapping("/routes/{id}/start")
+    public ResponseEntity<CollectionRouteApiResponse> startRoute(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        CollectionRoute route = routeService.startRoute(id, farmer.getId());
+        return ResponseEntity.ok(CollectionRouteApiResponse.from(route));
+    }
+
+    @PostMapping("/routes/{id}/stops/{stopId}/complete")
+    public ResponseEntity<Void> completeStop(
+            @PathVariable Long id,
+            @PathVariable Long stopId,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        routeService.completeStop(id, stopId, farmer.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/routes/{id}/cancel")
+    public ResponseEntity<Void> cancelRoute(
+            @PathVariable Long id,
+            @RequestParam(value = "reason", required = false) String reason,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        routeService.cancelRoute(id, farmer.getId(), reason);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/location")
+    public ResponseEntity<Void> updateLocation(
+            @Valid @RequestBody UpdateFarmerLocationApiRequest request,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        routeService.updateFarmerLocationAndCapacity(
+                farmer.getId(),
+                request.latitude(),
+                request.longitude(),
+                request.serviceRadiusKm(),
+                request.maxDailyCapacityKg()
+        );
+        return ResponseEntity.noContent().build();
     }
 
     private Farmer getAuthenticatedFarmer(Authentication auth) {

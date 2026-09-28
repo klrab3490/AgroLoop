@@ -127,9 +127,11 @@
                 </div>
 
                 <!-- Product Content -->
-                <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
-                        <span>By </span><strong style="color: #fff;" th:text="${p.farmer != null ? p.farmer.name : 'Verified Farmer'}">Farmer</strong>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem; display: flex; justify-content: space-between; align-items: center;">
+                        <span>By <a th:if="${p.farmer != null}" th:href="@{'/reviews/farmer/' + ${p.farmer.id}}" style="color: #fff; text-decoration: underline;" th:text="${p.farmer.name}">Farmer</a><span th:unless="${p.farmer != null}">Verified Farmer</span></span>
+                        <span th:if="${p.farmer != null and p.farmer.averageRating > 0}" style="color: #fbbf24; font-weight: 700; font-size: 0.78rem;">
+                            ★ <span th:text="${#numbers.formatDecimal(p.farmer.averageRating, 1, 1)}">4.9</span>
+                        </span>
                     </div>
 
                     <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3;">

@@ -27,6 +27,7 @@
                 <span class="badge phase-badge">Household Member</span>
                 <a th:href="@{/marketplace}" class="btn btn-primary btn-sm">🛒 Marketplace</a>
                 <a th:href="@{/marketplace/orders}" class="btn btn-outline btn-sm">My Orders</a>
+                <a th:href="@{/notifications}" class="btn btn-outline btn-sm">🔔 Alerts</a>
                 <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Household User</span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
@@ -208,7 +209,7 @@
 
                                     <!-- Farmer & Time Subtext -->
                                     <div th:if="${pickup.assignedFarmer != null}" style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                                        Farmer: <strong th:text="${pickup.assignedFarmer.farmName != null ? pickup.assignedFarmer.farmName : pickup.assignedFarmer.name}">Farmer</strong>
+                                        Farmer: <a th:href="@{'/reviews/farmer/' + ${pickup.assignedFarmer.id}}" style="color: #34d399; text-decoration: underline;" th:text="${pickup.assignedFarmer.farmName != null ? pickup.assignedFarmer.farmName : pickup.assignedFarmer.name}">Farmer</a>
                                     </div>
                                     <div th:if="${pickup.scheduledTime != null}" style="font-size: 0.78rem; color: #c084fc; margin-top: 0.15rem;">
                                         ⏰ <span th:text="${#temporals.format(pickup.scheduledTime, 'yyyy-MM-dd HH:mm')}">Date</span>
@@ -222,13 +223,18 @@
                                 </div>
                             </td>
                             <td style="padding: 1rem; text-align: right;">
-                                <div th:if="${pickupMap != null and pickupMap.containsKey(sub.id) and pickupMap.get(sub.id).isEligibleForCancellation()}">
-                                    <form th:action="@{${'/household/pickups/' + pickupMap.get(sub.id).id + '/cancel'}}" method="post" onsubmit="return confirm('Cancel this pickup request?');" style="display: inline;">
-                                        <input type="hidden" name="reason" value="Cancelled by household user">
-                                        <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-size: 0.8rem; padding: 0.35rem 0.7rem;">Cancel</button>
-                                    </form>
+                                <div th:if="${pickupMap != null and pickupMap.containsKey(sub.id)}">
+                                    <div th:if="${pickupMap.get(sub.id).isEligibleForCancellation()}">
+                                        <form th:action="@{${'/household/pickups/' + pickupMap.get(sub.id).id + '/cancel'}}" method="post" onsubmit="return confirm('Cancel this pickup request?');" style="display: inline;">
+                                            <input type="hidden" name="reason" value="Cancelled by household user">
+                                            <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-size: 0.8rem; padding: 0.35rem 0.7rem;">Cancel</button>
+                                        </form>
+                                    </div>
+                                    <div th:if="${pickupMap.get(sub.id).status.name() == 'COLLECTED' or pickupMap.get(sub.id).status.name() == 'VERIFIED'}" style="margin-top: 0.25rem;">
+                                        <a th:href="@{'/reviews/pickup/' + ${pickupMap.get(sub.id).id} + '/new'}" class="btn btn-outline btn-sm" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); font-size: 0.8rem; padding: 0.35rem 0.7rem;">⭐ Rate Farmer</a>
+                                    </div>
                                 </div>
-                                <div th:if="${pickupMap == null or !pickupMap.containsKey(sub.id) or !pickupMap.get(sub.id).isEligibleForCancellation()}">
+                                <div th:if="${pickupMap == null or !pickupMap.containsKey(sub.id)}">
                                     <span style="color: var(--text-muted); font-size: 0.8rem;">-</span>
                                 </div>
                             </td>

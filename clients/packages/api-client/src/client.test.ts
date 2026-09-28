@@ -210,4 +210,27 @@ describe("AgroLoopApiClient & Universal Client Architecture", () => {
     // In Web client mode, refresh token in JS memory is strictly null (managed via HttpOnly cookie)
     expect(storage.getRefreshToken()).toBeNull();
   });
+
+  it("safely invokes fetch with global/window receiver when fetch requires strict Window/globalThis context (e.g. WebKit)", async () => {
+    function webkitFetch(this: any, _url: any, _init: any) {
+      const isWindowOrGlobal = this === globalThis || (typeof window !== "undefined" && this === window);
+      if (!isWindowOrGlobal) {
+        throw new TypeError("Can only call Window.fetch on instances of Window");
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    }
+
+    const client = new AgroLoopApiClient({
+      baseUrl: "https://api.agroloop.com",
+      fetchFn: webkitFetch as any,
+    });
+
+    const res = await client.get<{ ok: boolean }>("/test");
+    expect(res.ok).toBe(true);
+  });
 });

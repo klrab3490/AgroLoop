@@ -54,7 +54,7 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container hero-container">
-            <div class="hero-badge">Phase 2: Authentication & User Management</div>
+            <div class="hero-badge">v1.0.0 — Full Ecosystem Live</div>
             <h2 class="hero-heading">Bridging Waste Management, Agriculture & Sustainable Commerce</h2>
             <p class="hero-desc">
                 AgroLoop transforms household organic waste into agricultural value. Farmers collect and verify waste, households earn EcoTokens, and everyone participates in a transparent, sustainable marketplace.
@@ -110,7 +110,7 @@
                         <li>Real-time pickup status tracking</li>
                         <li>EcoToken balance & marketplace shopping</li>
                     </ul>
-                    <span class="card-status-pill upcoming">Planned for Phase 2–4</span>
+                    <span class="card-status-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Active &amp; Live</span>
                 </div>
 
                 <!-- Farmer Card -->
@@ -123,7 +123,7 @@
                         <li>Post-collection weight & grade verification</li>
                         <li>Produce and organic compost listings</li>
                     </ul>
-                    <span class="card-status-pill upcoming">Planned for Phase 5–6</span>
+                    <span class="card-status-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Active &amp; Live</span>
                 </div>
 
                 <!-- Admin Card -->
@@ -136,7 +136,7 @@
                         <li>Dispute resolution & verification audit</li>
                         <li>Marketplace transaction oversight</li>
                     </ul>
-                    <span class="card-status-pill upcoming">Planned for Phase 10</span>
+                    <span class="card-status-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Active &amp; Live</span>
                 </div>
             </div>
         </div>
@@ -147,74 +147,63 @@
         <div class="container">
             <div class="section-header">
                 <span class="section-tag">Development Roadmap</span>
-                <h3 class="section-title">12-Phase Implementation Progress</h3>
-                <p class="section-subtitle">Following the prioritized workflow from setup to AI classification.</p>
+                <h3 class="section-title">Implementation Roadmap</h3>
+                <p class="section-subtitle">Following the prioritized workflow from baseline setup to multi-client deployment.</p>
             </div>
 
             <div class="phases-timeline">
                 <div class="phase-row current">
-                    <div class="phase-step">1</div>
+                    <div class="phase-step">1–8</div>
                     <div class="phase-info">
                         <div class="phase-title-line">
-                            <span class="phase-name">Phase 1: Project Setup</span>
-                            <span class="phase-tag active-tag">In Progress / Milestone Met</span>
+                            <span class="phase-name">Phases 1–8: Core Platform &amp; Multi-Client Ecosystem</span>
+                            <span class="phase-tag active-tag">Completed &amp; Live (v1.0.0)</span>
                         </div>
-                        <p class="phase-desc">Maven Spring Boot project setup, PostgreSQL connection, Thymeleaf templating, and baseline documentation.</p>
+                        <p class="phase-desc">Spring Boot backend, PostgreSQL, JPA inheritance, waste submissions, pickups &amp; verification, EcoTokens ledger, marketplace, admin governance, Next.js 15 Web Portal, Tauri v2 Desktop Console, and React Native Expo Mobile App.</p>
                     </div>
                 </div>
 
                 <div class="phase-row">
-                    <div class="phase-step">2</div>
+                    <div class="phase-step">9</div>
                     <div class="phase-info">
                         <div class="phase-title-line">
-                            <span class="phase-name">Phase 2: Authentication & Security</span>
-                            <span class="phase-tag pending-tag">Next</span>
+                            <span class="phase-name">Phase 9: Dynamic Matching &amp; Route Planning</span>
+                            <span class="phase-tag pending-tag">Planned</span>
                         </div>
-                        <p class="phase-desc">Spring Security, user registration, role segregation (`HOUSEHOLD`, `FARMER`, `ADMIN`), and session management.</p>
+                        <p class="phase-desc">Polymorphic <code>WasteMatcher</code> strategy interface (distance &amp; capacity), spatial geo-radius matching, automated farmer dispatch, and multi-stop collection route optimization.</p>
                     </div>
                 </div>
 
                 <div class="phase-row">
-                    <div class="phase-step">3</div>
+                    <div class="phase-step">10</div>
                     <div class="phase-info">
                         <div class="phase-title-line">
-                            <span class="phase-name">Phase 3: Profiles & Dashboards</span>
-                            <span class="phase-tag pending-tag">Upcoming</span>
+                            <span class="phase-name">Phase 10: Ratings, Reviews &amp; Reputation</span>
+                            <span class="phase-tag pending-tag">Planned</span>
                         </div>
-                        <p class="phase-desc">Dedicated dashboard workflows for households, farmers, and administrative management.</p>
+                        <p class="phase-desc">Dual-sided 5-star ratings and verified reviews between Households and Farmers, aggregate reliability scores, and public farmer trust profiles.</p>
                     </div>
                 </div>
 
                 <div class="phase-row">
-                    <div class="phase-step">4</div>
+                    <div class="phase-step">11</div>
                     <div class="phase-info">
                         <div class="phase-title-line">
-                            <span class="phase-name">Phase 4: Waste Submission & Images</span>
-                            <span class="phase-tag pending-tag">Upcoming</span>
+                            <span class="phase-name">Phase 11: Real-Time Event Streaming &amp; Push Alerts</span>
+                            <span class="phase-tag pending-tag">Planned</span>
                         </div>
-                        <p class="phase-desc">Multipart image upload with validation, local disk persistence, and database reference tracking.</p>
+                        <p class="phase-desc">Live status tracking via Server-Sent Events (SSE) / WebSockets, instant token minting alerts, and Expo Push Notifications for mobile devices.</p>
                     </div>
                 </div>
 
                 <div class="phase-row">
-                    <div class="phase-step">5–8</div>
+                    <div class="phase-step">12</div>
                     <div class="phase-info">
                         <div class="phase-title-line">
-                            <span class="phase-name">Phases 5–8: Pickups, Verification, EcoTokens & Marketplace</span>
-                            <span class="phase-tag pending-tag">Core Engine</span>
+                            <span class="phase-name">Phase 12: Cloud Object Storage &amp; Scaled Infrastructure</span>
+                            <span class="phase-tag pending-tag">Planned</span>
                         </div>
-                        <p class="phase-desc">Farmer claim & collection, post-collection verification, atomic EcoToken rewards, and marketplace checkout.</p>
-                    </div>
-                </div>
-
-                <div class="phase-row">
-                    <div class="phase-step">9–12</div>
-                    <div class="phase-info">
-                        <div class="phase-title-line">
-                            <span class="phase-name">Phases 9–12: Route Planning, Admin, Hardening & AI Classification</span>
-                            <span class="phase-tag pending-tag">Advanced</span>
-                        </div>
-                        <p class="phase-desc">Optimized collection routes, review systems, production tests, and multimodal AI waste classification.</p>
+                        <p class="phase-desc">Pluggable S3 / MinIO cloud storage provider with pre-signed URLs, Kubernetes Helm charts, and Prometheus/Grafana telemetry.</p>
                     </div>
                 </div>
             </div>
@@ -224,8 +213,8 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container footer-content">
-            <p>&copy; 2026 AgroLoop. Built with Spring Boot, Thymeleaf & PostgreSQL.</p>
-            <p class="footer-meta">Git Branch: <code>feature/project-setup</code></p>
+            <p>&copy; 2026 AgroLoop. Built with Spring Boot, Thymeleaf &amp; PostgreSQL.</p>
+            <p class="footer-meta">Release: <code>v1.0.0</code> &bull; Active Branch: <code>dev</code></p>
         </div>
     </footer>
 

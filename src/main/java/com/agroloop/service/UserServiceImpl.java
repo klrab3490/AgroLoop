@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
 
         if (existingCount.intValue() == 0) {
             entityManager.createNativeQuery(
-                            "INSERT INTO farmers (id, farm_name, farm_address, notes) VALUES (:userId, :farmName, :farmAddress, :notes)")
+                            "INSERT INTO farmers (id, farm_name, farm_address, notes, service_radius_km, max_daily_capacity_kg, average_rating, review_count) VALUES (:userId, :farmName, :farmAddress, :notes, 25.0, 200.00, 0.00, 0)")
                     .setParameter("userId", userId)
                     .setParameter("farmName", application.getFarmName())
                     .setParameter("farmAddress", application.getFarmAddress())

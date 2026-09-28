@@ -14,12 +14,15 @@ AgroLoop is a Java Spring Boot web application designed to connect households an
 
 ## Tech Stack
 
-- **Backend:** Java (JDK 21+ / Temurin 26), Spring Boot 3.x (Spring MVC, Spring Data JPA, Spring Validation)
-- **Database:** PostgreSQL (running in Docker)
-- **Frontend / Templating:** Thymeleaf, HTML5, CSS3, JavaScript
-- **Build Tool:** Maven 3.9+
-- **File Storage:** Local multipart storage (with transition path to cloud object storage)
-- **AI Classification:** Multi-modal waste classification (final phase)
+- **Backend:** Java (JDK 21+ / Temurin 26), Spring Boot 3.3.4 (Spring MVC, Spring Data JPA, Spring Security with stateless RSA-2048 JWT & session chains, Server-Sent Events)
+- **Database:** PostgreSQL (Docker containerized, Flyway database migrations V1–V12)
+- **Web Frontend:** Next.js 15 App Router (`@agroloop/web` with BFF security proxy, HttpOnly cookie rotation, and Tailwind CSS) + Thymeleaf SSR templates
+- **Desktop Application:** Tauri v2 + React 19 (`@agroloop/desktop` with native macOS/Windows OS Keychain delegation)
+- **Mobile Application:** React Native / Expo (`@agroloop/mobile` with offline queue, secure storage, and HMAC-SHA256 QR handshake)
+- **Shared Libraries:** Pure TypeScript QR matrix (`@agroloop/qr`), Typed REST SDK (`@agroloop/api-client`) with WebKit fetch binding & role formatters
+- **Monorepo & Build Tooling:** Turborepo 2.11.5, pnpm 12 workspaces, Maven 3.9+
+- **Testing & Verification:** JUnit 5, Mockito, Vitest, Jest, and Playwright End-to-End browser automation
+- **Cloud & File Storage:** Pluggable `CloudStorageService` SPI (Local Filesystem, AWS S3, and MinIO via native Java 21 `HttpClient` SigV4)
 
 ---
 
@@ -183,15 +186,21 @@ classDiagram
 All development is performed on feature branches, integrated initially into `dev`, and promoted to `main` only after review and verification:
 
 ```
-main (stable releases / production)
+main (stable releases / production v1.0.0)
 └── dev (active development & integration)
-    ├── feature/project-setup
-    ├── feature/user-management
-    ├── feature/waste-submission
-    ├── feature/pickup-verification
-    ├── feature/ecotokens
-    ├── feature/marketplace
-    └── feature/admin-testing
+    ├── feature/project-setup (Phase 1 - Completed)
+    ├── feature/user-management (Phase 2 - Completed)
+    ├── feature/waste-submission (Phase 3 - Completed)
+    ├── feature/pickup-verification (Phase 4 - Completed)
+    ├── feature/ecotokens (Phase 5 - Completed)
+    ├── feature/marketplace (Phase 6 - Completed)
+    ├── feature/admin-testing (Phase 7 - Completed)
+    ├── feature/client-api-boundary (Phase 7.5 - Completed)
+    ├── feature/cross-platform-clients (Phase 8 - Completed)
+    ├── feature/route-planning-matching (Phase 9 - Completed)
+    ├── feature/ratings-reputation (Phase 10 - Completed)
+    ├── feature/realtime-push-alerts (Phase 11 - Completed)
+    └── feature/cloud-storage-scaling (Phase 12 - Completed)
 ```
 
 Workflow:
@@ -293,17 +302,33 @@ docker compose down
 
 ### Running Automated Tests
 
-Run the test suite locally to verify database connectivity and web routes:
-
+#### 1. Backend Verification Suite (350 Passing Tests)
+Run the full Spring Boot JUnit 5 test suite:
 - **macOS / Linux:**
   ```bash
   ./mvnw test
   ```
-
 - **Windows:**
   ```cmd
   mvnw.cmd test
   ```
+
+#### 2. Cross-Platform Client Unit Tests (Vitest & Jest)
+Run unit and integration tests across all client packages (`@agroloop/web`, `@agroloop/mobile`, `@agroloop/desktop`, `@agroloop/api-client`, `@agroloop/qr`):
+```bash
+cd clients
+pnpm test
+```
+
+#### 3. Playwright End-to-End (E2E) Browser Suite
+Execute automated browser tests across Web UI and Desktop Operator UI:
+```bash
+cd clients
+pnpm test:e2e
+```
+- **Web UI tests only:** `pnpm --dir clients test:e2e:web`
+- **Desktop UI tests only:** `pnpm --dir clients test:e2e:desktop`
+- **Interactive UI mode:** `pnpm --dir clients test:e2e:ui`
 
 ---
 

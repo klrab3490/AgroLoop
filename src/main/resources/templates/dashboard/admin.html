@@ -145,6 +145,19 @@
                     <span style="font-size: 0.78rem; color: var(--text-secondary);">Double-Entry Verified</span>
                 </div>
             </div>
+
+            <div class="kpi-card">
+                <div class="kpi-inner">
+                    <span class="micro-eyebrow" th:classappend="${storageDiagnostics != null and storageDiagnostics.healthy ? 'emerald' : 'amber'}">
+                        <span>☁️</span> CLOUD STORAGE
+                    </span>
+                    <div class="kpi-val" style="font-size: 1.35rem; line-height: 1.8;" th:styleappend="${storageDiagnostics != null and storageDiagnostics.healthy ? 'color: #34d399;' : 'color: #fbbf24;'}">
+                        <span th:text="${storageDiagnostics != null ? storageDiagnostics.activeProvider : 'LOCAL'}">LOCAL</span>
+                        <span style="font-size: 0.75rem; font-weight: normal; margin-left: 0.2rem;" th:if="${storageDiagnostics != null and storageDiagnostics.latencyMs >= 0}" th:text="'(' + ${storageDiagnostics.latencyMs} + 'ms)'">(1ms)</span>
+                    </div>
+                    <span style="font-size: 0.78rem; color: var(--text-secondary);" th:text="${storageDiagnostics != null ? storageDiagnostics.providerDisplayName : 'Storage SPI Online'}">Storage SPI Online</span>
+                </div>
+            </div>
         </div>
 
         <!-- Core Operations Grid (60/40 Split) -->
@@ -311,6 +324,13 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 0.75rem;">
                             <span style="color: var(--text-secondary);">Database pgAdmin Host</span>
                             <code style="color: #fbbf24; font-size: 0.72rem;">:5055</code>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 8px; font-size: 0.75rem;">
+                            <span style="color: var(--text-secondary);">Cloud Storage SPI</span>
+                            <span style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span class="status-dot" th:classappend="${storageDiagnostics != null and storageDiagnostics.healthy ? 'dot-green' : 'dot-red'}"></span>
+                                <code style="color: #a78bfa; font-size: 0.72rem;" th:text="${storageDiagnostics != null ? storageDiagnostics.activeProvider + ' (' + storageDiagnostics.targetLocation + ')' : 'LOCAL'}">LOCAL</code>
+                            </span>
                         </div>
                     </div>
 

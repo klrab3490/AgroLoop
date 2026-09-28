@@ -16,6 +16,12 @@ public class Household extends User {
     @Column(length = 500)
     private String address;
 
+    @Column(name = "average_rating")
+    private Double averageRating = 0.0;
+
+    @Column(name = "review_count")
+    private Integer reviewCount = 0;
+
     protected Household() {
         // Required by JPA.
     }
@@ -95,5 +101,18 @@ public class Household extends User {
                 imagePath,
                 notes
         );
+    }
+
+    public Double getAverageRating() {
+        return averageRating != null ? averageRating : 0.0;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount != null ? reviewCount : 0;
+    }
+
+    public void updateReputation(Double averageRating, Integer reviewCount) {
+        this.averageRating = averageRating != null ? averageRating : 0.0;
+        this.reviewCount = reviewCount != null ? reviewCount : 0;
     }
 }

@@ -25,8 +25,10 @@
 
             <div class="nav-actions">
                 <span class="badge phase-badge">Farmer Partner</span>
-                <a th:href="@{/farmer/products}" class="btn btn-primary btn-sm">🌱 Manage Produce</a>
+                <a th:href="@{/farmer/routes}" class="btn btn-primary btn-sm">🗺️ Smart Routes &amp; Matching</a>
+                <a th:href="@{/farmer/products}" class="btn btn-outline btn-sm">🌱 Manage Produce</a>
                 <a th:href="@{/farmer/products/orders}" class="btn btn-outline btn-sm">Customer Orders</a>
+                <a th:href="@{/notifications}" class="btn btn-outline btn-sm">🔔 Alerts</a>
                 <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Farmer Partner</span>
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
@@ -38,7 +40,7 @@
     <main class="container" style="padding-top: 3rem; padding-bottom: 4rem;">
         <!-- Welcome Banner -->
         <div style="margin-bottom: 2.5rem;">
-            <span class="section-tag" style="background: rgba(52, 211, 153, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Phase 4 Active</span>
+            <span class="section-tag" style="background: rgba(52, 211, 153, 0.15); color: #34d399; border-color: rgba(52, 211, 153, 0.3);">Phase 9 Active</span>
             <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">Welcome, <span th:text="${user?.name}">Bob</span></h2>
             <p style="color: var(--text-secondary);">Claim nearby organic waste collections, schedule collection appointments, and record post-collection verification.</p>
         </div>
@@ -79,6 +81,18 @@
                 <h4>Verified Batches</h4>
                 <div style="font-size: 2.2rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;" th:text="${verifiedPickups != null ? verifiedPickups.size() : 0}">0</div>
                 <p>Compostable biomass inspected, graded, and token-approved.</p>
+            </div>
+
+            <div class="role-card">
+                <div class="card-icon farmer-icon">⭐</div>
+                <h4>Trust Reputation</h4>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #fbbf24; margin-bottom: 0.5rem;">
+                    <span th:text="${user?.averageRating > 0 ? #numbers.formatDecimal(user.averageRating, 1, 1) + ' ★' : 'New'}">5.0 ★</span>
+                </div>
+                <p>
+                    <span th:text="${user?.reviewCount + ' verified reviews • '}">0 reviews • </span>
+                    <a th:href="@{'/reviews/farmer/' + ${user?.id}}" style="color: #34d399; font-weight: 600; text-decoration: underline;">Public Profile</a>
+                </p>
             </div>
         </div>
 
@@ -260,6 +274,7 @@
                             <th style="padding: 0.8rem 1rem;">Quality Grade</th>
                             <th style="padding: 0.8rem 1rem;">Notes</th>
                             <th style="padding: 0.8rem 1rem;">Verified At</th>
+                            <th style="padding: 0.8rem 1rem; text-align: right;">Action / Review</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -273,6 +288,9 @@
                             </td>
                             <td style="padding: 1rem; color: var(--text-secondary);" th:text="${pickup.verification != null && pickup.verification.verificationNotes != null ? pickup.verification.verificationNotes : '-'}">Notes</td>
                             <td style="padding: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);" th:text="${pickup.verification != null ? #temporals.format(pickup.verification.verifiedAt, 'yyyy-MM-dd HH:mm') : '-'}">Date</td>
+                            <td style="padding: 1rem; text-align: right;">
+                                <a th:href="@{'/reviews/pickup/' + ${pickup.id} + '/new'}" class="btn btn-outline btn-sm" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); font-size: 0.8rem; padding: 0.35rem 0.7rem;">⭐ Rate Household</a>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

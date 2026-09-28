@@ -82,7 +82,8 @@ export default function App() {
             </p>
             <button
               onClick={() => {
-                const headerBtn = document.querySelector("header button") as HTMLButtonElement;
+                const headerBtn = (document.querySelector('[data-testid="header-sign-in-btn"]') ||
+                  document.querySelector("header button:last-of-type")) as HTMLButtonElement;
                 if (headerBtn) headerBtn.click();
               }}
               style={{

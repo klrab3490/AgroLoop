@@ -22,6 +22,8 @@ public interface PickupRequestRepository extends JpaRepository<PickupRequest, Lo
      */
     List<PickupRequest> findByStatusOrderByCreatedAtAsc(PickupStatus status);
 
+    List<PickupRequest> findByStatusOrderByCreatedAtDesc(PickupStatus status);
+
     /**
      * Finds all pickup requests assigned to a farmer.
      */

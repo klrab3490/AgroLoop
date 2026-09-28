@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { desktopApiClient } from "../lib/api.js";
+import { formatRole } from "@agroloop/api-client";
 import type { UserApiResponse, HouseholdBalanceResponse } from "@agroloop/api-types";
 
 interface UserGovernanceProps {
@@ -195,29 +196,33 @@ export const UserGovernance: React.FC<UserGovernanceProps> = ({ currentUserId })
                       <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>{u.email}</div>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <span
-                        style={{
-                          padding: "2px 8px",
-                          borderRadius: "4px",
-                          fontSize: "10px",
-                          fontWeight: "700",
-                          textTransform: "uppercase",
-                          background:
-                            u.role === "ROLE_ADMIN"
-                              ? "rgba(168, 85, 247, 0.15)"
-                              : u.role === "ROLE_FARMER"
-                              ? "rgba(245, 158, 11, 0.15)"
-                              : "rgba(56, 189, 248, 0.15)",
-                          color:
-                            u.role === "ROLE_ADMIN"
-                              ? "var(--accent-purple)"
-                              : u.role === "ROLE_FARMER"
-                              ? "var(--accent-amber)"
-                              : "var(--accent-blue)",
-                        }}
-                      >
-                        {u.role}
-                      </span>
+                      {(() => {
+                        const displayRole = formatRole(u.role);
+                        const isRoleAdmin = displayRole === "Admin";
+                        const isRoleFarmer = displayRole === "Farmer";
+                        return (
+                          <span
+                            style={{
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              fontSize: "11px",
+                              fontWeight: "700",
+                              background: isRoleAdmin
+                                ? "rgba(168, 85, 247, 0.15)"
+                                : isRoleFarmer
+                                ? "rgba(245, 158, 11, 0.15)"
+                                : "rgba(56, 189, 248, 0.15)",
+                              color: isRoleAdmin
+                                ? "var(--accent-purple)"
+                                : isRoleFarmer
+                                ? "var(--accent-amber)"
+                                : "var(--accent-blue)",
+                            }}
+                          >
+                            {displayRole}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <span

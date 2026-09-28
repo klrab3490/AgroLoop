@@ -7,3 +7,5 @@ out/
 .expo/
 *.tsbuildinfo
 .env*.local
+test-results/
+playwright-report/

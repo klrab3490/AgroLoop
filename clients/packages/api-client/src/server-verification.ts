@@ -98,8 +98,13 @@ export async function verifyServer(
   const {
     clientVersion = "1.0.0",
     timeoutMs = 5000,
-    fetchFn = globalThis.fetch,
   } = options;
+
+  const rawFetch = options.fetchFn ?? globalThis.fetch;
+  const fetchTarget = typeof window !== "undefined" ? window : globalThis;
+  const safeFetch: typeof fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    return rawFetch.call(fetchTarget, input, init);
+  };
 
   let normalizedUrl: string;
   try {
@@ -128,7 +133,7 @@ export async function verifyServer(
   const startTime = Date.now();
 
   try {
-    const response = await fetchFn(targetEndpoint, {
+    const response = await safeFetch(targetEndpoint, {
       method: "GET",
       headers: {
         Accept: "application/json",

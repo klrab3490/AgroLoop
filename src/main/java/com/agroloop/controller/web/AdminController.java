@@ -52,6 +52,7 @@ public class AdminController {
     private final HouseholdRepository householdRepository;
     private final FarmerRepository farmerRepository;
     private final OrderRepository orderRepository;
+    private final com.agroloop.service.storage.StorageManager storageManager;
 
     public AdminController(
             AdminGovernanceService adminGovernanceService,
@@ -60,7 +61,8 @@ public class AdminController {
             UserRepository userRepository,
             HouseholdRepository householdRepository,
             FarmerRepository farmerRepository,
-            OrderRepository orderRepository
+            OrderRepository orderRepository,
+            com.agroloop.service.storage.StorageManager storageManager
     ) {
         this.adminGovernanceService = Objects.requireNonNull(adminGovernanceService, "AdminGovernanceService cannot be null");
         this.userService = Objects.requireNonNull(userService, "UserService cannot be null");
@@ -69,6 +71,7 @@ public class AdminController {
         this.householdRepository = Objects.requireNonNull(householdRepository, "HouseholdRepository cannot be null");
         this.farmerRepository = Objects.requireNonNull(farmerRepository, "FarmerRepository cannot be null");
         this.orderRepository = Objects.requireNonNull(orderRepository, "OrderRepository cannot be null");
+        this.storageManager = Objects.requireNonNull(storageManager, "StorageManager cannot be null");
     }
 
     /**
@@ -98,6 +101,7 @@ public class AdminController {
         model.addAttribute("users", users);
         model.addAttribute("directions", TransactionDirection.values());
         model.addAttribute("recentOrders", recentOrders);
+        model.addAttribute("storageDiagnostics", storageManager.getDiagnostics());
         model.addAttribute("disputedOrders", disputedOrders);
         model.addAttribute("adminUsers", adminUsers);
         model.addAttribute("totalTokensInCirculation", totalTokensInCirculation);

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Center — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .notif-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            transition: all 0.2s ease;
+        }
+        .notif-card.unread {
+            background: rgba(16, 185, 129, 0.04);
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+        .notif-card:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        .notif-icon {
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.12);
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(52, 211, 153, 0.25);
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px #10b981; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Notification &amp; Alert Center</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/household/dashboard}" class="btn btn-outline btn-sm">🏠 Household Dashboard</a>
+                <a th:href="@{/farmer/dashboard}" class="btn btn-outline btn-sm">🚜 Farmer Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 3rem; padding-bottom: 5rem; max-width: 840px;">
+
+        <!-- Header Controls -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem;">
+                    <h2 style="font-size: 2rem; font-weight: 800; margin: 0;">🔔 Notification Center</h2>
+                    <span class="live-indicator">
+                        <span class="pulse-dot"></span> Live Stream Active
+                    </span>
+                </div>
+                <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">
+                    Real-time lifecycle alerts, collection updates, circular token rewards, and peer reviews.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <span th:if="${unreadCount > 0}" style="font-size: 0.85rem; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.35rem 0.8rem; border-radius: 9999px; font-weight: 700;"
+                      th:text="${unreadCount + ' Unread'}">
+                    3 Unread
+                </span>
+
+                <form th:if="${unreadCount > 0}" th:action="@{/notifications/read-all}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Mark All as Read</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Success/Info Alerts -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1.5rem; padding: 0.85rem 1.25rem; border-radius: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;">
+            <span th:text="${successMessage}">Success</span>
+        </div>
+
+        <!-- Notifications List -->
+        <div th:if="${notifications != null and !notifications.isEmpty()}">
+            <div th:each="n : ${notifications.content}" class="notif-card" th:classappend="${!n.isRead ? 'unread' : ''}">
+                <div class="notif-icon">
+                    <span th:if="${n.type.name() == 'PICKUP_CLAIMED'}">🚜</span>
+                    <span th:if="${n.type.name() == 'PICKUP_SCHEDULED'}">📅</span>
+                    <span th:if="${n.type.name() == 'PICKUP_COLLECTED'}">📦</span>
+                    <span th:if="${n.type.name() == 'TOKENS_MINTED'}">🪙</span>
+                    <span th:if="${n.type.name() == 'ORDER_PLACED'}">🛒</span>
+                    <span th:if="${n.type.name() == 'NEW_REVIEW'}">⭐</span>
+                    <span th:if="${n.type.name() == 'SYSTEM_ALERT'}">📢</span>
+                    <span th:if="${n.type.name() != 'PICKUP_CLAIMED' and n.type.name() != 'PICKUP_SCHEDULED' and n.type.name() != 'PICKUP_COLLECTED' and n.type.name() != 'TOKENS_MINTED' and n.type.name() != 'ORDER_PLACED' and n.type.name() != 'NEW_REVIEW' and n.type.name() != 'SYSTEM_ALERT'}">🔔</span>
+                </div>
+
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.35rem;">
+                        <div>
+                            <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: #fff;" th:text="${n.title}">
+                                Notification Title
+                            </h4>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);" th:text="${#temporals.format(n.createdAt, 'dd MMM yyyy, HH:mm')}">
+                                25 Sep 2026, 14:30
+                            </span>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <form th:if="${!n.isRead}" th:action="@{'/notifications/' + ${n.id} + '/read'}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Mark Read</button>
+                            </form>
+                            <span th:if="${n.isRead}" style="font-size: 0.75rem; color: var(--text-muted);">Read</span>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-secondary); font-size: 0.92rem; margin: 0.35rem 0 0.75rem 0; line-height: 1.5;" th:text="${n.message}">
+                        Notification content text details.
+                    </p>
+
+                    <div th:if="${n.actionUrl != null and !n.actionUrl.isBlank()}">
+                        <a th:href="@{${n.actionUrl}}" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 0.3rem 0.75rem; color: #34d399; border-color: rgba(52, 211, 153, 0.3);">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${notifications == null or notifications.isEmpty()}" style="text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px dashed var(--border-subtle); border-radius: 16px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔔</div>
+            <h3 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 0.4rem;">You're all caught up!</h3>
+            <p style="color: var(--text-secondary); max-width: 450px; margin: 0 auto;">
+                No unread notifications at the moment. When your waste is collected, tokens minted, or orders updated, live alerts will appear here.
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Client-side SSE Live Stream Listener Script -->
+    <script>
+        if (typeof EventSource !== "undefined") {
+            const eventSource = new EventSource('/notifications/stream');
+            eventSource.addEventListener('NOTIFICATION', function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    // Dynamically show toast or reload
+                    console.log('Received real-time notification:', data);
+                    if (Notification.permission === "granted") {
+                        new Notification(data.title, { body: data.message });
+                    }
+                } catch (e) {
+                    console.error('Error parsing notification event', e);
+                }
+            });
+            eventSource.onerror = function() {
+                console.log('SSE connection closed or reconnecting...');
+            };
+        }
+    </script>
+</body>
+</html>

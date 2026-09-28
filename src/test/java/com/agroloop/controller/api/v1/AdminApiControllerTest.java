@@ -162,4 +162,30 @@ class AdminApiControllerTest {
                 .andExpect(jsonPath("$.totalHouseholdBalances").exists())
                 .andExpect(jsonPath("$.solvent").isBoolean());
     }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/storage/status returns 200 with diagnostics for admin")
+    void getStorageDiagnostics_asAdmin_returns200() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/storage/status")
+                        .header("Authorization", "Bearer " + adminAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activeProvider").value("LOCAL"))
+                .andExpect(jsonPath("$.healthy").value(true))
+                .andExpect(jsonPath("$.latencyMs").isNumber());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/storage/status returns 403 Forbidden for non-admin")
+    void getStorageDiagnostics_asHousehold_returns403() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/storage/status")
+                        .header("Authorization", "Bearer " + householdAccessToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/storage/status returns 401 Unauthorized when unauthenticated")
+    void getStorageDiagnostics_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/storage/status"))
+                .andExpect(status().isUnauthorized());
+    }
 }

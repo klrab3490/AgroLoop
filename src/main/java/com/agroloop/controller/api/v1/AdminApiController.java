@@ -51,6 +51,7 @@ public class AdminApiController {
     private final HouseholdRepository householdRepository;
     private final IdempotencyService idempotencyService;
     private final OrderSecurityEvaluator orderSecurityEvaluator;
+    private final com.agroloop.service.storage.StorageManager storageManager;
 
     public AdminApiController(
             AdminGovernanceService adminGovernanceService,
@@ -59,7 +60,8 @@ public class AdminApiController {
             UserRepository userRepository,
             HouseholdRepository householdRepository,
             IdempotencyService idempotencyService,
-            OrderSecurityEvaluator orderSecurityEvaluator
+            OrderSecurityEvaluator orderSecurityEvaluator,
+            com.agroloop.service.storage.StorageManager storageManager
     ) {
         this.adminGovernanceService = adminGovernanceService;
         this.marketplaceService = marketplaceService;
@@ -68,6 +70,7 @@ public class AdminApiController {
         this.householdRepository = householdRepository;
         this.idempotencyService = idempotencyService;
         this.orderSecurityEvaluator = orderSecurityEvaluator;
+        this.storageManager = storageManager;
     }
 
     @GetMapping("/orders")
@@ -235,5 +238,10 @@ public class AdminApiController {
             }
         }
         return auth.getName();
+    }
+
+    @GetMapping("/storage/status")
+    public ResponseEntity<com.agroloop.dto.api.v1.response.StorageDiagnosticsResponse> getStorageDiagnostics() {
+        return ResponseEntity.ok(storageManager.getDiagnostics());
     }
 }

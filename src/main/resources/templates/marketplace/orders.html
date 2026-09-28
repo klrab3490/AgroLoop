@@ -72,7 +72,10 @@
                         <div style="font-size: 1.25rem; font-weight: 800; color: #34d399; font-family: 'JetBrains Mono', monospace;">
                             🪙 <span th:text="${#numbers.formatDecimal(ord.totalTokens, 1, 2)}">0.00</span>
                         </div>
-                        <a th:href="@{'/marketplace/orders/' + ${ord.id}}" class="btn btn-outline btn-sm" style="margin-top: 0.25rem;">View Receipt →</a>
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.25rem; flex-wrap: wrap;">
+                            <a th:if="${ord.status.name() == 'COMPLETED'}" th:href="@{'/reviews/order/' + ${ord.id} + '/new'}" class="btn btn-outline btn-sm" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.4);">⭐ Rate Produce</a>
+                            <a th:href="@{'/marketplace/orders/' + ${ord.id}}" class="btn btn-outline btn-sm">View Receipt →</a>
+                        </div>
                     </div>
                 </div>
 

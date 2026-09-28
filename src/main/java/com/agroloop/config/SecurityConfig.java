@@ -121,6 +121,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/health", "/api/v1/meta").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/marketplace/products", "/api/v1/marketplace/products/*", "/api/v1/marketplace/categories").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/users/*", "/api/v1/reviews/summary/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/media/download/*").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/api/v1/farmer/**").hasAuthority("ROLE_FARMER")
@@ -146,7 +147,7 @@ public class SecurityConfig {
         http
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico", "/marketplace", "/marketplace/products/**", "/marketplace/cart/**").permitAll()
+                .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico", "/marketplace", "/marketplace/products/**", "/marketplace/cart/**", "/reviews/farmer/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/marketplace/checkout/**", "/marketplace/orders").hasAuthority("ROLE_HOUSEHOLD")
                 .requestMatchers("/marketplace/orders/**").hasAnyAuthority("ROLE_HOUSEHOLD", "ROLE_FARMER", "ROLE_ADMIN")

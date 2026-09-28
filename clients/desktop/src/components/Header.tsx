@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { desktopApiClient } from "../lib/api.js";
+import { formatRole } from "@agroloop/api-client";
 import type { UserApiResponse } from "@agroloop/api-types";
 import { ServerManagerModal } from "./ServerManagerModal.js";
 import { getActiveServerProfile, type DesktopServerProfile } from "../storage/server-config.js";
@@ -104,6 +105,7 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
           {/* Server Manager Chip */}
           <button
             type="button"
+            data-testid="header-server-profile-btn"
             onClick={() => setShowServerManager(true)}
             style={{
               display: "flex",
@@ -135,13 +137,12 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
                 </span>
                 <span
                   style={{
-                    fontSize: "10px",
+                    fontSize: "11px",
                     fontWeight: "600",
                     color: "var(--accent-emerald)",
-                    textTransform: "uppercase",
                   }}
                 >
-                  {currentUser.role}
+                  {formatRole(currentUser.role)}
                 </span>
               </div>
               <button
@@ -161,6 +162,7 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
             </div>
           ) : (
             <button
+              data-testid="header-sign-in-btn"
               onClick={() => setShowLoginModal(true)}
               style={{
                 padding: "8px 16px",

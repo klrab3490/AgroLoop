@@ -23,7 +23,7 @@ public class HomeController {
     public String home(Model model) {
         model.addAttribute("appName", "AgroLoop");
         model.addAttribute("appTagline", "Bridging Waste Management, Agriculture & Sustainable Commerce");
-        model.addAttribute("currentPhase", "Phase 1: Project Setup");
+        model.addAttribute("currentPhase", "Phase 8: Multi-Client Ecosystem (Live)");
         model.addAttribute("timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // Check database connection status

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator
 import { Link, useRouter } from "expo-router";
 import { useAuth } from "../src/context/auth-context";
 import { getServerConfig, getServerHostname } from "../src/storage/server-config";
+import { formatRole } from "@agroloop/api-client";
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function IndexScreen() {
               <Text style={styles.profileName}>{user.name}</Text>
               <Text style={styles.profileEmail}>{user.email}</Text>
               <View style={styles.roleTag}>
-                <Text style={styles.roleTagText}>{user.role}</Text>
+                <Text style={styles.roleTagText}>{formatRole(user.role)}</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.logoutBtn} onPress={logout}>

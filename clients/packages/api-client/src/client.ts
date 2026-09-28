@@ -35,7 +35,11 @@ export class AgroLoopApiClient {
     // Normalize baseUrl: strip trailing slash and validate structure
     this.baseUrl = normalizeServerUrl(config.baseUrl);
     this.deviceName = config.deviceName ?? "AgroLoop Client";
-    this.customFetch = config.fetchFn ?? globalThis.fetch;
+    const rawFetch = config.fetchFn ?? globalThis.fetch;
+    const fetchTarget = typeof window !== "undefined" ? window : globalThis;
+    this.customFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      return rawFetch.call(fetchTarget, input, init);
+    };
     this.session = new SessionManager({
       clientType: config.clientType ?? "WEB",
       tokenStorage: config.tokenStorage,

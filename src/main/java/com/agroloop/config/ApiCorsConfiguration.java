@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class ApiCorsConfiguration {
 
-    @Value("${agroloop.cors.allowed-origins:http://localhost:3000,http://localhost:5173,https://app.agroloop.example,https://ops.agroloop.example}")
+    @Value("${agroloop.cors.allowed-origins:http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:1420,tauri://localhost,http://tauri.localhost,https://app.agroloop.example,https://ops.agroloop.example}")
     private String allowedOrigins;
 
     @Bean
@@ -25,10 +25,20 @@ public class ApiCorsConfiguration {
                 .filter(s -> !s.isEmpty())
                 .toList();
 
-        config.setAllowedOrigins(origins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"));
-        config.setExposedHeaders(List.of("X-Request-Id"));
+        List<String> patterns = new java.util.ArrayList<>(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "http://192.168.*:*",
+                "http://10.*:*",
+                "tauri://localhost",
+                "http://tauri.localhost"
+        ));
+        patterns.addAll(origins);
+
+        config.setAllowedOriginPatterns(patterns);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("X-Request-Id", "Content-Disposition"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

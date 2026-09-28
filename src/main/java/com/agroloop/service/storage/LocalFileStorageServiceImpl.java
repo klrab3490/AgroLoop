@@ -21,8 +21,8 @@ import java.util.UUID;
  * Enforces server-side UUID filename generation, strict path traversal guards,
  * and MIME type verification.
  */
-@Service
-public class LocalFileStorageServiceImpl implements FileStorageService {
+@Service("localFileStorageService")
+public class LocalFileStorageServiceImpl implements CloudStorageService {
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     private static final List<String> ALLOWED_MIME_TYPES = List.of(
@@ -164,5 +164,25 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
             return ".webp";
         }
         return ".jpg";
+    }
+
+    @Override
+    public StorageProvider getProvider() {
+        return StorageProvider.LOCAL;
+    }
+
+    @Override
+    public String generatePresignedUploadUrl(String storageKey, String contentType, long expirationSeconds) {
+        return "/api/v1/media/upload?key=" + storageKey;
+    }
+
+    @Override
+    public String generatePresignedDownloadUrl(String storageKey, long expirationSeconds) {
+        return "/uploads/" + storageKey;
+    }
+
+    @Override
+    public boolean isHealthy() {
+        return Files.exists(rootLocation) && Files.isWritable(rootLocation);
     }
 }

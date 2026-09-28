@@ -212,6 +212,16 @@ The `clients/` directory contains a high-performance Turborepo monorepo:
    ```
    Launches the native desktop management app with live Tier-1/Tier-2 solvency auditing, user governance, and fleet dispatch.
 
+5. **Run End-to-End (E2E) Browser Tests with Playwright**:
+   ```bash
+   cd clients
+   pnpm test:e2e
+   ```
+   Runs the automated Playwright test suite against both Web UI (Next.js on port 3100) and Desktop Operator UI (Vite on port 1420), validating authentication gates, cart drawer, role badges ("Farmer", "Household", "Admin"), and routing.
+   - Run Web tests only: `pnpm --dir clients test:e2e:web`
+   - Run Desktop tests only: `pnpm --dir clients test:e2e:desktop`
+   - Interactive UI Mode: `pnpm --dir clients test:e2e:ui`
+
 ---
 
 ### Step 5: Default Credentials Reference
@@ -824,6 +834,14 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`OrderItem.java`](../src/main/java/com/agroloop/model/OrderItem.java)** | Domain Entity | `class OrderItem` | Historical line item preserving product title, unit price, category, and farmer name snapshot. | [06. Marketplace](modules/06_marketplace.md) |
 | **[`IdempotencyKey.java`](../src/main/java/com/agroloop/model/IdempotencyKey.java)** | Domain Entity | `class IdempotencyKey` | Persists idempotency hashes, execution status, and AES-GCM-256 encrypted response caches. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`IdempotencyStatus.java`](../src/main/java/com/agroloop/model/IdempotencyStatus.java)** | Domain Enum | `enum IdempotencyStatus` | Execution state: `IN_PROGRESS`, `COMPLETED`, `FAILED`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`CollectionRoute.java`](../src/main/java/com/agroloop/model/CollectionRoute.java)** | Domain Aggregate | `class CollectionRoute` | Farmer collection itinerary, planned stops, total distance km, and completion tracking. | Phase 9 Logistics |
+| **[`RouteStop.java`](../src/main/java/com/agroloop/model/RouteStop.java)** | Domain Entity | `class RouteStop` | Waypoint stop associated with PickupRequest, sequential stop order, and arrival status. | Phase 9 Logistics |
+| **[`RouteStatus.java`](../src/main/java/com/agroloop/model/RouteStatus.java)** | Domain Enum | `enum RouteStatus` | Route lifecycle: `PLANNED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`. | Phase 9 Logistics |
+| **[`RouteStopStatus.java`](../src/main/java/com/agroloop/model/RouteStopStatus.java)** | Domain Enum | `enum RouteStopStatus` | Stop progress: `PENDING`, `ARRIVED`, `COLLECTED`, `SKIPPED`. | Phase 9 Logistics |
+| **[`Review.java`](../src/main/java/com/agroloop/model/Review.java)** | Domain Aggregate | `class Review` | 1-5 star ratings, feedback commentary, context linking (pickup/order), and self-review protection. | Phase 10 Trust |
+| **[`ReviewType.java`](../src/main/java/com/agroloop/model/ReviewType.java)** | Domain Enum | `enum ReviewType` | Review categories: `PICKUP_EXPERIENCE`, `COMPOST_QUALITY`, `GENERAL`. | Phase 10 Trust |
+| **[`Notification.java`](../src/main/java/com/agroloop/model/Notification.java)** | Domain Entity | `class Notification` | In-app user notifications, unread tracking, action deep-links, and delivery timestamps. | Phase 11 Streaming |
+| **[`NotificationType.java`](../src/main/java/com/agroloop/model/NotificationType.java)** | Domain Enum | `enum NotificationType` | Alerts: `PICKUP_CLAIMED`, `PICKUP_SCHEDULED`, `PICKUP_COLLECTED`, `PICKUP_VERIFIED`, `TOKENS_CREDITED`, `ORDER_PLACED`, `ORDER_STATUS_CHANGED`, `REVIEW_RECEIVED`. | Phase 11 Streaming |
 
 ---
 
@@ -847,6 +865,10 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`OrderRepository.java`](../src/main/java/com/agroloop/repository/OrderRepository.java)** | Persistence | `OrderRepository` | Order history by buyer, farmer sales lookups, and dispute filtering. | [06. Marketplace](modules/06_marketplace.md) |
 | **[`OrderItemRepository.java`](../src/main/java/com/agroloop/repository/OrderItemRepository.java)** | Persistence | `OrderItemRepository` | Snapshot order items querying for fulfillment tracking. | [06. Marketplace](modules/06_marketplace.md) |
 | **[`IdempotencyKeyRepository.java`](../src/main/java/com/agroloop/repository/IdempotencyKeyRepository.java)** | Persistence | `IdempotencyKeyRepository` | Atomic reservation and retrieval of `Idempotency-Key` records. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`CollectionRouteRepository.java`](../src/main/java/com/agroloop/repository/CollectionRouteRepository.java)** | Persistence | `CollectionRouteRepository` | Farmer collection routes by status and creation order. | Phase 9 Logistics |
+| **[`RouteStopRepository.java`](../src/main/java/com/agroloop/repository/RouteStopRepository.java)** | Persistence | `RouteStopRepository` | Stops per route ordered by sequence index. | Phase 9 Logistics |
+| **[`ReviewRepository.java`](../src/main/java/com/agroloop/repository/ReviewRepository.java)** | Persistence | `ReviewRepository` | Review feeds, average star rating calculations, and rating distribution breakdowns. | Phase 10 Trust |
+| **[`NotificationRepository.java`](../src/main/java/com/agroloop/repository/NotificationRepository.java)** | Persistence | `NotificationRepository` | User notification inboxes, unread counter queries, and bulk read markings. | Phase 11 Streaming |
 
 ---
 
@@ -879,6 +901,22 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`MarketplaceServiceImpl.java`](../src/main/java/com/agroloop/service/MarketplaceServiceImpl.java)** | Service Logic | `class MarketplaceServiceImpl` | Deterministic dual-phase pessimistic locking (household row -> ascending product rows) and atomic checkout. | [06. Marketplace](modules/06_marketplace.md) |
 | **[`AdminGovernanceService.java`](../src/main/java/com/agroloop/service/AdminGovernanceService.java)** | Service Contract | `AdminGovernanceService` | Platform solvency reconciliation, manual token adjustments under lock, and order dispute adjudication. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`AdminGovernanceServiceImpl.java`](../src/main/java/com/agroloop/service/AdminGovernanceServiceImpl.java)** | Service Logic | `AdminGovernanceServiceImpl` | Implements serialized last-admin defense, lock hierarchy token adjustment, and atomic refund restock. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`RouteService.java`](../src/main/java/com/agroloop/service/RouteService.java)** | Service Contract | `interface RouteService` | Multi-stop collection routing, distance TSP optimization, waypoint scheduling, and stop updates. | Phase 9 Logistics |
+| **[`RouteServiceImpl.java`](../src/main/java/com/agroloop/service/RouteServiceImpl.java)** | Service Logic | `class RouteServiceImpl` | Implements route generation, stop sequencing, status progression, and Haversine geo calculations. | Phase 9 Logistics |
+| **[`WasteMatcher.java`](../src/main/java/com/agroloop/service/matching/WasteMatcher.java)** | Strategy Interface | `interface WasteMatcher` | Polymorphic matching strategy for pairing pending submissions with eligible farmers. | Phase 9 Logistics |
+| **[`DistanceBasedWasteMatcher.java`](../src/main/java/com/agroloop/service/matching/DistanceBasedWasteMatcher.java)** | Strategy Implementation | `DistanceBasedWasteMatcher` | Geodesic radius matcher filtering submissions within farmer service perimeter. | Phase 9 Logistics |
+| **[`CapacityBasedWasteMatcher.java`](../src/main/java/com/agroloop/service/matching/CapacityBasedWasteMatcher.java)** | Strategy Implementation | `CapacityBasedWasteMatcher` | Capacity-aware matcher prioritizing pending batches based on farmer compost volume. | Phase 9 Logistics |
+| **[`PickupRouteOptimizer.java`](../src/main/java/com/agroloop/service/matching/PickupRouteOptimizer.java)** | Optimization Engine | `PickupRouteOptimizer` | TSP 2-opt heuristic optimizing multi-stop collection sequences to minimize travel distance. | Phase 9 Logistics |
+| **[`ReviewService.java`](../src/main/java/com/agroloop/service/ReviewService.java)** | Service Contract | `interface ReviewService` | Review submission, double-review prevention, average star calculations, and reputation queries. | Phase 10 Trust |
+| **[`ReviewServiceImpl.java`](../src/main/java/com/agroloop/service/ReviewServiceImpl.java)** | Service Logic | `class ReviewServiceImpl` | Implements transactional review validation, reputation aggregation, and event publishing. | Phase 10 Trust |
+| **[`NotificationService.java`](../src/main/java/com/agroloop/service/NotificationService.java)** | Service Contract | `interface NotificationService` | User notification management, unread counts, mark-as-read operations, and event dispatch. | Phase 11 Streaming |
+| **[`NotificationServiceImpl.java`](../src/main/java/com/agroloop/service/NotificationServiceImpl.java)** | Service Logic | `class NotificationServiceImpl` | Transactional persistence of notifications and real-time SSE stream broadcasting. | Phase 11 Streaming |
+| **[`SseEmitterRegistry.java`](../src/main/java/com/agroloop/service/notification/SseEmitterRegistry.java)** | Streaming Infrastructure | `class SseEmitterRegistry` | Thread-safe concurrent registry of active client SSE emitters with auto-cleanup on disconnect. | Phase 11 Streaming |
+| **[`NotificationEventListener.java`](../src/main/java/com/agroloop/service/notification/NotificationEventListener.java)** | Event Integration | `NotificationEventListener` | Transactional domain event listener capturing pickups, tokens, orders, and reviews. | Phase 11 Streaming |
+| **[`CloudStorageService.java`](../src/main/java/com/agroloop/service/storage/CloudStorageService.java)** | Storage SPI | `interface CloudStorageService` | Extensible SPI contract for file persistence, pre-signed upload/download URLs, and health checks. | Phase 12 Storage |
+| **[`StorageManager.java`](../src/main/java/com/agroloop/service/storage/StorageManager.java)** | Storage Facade | `class StorageManager` | `@Primary` facade delegating dynamically across Local, AWS S3, and MinIO backends with latency diagnostics. | Phase 12 Storage |
+| **[`LocalFileStorageServiceImpl.java`](../src/main/java/com/agroloop/service/storage/LocalFileStorageServiceImpl.java)** | Storage Implementation | `LocalFileStorageServiceImpl` | Local filesystem storage implementation with directory traversal guards. | Phase 12 Storage |
+| **[`S3MinioStorageServiceImpl.java`](../src/main/java/com/agroloop/service/storage/S3MinioStorageServiceImpl.java)** | Storage Implementation | `S3MinioStorageServiceImpl` | Native Java 21 `HttpClient` S3 REST implementation without heavy AWS SDK dependencies. | Phase 12 Storage |
 
 ---
 
@@ -889,13 +927,15 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`RestExceptionHandler.java`](../src/main/java/com/agroloop/controller/api/RestExceptionHandler.java)** | Exception Handling | `@RestControllerAdvice` | Translates domain exceptions into RFC 7807 problem details with `X-Request-ID`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`AuthApiController.java`](../src/main/java/com/agroloop/controller/api/v1/AuthApiController.java)** | REST Controller | `class AuthApiController` | `/api/v1/auth/login`, `/register`, `/refresh`, `/logout`, `/me`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`HouseholdApiController.java`](../src/main/java/com/agroloop/controller/api/v1/HouseholdApiController.java)** | REST Controller | `HouseholdApiController` | `/api/v1/household/submissions`, `/balance`, `/ledger`, `/apply-farmer`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
-| **[`FarmerApiController.java`](../src/main/java/com/agroloop/controller/api/v1/FarmerApiController.java)** | REST Controller | `class FarmerApiController` | `/api/v1/farmer/products`, `/orders`, `/collections`, `/profile`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`FarmerApiController.java`](../src/main/java/com/agroloop/controller/api/v1/FarmerApiController.java)** | REST Controller | `class FarmerApiController` | `/api/v1/farmer/products`, `/orders`, `/collections`, `/profile`, `/location`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`PickupApiController.java`](../src/main/java/com/agroloop/controller/api/v1/PickupApiController.java)** | REST Controller | `class PickupApiController` | `/api/v1/pickups/**`, `/handshake/pass`, `/handshake/verify`. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
 | **[`MarketplaceApiController.java`](../src/main/java/com/agroloop/controller/api/v1/MarketplaceApiController.java)** | REST Controller | `MarketplaceApiController` | `/api/v1/marketplace/products`, `/checkout` (Idempotent). | [06. Marketplace](modules/06_marketplace.md) |
 | **[`OrderApiController.java`](../src/main/java/com/agroloop/controller/api/v1/OrderApiController.java)** | REST Controller | `class OrderApiController` | `/api/v1/orders/{id}`, `/cancel`, `/dispute`, `/adjudicate`. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`MediaApiController.java`](../src/main/java/com/agroloop/controller/api/v1/MediaApiController.java)** | REST Controller | `class MediaApiController` | `/api/v1/media/ticket`, `/upload`, `/confirm`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
-| **[`AdminApiController.java`](../src/main/java/com/agroloop/controller/api/v1/AdminApiController.java)** | REST Controller | `class AdminApiController` | `/api/v1/admin/users`, `/token-adjustment`, `/solvency`, `/ledger`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`AdminApiController.java`](../src/main/java/com/agroloop/controller/api/v1/AdminApiController.java)** | REST Controller | `class AdminApiController` | `/api/v1/admin/users`, `/token-adjustment`, `/solvency`, `/ledger`, `/storage/status`. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`SystemApiController.java`](../src/main/java/com/agroloop/controller/api/v1/SystemApiController.java)** | REST Controller | `class SystemApiController` | `/api/v1/system/health`, `/meta`, `/diagnostics`. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`ReviewApiController.java`](../src/main/java/com/agroloop/controller/api/v1/ReviewApiController.java)** | REST Controller | `class ReviewApiController` | `/api/v1/reviews/pickup`, `/reviews/order`, `/reviews/farmer/{id}`, `/reviews/farmer/{id}/reputation`. | Phase 10 Trust |
+| **[`NotificationApiController.java`](../src/main/java/com/agroloop/controller/api/v1/NotificationApiController.java)** | REST Controller | `NotificationApiController` | `/api/v1/notifications`, `/stream` (SSE), `/unread-count`, `/{id}/read`, `/read-all`. | Phase 11 Streaming |
 
 ---
 
@@ -909,7 +949,10 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`FarmerProductController.java`](../src/main/java/com/agroloop/controller/web/FarmerProductController.java)** | Web Controller | `FarmerProductController` | Farmer product management, listing creation forms, and sales history. | [06. Marketplace](modules/06_marketplace.md) |
 | **[`MarketplaceController.java`](../src/main/java/com/agroloop/controller/web/MarketplaceController.java)** | Web Controller | `MarketplaceController` | Marketplace catalog browsing, cart operations, and web checkout flow. | [06. Marketplace](modules/06_marketplace.md) |
 | **[`PickupController.java`](../src/main/java/com/agroloop/controller/web/PickupController.java)** | Web Controller | `class PickupController` | Handles farmer pickup operations (`/farmer/pickups/**`) and household cancellation. | [04. Pickups](modules/04_pickup_and_verification.md) |
-| **[`AdminController.java`](../src/main/java/com/agroloop/controller/web/AdminController.java)** | Web Controller | `class AdminController` | Dedicated admin portal serving `/admin/users`, `/admin/orders`, `/admin/ledger`. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`AdminController.java`](../src/main/java/com/agroloop/controller/web/AdminController.java)** | Web Controller | `class AdminController` | Dedicated admin portal serving `/admin/users`, `/admin/orders`, `/admin/ledger`, storage diagnostics. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`FarmerRouteController.java`](../src/main/java/com/agroloop/controller/web/FarmerRouteController.java)** | Web Controller | `FarmerRouteController` | Farmer collection routes view (`/farmer/routes`) with Leaflet route map, TSP optimization, and stop progression. | Phase 9 Logistics |
+| **[`ReviewWebController.java`](../src/main/java/com/agroloop/controller/web/ReviewWebController.java)** | Web Controller | `class ReviewWebController` | Public farmer profile (`/reviews/farmer/{id}`) and review submission forms (`/reviews/pickup/{id}/new`, `/reviews/order/{id}/new`). | Phase 10 Trust |
+| **[`NotificationWebController.java`](../src/main/java/com/agroloop/controller/web/NotificationWebController.java)** | Web Controller | `NotificationWebController` | Notification inbox view (`/notifications`) with live SSE connection badge and mark-read actions. | Phase 11 Streaming |
 
 ---
 
@@ -926,6 +969,9 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`V7__create_admin_and_refund_governance.sql`](../src/main/resources/db/migration/V7__create_admin_and_refund_governance.sql)** | DB Migration | `V7` | Implements `token_balance >= 0` check, refund columns, and PostgreSQL ledger immutability trigger. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`V8__api_sessions_idempotency_media.sql`](../src/main/resources/db/migration/V8__api_sessions_idempotency_media.sql)** | DB Migration | `V8` | Creates `auth_sessions`, `idempotency_keys`, and `media_assets` tables. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`V9__pickup_handshake.sql`](../src/main/resources/db/migration/V9__pickup_handshake.sql)** | DB Migration | `V9` | Creates `pickup_handshakes` table for server-authoritative QR codes. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`V10__waste_matcher_and_routes.sql`](../src/main/resources/db/migration/V10__waste_matcher_and_routes.sql)** | DB Migration | `V10` | Adds `latitude` and `longitude` coordinates to farmers/households, and creates `collection_routes` and `route_stops` tables. | Phase 9 Logistics |
+| **[`V11__ratings_and_reviews.sql`](../src/main/resources/db/migration/V11__ratings_and_reviews.sql)** | DB Migration | `V11` | Adds `average_rating` and `review_count` to farmers/households, and creates `reviews` table with strict integrity checks. | Phase 10 Trust |
+| **[`V12__notification_system.sql`](../src/main/resources/db/migration/V12__notification_system.sql)** | DB Migration | `V12` | Creates `notifications` table with composite indexes on `(user_id, created_at DESC)` and `(user_id, is_read)`. | Phase 11 Streaming |
 
 ---
 
@@ -942,6 +988,10 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`users.html`](../src/main/resources/templates/admin/users.html)** | UI View | Thymeleaf Template | Admin user management view with status toggles and manual token adjustment modals. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`orders.html`](../src/main/resources/templates/admin/orders.html)** | UI View | Thymeleaf Template | Admin order view with cancellation and dispute adjudication modals. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`ledger.html`](../src/main/resources/templates/admin/ledger.html)** | UI View | Thymeleaf Template | Admin immutable ledger viewer with credit/debit chips and pagination. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`routes.html`](../src/main/resources/templates/farmer/routes.html)** | UI View | Thymeleaf Template | Interactive Leaflet routing portal with waypoint sequencing, TSP optimization, and stop tracking. | [09. Routing](modules/09_route_planning_and_matching.md) |
+| **[`farmer-profile.html`](../src/main/resources/templates/reviews/farmer-profile.html)** | UI View | Thymeleaf Template | Public farmer trust profile displaying 5-star rating breakdowns, badges, and customer feedback. | [10. Reviews](modules/10_ratings_and_reviews.md) |
+| **[`submit-review.html`](../src/main/resources/templates/reviews/submit-review.html)** | UI View | Thymeleaf Template | Contextual review submission form with interactive 5-star selector and rating commentary. | [10. Reviews](modules/10_ratings_and_reviews.md) |
+| **[`notifications/index.html`](../src/main/resources/templates/notifications/index.html)** | UI View | Thymeleaf Template | Live real-time notification inbox with SSE connection indicator and mark-all-read action. | [11. Alerts](modules/11_realtime_events_and_alerts.md) |
 | **[`css/style.css`](../src/main/resources/static/css/style.css)** | Static Stylesheet | CSS | Global responsive stylesheet with dark-mode palette, typography, and glassmorphism. | [01. Setup](modules/01_project_setup.md) |
 | **[`images/logo.png`](../src/main/resources/static/images/logo.png)** | Static Asset | PNG Image | High-resolution official AgroLoop brand artwork and browser favicon. | [01. Setup](modules/01_project_setup.md) |
 
@@ -956,8 +1006,10 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`turbo.json`](../clients/turbo.json)** | Build Orchestration | Turborepo Pipeline | Configures caching, task pipelines, and topological builds across clients. | [08. Clients](modules/08_cross_platform_clients.md) |
 | **[`openapi.json`](../clients/openapi/openapi.json)** | API Contract | OpenAPI 3.1 Spec | Exported REST API specification driving type generation and client SDKs. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`api-types/src/index.ts`](../clients/packages/api-types/src/index.ts)** | Shared Library | `@agroloop/api-types` | Generated TypeScript types matching backend API responses and requests. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
-| **[`api-client/src/client.ts`](../clients/packages/api-client/src/client.ts)** | Shared Library | `@agroloop/api-client` | Typed HTTP client with single-flight refresh mutex and idempotency injection. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`api-client/src/client.ts`](../clients/packages/api-client/src/client.ts)** | Shared Library | `@agroloop/api-client` | Typed HTTP client with single-flight refresh mutex, WebKit fetch binding, and idempotency injection. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`api-client/src/formatters.ts`](../clients/packages/api-client/src/formatters.ts)** | Shared Library | `@agroloop/api-client` | Clean role string formatter mapping backend authorities (`ROLE_FARMER` -> `Farmer`, etc.). | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`qr/src/qr-matrix.ts`](../clients/packages/qr/src/qr-matrix.ts)** | Shared Library | `@agroloop/qr` | Pure TypeScript QR matrix generator using Kazuhiko Arase algorithms. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
+| **[`playwright.config.ts`](../clients/playwright.config.ts)** | E2E Config | Playwright Config | Multi-project E2E test configuration orchestrating Web (port 3100) and Desktop (port 1420). | [08. Clients](modules/08_cross_platform_clients.md) |
 
 ---
 
@@ -999,6 +1051,7 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | :--- | :--- | :--- | :--- | :--- |
 | **[`App.tsx`](../clients/desktop/src/App.tsx)** | Desktop Entrypoint | React Component | Main administrative shell featuring tabbed navigation and server connectivity indicator. | [08. Clients](modules/08_cross_platform_clients.md) |
 | **[`tauri.conf.json`](../clients/desktop/src-tauri/tauri.conf.json)** | Tauri Configuration | Native App Config | Configures Tauri v2 desktop window, security permissions, and OS keychain plugins. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`build.rs`](../clients/desktop/src-tauri/build.rs)** | Rust Build Script | Tauri Build | Invokes `tauri_build::build()` to compile native macOS/Windows/Linux platform bindings. | [08. Clients](modules/08_cross_platform_clients.md) |
 | **[`SolvencyAudit.tsx`](../clients/desktop/src/components/SolvencyAudit.tsx)** | Desktop View | React Component | Real-time platform solvency console reconciling Tier-1 user balances with Tier-2 ledgers. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`UserGovernance.tsx`](../clients/desktop/src/components/UserGovernance.tsx)** | Desktop View | React Component | User management view with status toggles and manual token adjustment modals. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`LedgerExplorer.tsx`](../clients/desktop/src/components/LedgerExplorer.tsx)** | Desktop View | React Component | Immutable financial audit ledger viewer with transaction filtering and pagination. | [07. Admin](modules/07_admin_and_testing.md) |
@@ -1057,6 +1110,18 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`OrderLifecycleConcurrencyTest.java`](../src/test/java/com/agroloop/service/OrderLifecycleConcurrencyTest.java)** | Concurrency Stress | `Order` Lifecycle | Simultaneous cancel, dispute, and complete on same order; exactly one wins. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`ConcurrentHouseholdLedgerMutationTest.java`](../src/test/java/com/agroloop/service/ConcurrentHouseholdLedgerMutationTest.java)** | Concurrency Stress | Financial Ledger | 15 concurrent threads performing credits, debits, adjustments; asserts running balance. | [07. Admin](modules/07_admin_and_testing.md) |
 | **[`ConcurrentLastAdminProtectionTest.java`](../src/test/java/com/agroloop/service/ConcurrentLastAdminProtectionTest.java)** | Concurrency Stress | `AdminGovernanceService` | Verifies serialized last-admin defense; prevents concurrent requests from 0 admins. | [07. Admin](modules/07_admin_and_testing.md) |
+| **[`CollectionRouteTest.java`](../src/test/java/com/agroloop/model/CollectionRouteTest.java)** | Domain Unit | `CollectionRoute`, `RouteStop` | Verifies route stop sequencing, distance updates, and status transitions. | [09. Routing](modules/09_route_planning_and_matching.md) |
+| **[`RouteServiceTest.java`](../src/test/java/com/agroloop/service/RouteServiceTest.java)** | Service Unit | `RouteServiceImpl`, `PickupRouteOptimizer` | Asserts TSP route optimization, Haversine geo calculations, and stop progression. | [09. Routing](modules/09_route_planning_and_matching.md) |
+| **[`FarmerRouteControllerTest.java`](../src/test/java/com/agroloop/controller/FarmerRouteControllerTest.java)** | Web Integration | `FarmerRouteController` | Tests route dashboard view, route creation, and stop status mutation. | [09. Routing](modules/09_route_planning_and_matching.md) |
+| **[`ReviewTest.java`](../src/test/java/com/agroloop/model/ReviewTest.java)** | Domain Unit | `Review` | Asserts 1-5 rating range enforcement, self-review guard, and comment bounds. | [10. Reviews](modules/10_ratings_and_reviews.md) |
+| **[`ReviewServiceTest.java`](../src/test/java/com/agroloop/service/ReviewServiceTest.java)** | Service Unit | `ReviewServiceImpl` | Tests review submission, duplicate checks, star averages, and reputation calculation. | [10. Reviews](modules/10_ratings_and_reviews.md) |
+| **[`ReviewApiControllerTest.java`](../src/test/java/com/agroloop/controller/api/v1/ReviewApiControllerTest.java)** | REST Integration | `ReviewApiController` | Tests `/api/v1/reviews/**` endpoints, role security, validation, and error responses. | [10. Reviews](modules/10_ratings_and_reviews.md) |
+| **[`ReviewWebControllerTest.java`](../src/test/java/com/agroloop/controller/ReviewWebControllerTest.java)** | Web Integration | `ReviewWebController` | Tests public farmer profile view and context review submission workflows. | [10. Reviews](modules/10_ratings_and_reviews.md) |
+| **[`NotificationTest.java`](../src/test/java/com/agroloop/model/NotificationTest.java)** | Domain Unit | `Notification` | Verifies notification creation, unread state defaults, and mark-as-read transitions. | [11. Alerts](modules/11_realtime_events_and_alerts.md) |
+| **[`NotificationServiceTest.java`](../src/test/java/com/agroloop/service/NotificationServiceTest.java)** | Service Unit | `NotificationServiceImpl` | Tests persistent notification inbox, unread counts, mark-read, and SSE broadcasting. | [11. Alerts](modules/11_realtime_events_and_alerts.md) |
+| **[`NotificationApiControllerTest.java`](../src/test/java/com/agroloop/controller/api/v1/NotificationApiControllerTest.java)** | REST Integration | `NotificationApiController` | Tests SSE stream handshake, notification retrieval, unread counts, and batch read. | [11. Alerts](modules/11_realtime_events_and_alerts.md) |
+| **[`NotificationWebControllerTest.java`](../src/test/java/com/agroloop/controller/NotificationWebControllerTest.java)** | Web Integration | `NotificationWebController` | Tests notification inbox UI rendering, SSE stream endpoint, and mark-read redirects. | [11. Alerts](modules/11_realtime_events_and_alerts.md) |
+| **[`StorageManagerTest.java`](../src/test/java/com/agroloop/service/storage/StorageManagerTest.java)** | Storage SPI Unit | `StorageManager` | Verifies dynamic polymorphic dispatch between Local and S3/MinIO backends and diagnostics. | [12. Storage](modules/12_cloud_storage_and_scaling.md) |
 | **[`AgroLoopApplicationTests.java`](../src/test/java/com/agroloop/AgroLoopApplicationTests.java)** | Smoke Test | Spring Context | Bootstraps full Spring Boot context to ensure all beans and configurations load cleanly. | [01. Setup](modules/01_project_setup.md) |
 
 ---
@@ -1079,8 +1144,11 @@ The tables below provide a catalog of key files in the AgroLoop codebase. Every 
 | **[`admin-ops.test.ts`](../clients/desktop/src/tests/admin-ops.test.ts)** | Vitest | `@agroloop/desktop` | Solvency calculations, user governance actions, and order dispute decisions. | [08. Clients](modules/08_cross_platform_clients.md) |
 | **[`desktop-storage.test.ts`](../clients/desktop/src/storage/desktop-storage.test.ts)** | Vitest | `@agroloop/desktop` | Native OS Keychain adapter storage and token retrieval. | [08. Clients](modules/08_cross_platform_clients.md) |
 | **[`qr.test.ts`](../clients/packages/qr/src/qr.test.ts)** | Vitest | `@agroloop/qr` | Matrix dimension calculations, error correction encoding, and quiet zone rules. | [08. QR Handshake](modules/08_mobile_qr_handshake.md) |
-| **[`client.test.ts`](../clients/packages/api-client/src/client.test.ts)** | Vitest | `@agroloop/api-client` | HTTP method execution, automatic header injection, and response parsing. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`client.test.ts`](../clients/packages/api-client/src/client.test.ts)** | Vitest | `@agroloop/api-client` | HTTP method execution, automatic header injection, WebKit fetch binding, and response parsing. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`formatters.test.ts`](../clients/packages/api-client/src/formatters.test.ts)** | Vitest | `@agroloop/api-client` | Role formatting transformation (`ROLE_FARMER` -> `Farmer`, etc.) and edge cases. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
 | **[`server-verification.test.ts`](../clients/packages/api-client/src/server-verification.test.ts)** | Vitest | `@agroloop/api-client` | Server discovery handshake and public key verification routines. | [07.5. API Boundary](modules/07_5_client_api_boundary.md) |
+| **[`web-ui.spec.ts`](../clients/e2e/web-ui.spec.ts)** | Playwright | `@agroloop/web` | Marketplace navigation, cart drawer, role badges ("Farmer", "Household", "Admin"), and routing. | [08. Clients](modules/08_cross_platform_clients.md) |
+| **[`desktop-ui.spec.ts`](../clients/e2e/desktop-ui.spec.ts)** | Playwright | `@agroloop/desktop` | Operator login gate, header role badge, user governance table role badges, and server manager. | [08. Clients](modules/08_cross_platform_clients.md) |
 
 ---
 
@@ -1100,6 +1168,10 @@ Each feature and integration in AgroLoop has its own dedicated documentation fil
 | **[07.5. Client/API Boundary & Architecture](modules/07_5_client_api_boundary.md)** | Phase 7.5: Client/API | Completed | Versioned `/api/v1` REST contract layer for Web, Mobile, and Desktop. Dual Spring Security filter chains, RSA-2048 JWT, refresh rotation with replay defense, AES-GCM-256 encrypted idempotency, media management, OpenAPI 3.1, and 265 green tests. |
 | **[08. Mobile QR Handshake Architecture](modules/08_mobile_qr_handshake.md)** | Phase 8: Mobile Handshake | Completed | Ephemeral server-authoritative HMAC-SHA256 dynamic QR passes, pessimistic locked verification, zero-PII compact payloads, brute-force rate-limiting, and pure React Native Kazuhiko Arase QR matrix integration. |
 | **[08. Cross-Platform Clients Architecture](modules/08_cross_platform_clients.md)** | Phase 8: Web & Desktop Clients | Completed | Multi-client ecosystem: Next.js 15 Web Portal (`@agroloop/web` with BFF boundary, HttpOnly cookie rotation, server-side single-flight refresh mutex, and allowlist proxy) & Tauri v2 Desktop Operations Console (`@agroloop/desktop` with native OS Keychain delegation, live Tier-1 & Tier-2 Solvency Reconciliation, User Governance, Order Disputes, Ledger Explorer, and Fleet Telemetry). |
+| **[09. Route Planning & Waste Matching](modules/09_route_planning_and_matching.md)** | Phase 9: Routing & Logistics | Completed | Polymorphic `WasteMatcher` strategy interface (`DistanceBased`, `CapacityBalanced`, `Composite`), TSP 2-Opt heuristic route optimization (`RouteOptimizationService`), interactive Leaflet routing map (`/farmer/routes`), and REST API endpoints (`/api/v1/farmer/routes/**`). |
+| **[10. Ratings, Reviews & Reputation](modules/10_ratings_and_reviews.md)** | Phase 10: Feedback & Trust | Completed | 1-5 star ratings and written reviews between Households and Farmers, anti-self-review guard, aggregate farmer reputation scores (`averageRating`, `reviewCount`), public farmer trust profiles (`/reviews/farmer/{id}`), and REST API endpoints (`/api/v1/reviews/**`). |
+| **[11. Real-Time Events & Push Alerts](modules/11_realtime_events_and_alerts.md)** | Phase 11: Live Streaming & Mobile | Completed | Real-time event streaming via Server-Sent Events (SSE) with thread-safe `SseEmitterRegistry`, Spring Domain event listeners (`NotificationEvents`), persistent notification inbox with unread badge (`/notifications`), and REST API endpoints (`/api/v1/notifications/**`). |
+| **[12. Cloud Storage & Scaled Infrastructure](modules/12_cloud_storage_and_scaling.md)** | Phase 12: Cloud Native & S3 | Completed | Pluggable Cloud Storage SPI (`CloudStorageService`, `StorageManager` facade supporting Local Filesystem, AWS S3, and MinIO), native Java 21 `HttpClient` SigV4 REST client, presigned upload URLs, and admin operations storage diagnostics card (`/admin/dashboard`, `/api/v1/admin/storage/status`). |
 
 ---
 

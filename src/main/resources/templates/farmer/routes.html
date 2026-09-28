@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Route Planning & Matching — AgroLoop</title>
+    <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
+                <div>
+                    <h1 class="brand-title">AgroLoop</h1>
+                    <span class="brand-subtitle">Smart Logistics &amp; Route Dispatch</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <a th:href="@{/farmer/dashboard}" class="btn btn-outline btn-sm">⬅ Back to Dashboard</a>
+                <a th:href="@{/farmer/products}" class="btn btn-primary btn-sm">🌱 Manage Produce</a>
+                <span style="font-size: 0.9rem; font-weight: 600;" th:text="${user?.name}">Farmer Partner</span>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm">Sign Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding-top: 2.5rem; padding-bottom: 4rem;">
+
+        <!-- Header Hero -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2.5rem;">
+            <div>
+                <span class="section-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">Phase 9 Active</span>
+                <h2 style="font-size: 2rem; font-weight: 800; margin-top: 0.3rem;">🗺️ Dynamic Matching &amp; Collection Routes</h2>
+                <p style="color: var(--text-secondary); max-width: 650px;">
+                    Algorithmically match organic waste submissions to your farm using polymorphic heuristics, optimize your multi-stop collection itinerary, and minimize driving emissions.
+                </p>
+            </div>
+
+            <!-- Farm Telemetry Summary Card -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; gap: 2rem; align-items: center;">
+                <div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Base Coordinates</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #fff; margin-top: 0.2rem;" th:text="${#numbers.formatDecimal(user?.latitude, 1, 4) + ', ' + #numbers.formatDecimal(user?.longitude, 1, 4)}">10.8505, 76.2711</div>
+                </div>
+                <div style="border-left: 1px solid var(--border-subtle); padding-left: 2rem;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Service Radius</div>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: #34d399; margin-top: 0.2rem;" th:text="${user?.serviceRadiusKm + ' km'}">25 km</div>
+                </div>
+                <div style="border-left: 1px solid var(--border-subtle); padding-left: 2rem;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Daily Capacity</div>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: #60a5fa; margin-top: 0.2rem;" th:text="${user?.maxDailyCapacityKg + ' kg'}">200 kg</div>
+                </div>
+                <button onclick="toggleSettingsModal()" class="btn btn-outline btn-sm" style="margin-left: 0.5rem;">⚙️ Settings</button>
+            </div>
+        </div>
+
+        <!-- Flash Alerts -->
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;">
+            <span th:text="${successMessage}">Operation successful!</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 2rem; padding: 1rem 1.5rem; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+            <span th:text="${errorMessage}">Error occurred.</span>
+        </div>
+
+        <!-- Section 1: Active Dispatched Routes -->
+        <div th:if="${activeRoutes != null and !activeRoutes.isEmpty()}" style="margin-bottom: 3.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                <div>
+                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.2rem;">🚚 Active Itineraries &amp; Dispatched Routes</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Follow your sequenced collection stops in real-time.</p>
+                </div>
+                <span class="badge phase-badge" th:text="${activeRoutes.size() + ' Active'}">1 Active</span>
+            </div>
+
+            <div th:each="route : ${activeRoutes}" style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 2rem;">
+                <!-- Route Summary Banner -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h4 style="font-size: 1.25rem; font-weight: 800; margin: 0;" th:text="${'Route #' + route.id + ' — ' + route.routeDate}">Route #1</h4>
+                            <span th:if="${route.status.name() == 'PLANNED'}" class="card-status-pill upcoming">Planned</span>
+                            <span th:if="${route.status.name() == 'IN_PROGRESS'}" class="card-status-pill" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4);">In Progress</span>
+                            <span th:if="${route.status.name() == 'COMPLETED'}" class="card-status-pill" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);">Completed</span>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.4rem;" th:if="${route.notes != null}" th:text="${'Notes: ' + route.notes}">Notes</p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 1.5rem;">
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Total Est. Distance:</span>
+                            <strong style="color: #fbbf24; font-size: 1.1rem; margin-left: 0.3rem;" th:text="${route.totalDistanceKm + ' km'}">12.4 km</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Total Payload:</span>
+                            <strong style="color: #34d399; font-size: 1.1rem; margin-left: 0.3rem;" th:text="${route.totalEstimatedWeight + ' kg'}">85 kg</strong>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a th:if="${navigationUrls[route.id] != null}" th:href="${navigationUrls[route.id]}" target="_blank" class="btn btn-outline btn-sm" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.4);">
+                                🧭 Open GPS Nav
+                            </a>
+                            <form th:if="${route.status.name() == 'PLANNED'}" th:action="@{/farmer/routes/{id}/start(id=${route.id})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-primary btn-sm">▶ Start Run</button>
+                            </form>
+                            <form th:action="@{/farmer/routes/{id}/cancel(id=${route.id})}" method="post" onsubmit="return confirm('Are you sure you want to cancel this route?');" style="display: inline;">
+                                <button type="submit" class="btn btn-outline btn-sm" style="color: #f87171; border-color: rgba(248, 113, 113, 0.4);">Cancel</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sequenced Stops Table -->
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase;">
+                                <th style="padding: 0.75rem 1rem;">Stop #</th>
+                                <th style="padding: 0.75rem 1rem;">Category</th>
+                                <th style="padding: 0.75rem 1rem;">Household &amp; Address</th>
+                                <th style="padding: 0.75rem 1rem;">Weight</th>
+                                <th style="padding: 0.75rem 1rem;">Dist. From Prev</th>
+                                <th style="padding: 0.75rem 1rem;">Stop Status</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="stop : ${route.stops}" style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 1rem;">
+                                    <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-weight: 800; font-size: 0.9rem;" th:text="${stop.stopOrder}">1</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <span class="badge phase-badge" th:text="${stop.pickupRequest.wasteSubmission.category.displayName}">Category</span>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 600;" th:text="${stop.pickupRequest.wasteSubmission.household.name}">Household Name</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem;" th:text="${stop.pickupRequest.wasteSubmission.pickupAddress}">Address</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <strong style="color: #34d399;" th:text="${stop.pickupRequest.wasteSubmission.estimatedWeight + ' kg'}">10 kg</strong>
+                                </td>
+                                <td style="padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;" th:text="${'+' + stop.estimatedDistanceFromPrevKm + ' km'}">+2.5 km</td>
+                                <td style="padding: 1rem;">
+                                    <span th:if="${stop.status.name() == 'PENDING'}" class="card-status-pill upcoming">Pending</span>
+                                    <span th:if="${stop.status.name() == 'COMPLETED'}" class="card-status-pill" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Collected</span>
+                                    <span th:if="${stop.status.name() == 'SKIPPED'}" class="card-status-pill" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">Skipped</span>
+                                </td>
+                                <td style="padding: 1rem; text-align: right;">
+                                    <form th:if="${stop.status.name() == 'PENDING'}" th:action="@{/farmer/routes/{id}/stops/{stopId}/complete(id=${route.id}, stopId=${stop.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-primary btn-sm">✓ Mark Done</button>
+                                    </form>
+                                    <span th:unless="${stop.status.name() == 'PENDING'}" style="color: var(--text-secondary); font-size: 0.85rem;">Finished</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: WasteMatcher Recommendations & Route Generator -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 0.2rem;">⚡ Smart Pickup Matcher &amp; TSP Optimizer</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Select your preferred matching strategy to rank candidate waste submissions, then bundle them into an optimal route.</p>
+                </div>
+
+                <!-- Strategy Selector Pill Bar -->
+                <div style="display: flex; gap: 0.5rem; background: #0d1117; padding: 0.35rem; border-radius: 10px; border: 1px solid var(--border-subtle);">
+                    <a th:href="@{/farmer/routes(strategy='COMPOSITE')}" 
+                       class="btn btn-sm" 
+                       th:style="${selectedStrategy == 'COMPOSITE' ? 'background: #34d399; color: #000; font-weight: 700;' : 'background: transparent; color: var(--text-secondary);'}">
+                        🌟 Composite (Recommended)
+                    </a>
+                    <a th:href="@{/farmer/routes(strategy='DISTANCE')}" 
+                       class="btn btn-sm" 
+                       th:style="${selectedStrategy == 'DISTANCE' ? 'background: #34d399; color: #000; font-weight: 700;' : 'background: transparent; color: var(--text-secondary);'}">
+                        📍 Nearest First
+                    </a>
+                    <a th:href="@{/farmer/routes(strategy='CAPACITY')}" 
+                       class="btn btn-sm" 
+                       th:style="${selectedStrategy == 'CAPACITY' ? 'background: #34d399; color: #000; font-weight: 700;' : 'background: transparent; color: var(--text-secondary);'}">
+                        ⚖️ Maximize Payload
+                    </a>
+                </div>
+            </div>
+
+            <!-- Route Generation Form Wrapper -->
+            <form th:action="@{/farmer/routes/generate}" method="post">
+                <div th:if="${recommendations != null and !recommendations.isEmpty()}" style="overflow-x: auto; margin-bottom: 2rem;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase;">
+                                <th style="padding: 0.8rem 1rem; width: 40px;">
+                                    <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)" style="cursor: pointer;">
+                                </th>
+                                <th style="padding: 0.8rem 1rem;">Match Score</th>
+                                <th style="padding: 0.8rem 1rem;">Category</th>
+                                <th style="padding: 0.8rem 1rem;">Household &amp; Address</th>
+                                <th style="padding: 0.8rem 1rem;">Distance from Farm</th>
+                                <th style="padding: 0.8rem 1rem;">Estimated Weight</th>
+                                <th style="padding: 0.8rem 1rem;">Recommendation Basis</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="match : ${recommendations}" style="border-bottom: 1px solid var(--border-subtle);">
+                                <td style="padding: 1rem;">
+                                    <input type="checkbox" name="pickupIds" th:value="${match.pickupRequest.id}" class="pickup-checkbox" style="cursor: pointer;">
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.65rem; border-radius: 9999px; font-weight: 800; font-size: 0.85rem;"
+                                         th:style="${match.matchScore >= 75 ? 'background: rgba(16, 185, 129, 0.2); color: #34d399;' : (match.matchScore >= 50 ? 'background: rgba(251, 191, 36, 0.2); color: #fbbf24;' : 'background: rgba(239, 68, 68, 0.2); color: #f87171;')}">
+                                        <span th:text="${#numbers.formatDecimal(match.matchScore, 1, 0) + '%'}">92%</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <span class="badge phase-badge" th:text="${match.pickupRequest.wasteSubmission.category.displayName}">Food Scraps</span>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 600;" th:text="${match.pickupRequest.wasteSubmission.household.name}">Alice</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem;" th:text="${match.pickupRequest.wasteSubmission.pickupAddress}">123 Green Way</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff;" th:text="${match.distanceKm + ' km'}">4.2 km</span>
+                                        <span th:if="${match.withinServiceRadius}" style="font-size: 0.7rem; color: #34d399; background: rgba(16, 185, 129, 0.15); padding: 0.15rem 0.4rem; border-radius: 4px;">In Radius</span>
+                                        <span th:unless="${match.withinServiceRadius}" style="font-size: 0.7rem; color: #f87171; background: rgba(239, 68, 68, 0.15); padding: 0.15rem 0.4rem; border-radius: 4px;">Out of Radius</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <strong style="color: #34d399;" th:text="${match.pickupRequest.wasteSubmission.estimatedWeight + ' kg'}">15 kg</strong>
+                                </td>
+                                <td style="padding: 1rem; color: var(--text-secondary); font-size: 0.85rem;" th:text="${match.matchReason}">
+                                    4.2 km | 15.0 kg | waiting 12h
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${recommendations == null or recommendations.isEmpty()}" style="text-align: center; padding: 3rem 1rem; color: var(--text-secondary);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎉</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;">No Unclaimed Pickups Available</div>
+                    <p style="font-size: 0.9rem;">All organic waste submissions in your service area have already been claimed or collected.</p>
+                </div>
+
+                <!-- Route Generation Bar -->
+                <div th:if="${recommendations != null and !recommendations.isEmpty()}" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; background: #0d1117; border: 1px solid var(--border-subtle); border-radius: 12px; padding: 1.25rem 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; margin-bottom: 0.3rem;">Scheduled Route Date</label>
+                            <input type="date" name="routeDate" th:value="${today}" style="background: var(--bg-card); color: #fff; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9rem;" required>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; margin-bottom: 0.3rem;">Route Notes (Optional)</label>
+                            <input type="text" name="notes" placeholder="e.g. Morning organic compost collection run" style="background: var(--bg-card); color: #fff; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9rem; min-width: 280px;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.75rem; font-weight: 800;">
+                        ⚡ Generate Optimized Route
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- Modal for Farmer Location & Capacity Settings -->
+    <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 2rem; width: 90%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 800; margin: 0;">⚙️ Farm Location &amp; Dispatch Settings</h3>
+                <button onclick="toggleSettingsModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+
+            <form th:action="@{/farmer/routes/settings}" method="post">
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Farm Latitude</label>
+                    <input type="number" step="0.0000001" id="latitudeInput" name="latitude" th:value="${user?.latitude}" class="form-input" style="width: 100%; background: #0d1117; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.6rem 0.75rem; color: #fff;" required>
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Farm Longitude</label>
+                    <input type="number" step="0.0000001" id="longitudeInput" name="longitude" th:value="${user?.longitude}" class="form-input" style="width: 100%; background: #0d1117; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.6rem 0.75rem; color: #fff;" required>
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <button type="button" onclick="detectCurrentLocation()" class="btn btn-outline btn-sm" style="width: 100%; border-style: dashed;">
+                        📍 Detect Current Device Coordinates
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Service Radius (km)</label>
+                    <input type="number" step="1" name="serviceRadiusKm" th:value="${user?.serviceRadiusKm}" class="form-input" style="width: 100%; background: #0d1117; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.6rem 0.75rem; color: #fff;" required>
+                </div>
+
+                <div style="margin-bottom: 1.75rem;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem;">Max Daily Collection Capacity (kg)</label>
+                    <input type="number" step="5" name="maxDailyCapacityKg" th:value="${user?.maxDailyCapacityKg}" class="form-input" style="width: 100%; background: #0d1117; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.6rem 0.75rem; color: #fff;" required>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" onclick="toggleSettingsModal()" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function toggleSelectAll(master) {
+            const checkboxes = document.querySelectorAll('.pickup-checkbox');
+            checkboxes.forEach(cb => cb.checked = master.checked);
+        }
+
+        function detectCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        document.getElementById('latitudeInput').value = pos.coords.latitude.toFixed(6);
+                        document.getElementById('longitudeInput').value = pos.coords.longitude.toFixed(6);
+                    },
+                    err => alert("Unable to retrieve GPS coordinates: " + err.message)
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        }
+    </script>
+
+</body>
+</html>
