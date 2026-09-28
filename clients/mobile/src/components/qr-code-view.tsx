@@ -166,7 +166,11 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   expiredOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 14,
     justifyContent: "center",

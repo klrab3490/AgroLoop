@@ -52,13 +52,15 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
   return (
     <>
       <header
+        className="glass-header"
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           padding: "16px 24px",
-          background: "var(--bg-surface)",
-          borderBottom: "1px solid var(--border-subtle)",
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -186,8 +188,9 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.75)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(0, 0, 0, 0.65)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -196,14 +199,11 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
           }}
         >
           <div
+            className="glass-modal"
             style={{
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: "16px",
-              padding: "24px",
+              padding: "28px",
               width: "100%",
-              maxWidth: "400px",
-              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+              maxWidth: "420px",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -234,42 +234,19 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
 
             <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                    Operator Email
-                  </label>
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                    <span style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: "600" }}>
-                      Development / Demo Operator Quick-Fill:
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => { setEmail("admin@agroloop.com"); setPassword("admin123"); }}
-                      style={{
-                        fontSize: "10px",
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        background: "rgba(16, 185, 129, 0.15)",
-                        color: "var(--accent-emerald)",
-                        border: "1px solid rgba(16, 185, 129, 0.3)",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                      }}
-                      title="Load development demo administrator credentials"
-                    >
-                      🛡️ admin@agroloop.com (Demo)
-                    </button>
-                  </div>
-                </div>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "4px" }}>
+                  Operator Email
+                </label>
                 <input
                   type="email"
                   required
+                  placeholder="admin@agroloop.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
                     width: "100%",
                     padding: "8px 12px",
-                    background: "var(--bg-app)",
+                    background: "rgba(15, 23, 42, 0.8)",
                     border: "1px solid var(--border-subtle)",
                     borderRadius: "8px",
                     color: "var(--text-primary)",

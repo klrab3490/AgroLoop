@@ -19,9 +19,12 @@ import {
 import { setMobileServerUrl, defaultBaseUrl } from "../src/lib/api";
 
 const PRESETS = [
-  { label: "Android Emulator", url: "http://10.0.2.2:8080" },
+  ...(defaultBaseUrl && !defaultBaseUrl.includes("10.0.2.2") && !defaultBaseUrl.includes("localhost")
+    ? [{ label: "Detected Host (" + defaultBaseUrl.replace("http://", "").replace(":8080", "") + ")", url: defaultBaseUrl }]
+    : []),
   { label: "Localhost", url: "http://localhost:8080" },
-  { label: "Cloud Demo", url: "https://api.agroloop.app" },
+  { label: "Android Emulator", url: "http://10.0.2.2:8080" },
+  { label: "Cloud Production", url: "https://api.agroloop.app" },
 ];
 
 export default function ServerSetupScreen() {

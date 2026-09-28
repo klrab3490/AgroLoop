@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/v1/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["markAsRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["markAllAsRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media/upload/{mediaId}": {
         parameters: {
             query?: never;
@@ -30,6 +62,54 @@ export interface paths {
         get?: never;
         put: operations["updateProduct"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/farmer/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateLocation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/pickups/{pickupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitPickupReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitOrderReview"];
         delete?: never;
         options?: never;
         head?: never;
@@ -174,6 +254,70 @@ export interface paths {
         get: operations["getSubmissions"];
         put?: never;
         post: operations["submitWaste"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/farmer/routes/{id}/stops/{stopId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeStop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/farmer/routes/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/farmer/routes/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/farmer/routes/optimize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createOptimizedRoute"];
         delete?: never;
         options?: never;
         head?: never;
@@ -404,6 +548,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["subscribeWebStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReviewsForUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/summary/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReputationSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/eligibility/pickup/{pickupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["checkPickupEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/eligibility/order/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["checkOrderEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pickups": {
         parameters: {
             query?: never;
@@ -444,6 +668,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUnreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["subscribe"];
         put?: never;
         post?: never;
         delete?: never;
@@ -588,6 +860,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/farmer/routes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRouteDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/farmer/routes/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getActiveRoutes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/farmer/pickups/available": {
         parameters: {
             query?: never;
@@ -620,6 +924,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/farmer/matching/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPickupRecommendations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -644,6 +964,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/storage/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStorageDiagnostics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -732,6 +1068,43 @@ export interface components {
             farmerName?: string;
             mediaId?: string;
             imageUrl?: string;
+        };
+        UpdateFarmerLocationApiRequest: {
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+            /** Format: double */
+            serviceRadiusKm?: number;
+            maxDailyCapacityKg?: number;
+        };
+        SubmitReviewApiRequest: {
+            /** Format: int32 */
+            rating: number;
+            comment?: string;
+        };
+        ReviewApiResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            reviewerId?: number;
+            reviewerName?: string;
+            reviewerRole?: string;
+            /** Format: int64 */
+            revieweeId?: number;
+            revieweeName?: string;
+            revieweeRole?: string;
+            /** Format: int64 */
+            pickupId?: number;
+            /** Format: int64 */
+            orderId?: number;
+            /** @enum {string} */
+            reviewType?: "PICKUP_EXPERIENCE" | "COMPOST_QUALITY" | "GENERAL";
+            /** Format: int32 */
+            rating?: number;
+            comment?: string;
+            /** Format: date-time */
+            createdAt?: string;
         };
         CompactQrPayload: {
             t?: string;
@@ -941,6 +1314,49 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        CollectionRouteApiResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            farmerId?: number;
+            /** Format: date */
+            routeDate?: string;
+            status?: string;
+            /** Format: double */
+            totalDistanceKm?: number;
+            /** Format: double */
+            totalEstimatedWeightKg?: number;
+            notes?: string;
+            stops?: components["schemas"]["RouteStopApiResponse"][];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        RouteStopApiResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            pickupId?: number;
+            /** Format: int32 */
+            stopOrder?: number;
+            status?: string;
+            /** Format: double */
+            estimatedDistanceFromPrevKm?: number;
+            /** Format: date-time */
+            completedAt?: string;
+            notes?: string;
+            category?: string;
+            pickupAddress?: string;
+            /** Format: double */
+            estimatedWeight?: number;
+        };
+        CreateRouteApiRequest: {
+            pickupIds: number[];
+            /** Format: date */
+            routeDate?: string;
+            notes?: string;
+        };
         VerifyWasteApiRequest: {
             verifiedWeight: number;
             /** @enum {string} */
@@ -1007,6 +1423,100 @@ export interface components {
             resolution: "APPROVED_REFUND" | "DISMISSED";
             adminNotes?: string;
         };
+        SseEmitter: {
+            /** Format: int64 */
+            timeout?: number;
+        };
+        PageReviewApiResponse: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
+            sort?: components["schemas"]["SortObject"][];
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["ReviewApiResponse"][];
+            /** Format: int32 */
+            number?: number;
+            empty?: boolean;
+        };
+        PageableObject: {
+            paged?: boolean;
+            sort?: components["schemas"]["SortObject"][];
+            unpaged?: boolean;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int64 */
+            offset?: number;
+        };
+        SortObject: {
+            direction?: string;
+            nullHandling?: string;
+            ascending?: boolean;
+            property?: string;
+            ignoreCase?: boolean;
+        };
+        ReputationSummaryApiResponse: {
+            /** Format: int64 */
+            userId?: number;
+            userName?: string;
+            userRole?: string;
+            /** Format: double */
+            averageRating?: number;
+            /** Format: int64 */
+            reviewCount?: number;
+            /** Format: int64 */
+            fiveStarCount?: number;
+            /** Format: int64 */
+            fourStarCount?: number;
+            /** Format: int64 */
+            threeStarCount?: number;
+            /** Format: int64 */
+            twoStarCount?: number;
+            /** Format: int64 */
+            oneStarCount?: number;
+            trustBadge?: string;
+        };
+        NotificationApiResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            userId?: number;
+            title?: string;
+            message?: string;
+            /** @enum {string} */
+            type?: "PICKUP_CLAIMED" | "PICKUP_SCHEDULED" | "PICKUP_COLLECTED" | "TOKENS_MINTED" | "ORDER_PLACED" | "ORDER_STATUS_CHANGED" | "NEW_REVIEW" | "NEW_NEARBY_WASTE" | "SYSTEM_ALERT";
+            typeDisplayName?: string;
+            actionUrl?: string;
+            isRead?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        PageNotificationApiResponse: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
+            sort?: components["schemas"]["SortObject"][];
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["NotificationApiResponse"][];
+            /** Format: int32 */
+            number?: number;
+            empty?: boolean;
+        };
         SystemMetaApiResponse: {
             status?: string;
             service?: string;
@@ -1048,6 +1558,32 @@ export interface components {
             status?: string;
             service?: string;
         };
+        WasteMatchApiResponse: {
+            /** Format: int64 */
+            pickupId?: number;
+            category?: string;
+            householdName?: string;
+            pickupAddress?: string;
+            /** Format: double */
+            estimatedWeightKg?: number;
+            /** Format: double */
+            distanceKm?: number;
+            /** Format: double */
+            matchScore?: number;
+            matchReason?: string;
+            withinServiceRadius?: boolean;
+            withinCapacity?: boolean;
+        };
+        StorageDiagnosticsResponse: {
+            /** @enum {string} */
+            activeProvider?: "LOCAL" | "S3" | "MINIO";
+            providerDisplayName?: string;
+            healthy?: boolean;
+            targetLocation?: string;
+            s3Configured?: boolean;
+            /** Format: int64 */
+            latencyMs?: number;
+        };
         SolvencyMetricsDto: {
             totalHouseholdBalances?: number;
             totalCredits?: number;
@@ -1078,6 +1614,44 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    markAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    markAllAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     directUpload: {
         parameters: {
             query?: never;
@@ -1120,6 +1694,80 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ProductApiResponse"];
+                };
+            };
+        };
+    };
+    updateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFarmerLocationApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    submitPickupReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pickupId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitReviewApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReviewApiResponse"];
+                };
+            };
+        };
+    };
+    submitOrderReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitReviewApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReviewApiResponse"];
                 };
             };
         };
@@ -1396,6 +2044,95 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["WasteSubmissionApiResponse"];
+                };
+            };
+        };
+    };
+    completeStop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                stopId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    startRoute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionRouteApiResponse"];
+                };
+            };
+        };
+    };
+    cancelRoute: {
+        parameters: {
+            query?: {
+                reason?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createOptimizedRoute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRouteApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionRouteApiResponse"];
                 };
             };
         };
@@ -1774,6 +2511,121 @@ export interface operations {
             };
         };
     };
+    subscribeWebStream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SseEmitter"];
+                };
+            };
+        };
+    };
+    getReviewsForUser: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageReviewApiResponse"];
+                };
+            };
+        };
+    };
+    getReputationSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReputationSummaryApiResponse"];
+                };
+            };
+        };
+    };
+    checkPickupEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pickupId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    checkOrderEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     listPickups: {
         parameters: {
             query?: never;
@@ -1834,6 +2686,71 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OrderApiResponse"];
+                };
+            };
+        };
+    };
+    getNotifications: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageNotificationApiResponse"];
+                };
+            };
+        };
+    };
+    getUnreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SseEmitter"];
                 };
             };
         };
@@ -2009,6 +2926,48 @@ export interface operations {
             };
         };
     };
+    getRouteDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionRouteApiResponse"];
+                };
+            };
+        };
+    };
+    getActiveRoutes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionRouteApiResponse"][];
+                };
+            };
+        };
+    };
     getAvailablePickups: {
         parameters: {
             query?: never;
@@ -2049,6 +3008,28 @@ export interface operations {
             };
         };
     };
+    getPickupRecommendations: {
+        parameters: {
+            query?: {
+                strategy?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WasteMatchApiResponse"][];
+                };
+            };
+        };
+    };
     getCurrentUser: {
         parameters: {
             query?: never;
@@ -2085,6 +3066,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["UserApiResponse"][];
+                };
+            };
+        };
+    };
+    getStorageDiagnostics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StorageDiagnosticsResponse"];
                 };
             };
         };

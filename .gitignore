@@ -60,3 +60,4 @@ clients/**/.env*.local
 clients/mobile/android/
 clients/mobile/ios/
 node_modules/
+.pnpm-store/

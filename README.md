@@ -220,11 +220,33 @@ For detailed phase tracking and implementation milestones, see [ROADMAP.md](./RO
 - **Java:** JDK 21+ (e.g. OpenJDK 21 or Temurin 26)
 - **Docker & Docker Compose:** For running PostgreSQL (and optional containerized app)
 - **Git**
+- **Node.js & pnpm:** Node >= 20.0.0 and pnpm >= 10 (for web, desktop, and mobile clients)
 
 > **💡 Quick Environment Setup & Health Check:**  
 > Run the automated setup script to verify, install, and update all required packages on your system:
 > - **macOS / Linux:** `./setup.sh` *(or `./setup.sh --check-only` for dry-run inspection)*
 > - **Windows:** `setup.bat`
+
+---
+
+### ⚡ Quick Start with `make` (Fastest & Easiest)
+
+AgroLoop provides a self-documenting master `Makefile` at the repository root:
+
+```bash
+make help          # 📋 Display all available commands and targets
+make install       # 📦 Install Java dependencies, pnpm client packages & Playwright
+make dev           # 🚀 Start PostgreSQL and prepare local development
+make run-backend   # ☕ Start Spring Boot API server (port 8080)
+make run-web       # 🌐 Start Next.js web app (port 3000)
+make run-desktop   # 🖥️  Start Tauri desktop application
+make run-mobile    # 📱 Start Expo mobile bundler (port 8082)
+make test          # 🧪 Run full backend JUnit & client Vitest suites
+make check         # 🔍 Run complete quality gate (type-check, lint, test)
+make build         # 🏗️  Build production backend JAR & all frontend apps
+make docker-up     # 🐳 Launch complete containerized stack (Postgres, API, Web)
+make docker-down   # 🛑 Stop all Docker containers
+```
 
 ---
 

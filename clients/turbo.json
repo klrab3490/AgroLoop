@@ -8,6 +8,10 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "dist/**", "build/**"]
     },
+    "@agroloop/mobile#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     "type-check": {
       "dependsOn": ["^build"],
       "outputs": []

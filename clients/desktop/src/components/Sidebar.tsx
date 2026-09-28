@@ -43,10 +43,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
 
   return (
     <aside
+      className="glass-sidebar"
       style={{
         width: "260px",
-        background: "var(--bg-surface)",
-        borderRight: "1px solid var(--border-subtle)",
         display: "flex",
         flexDirection: "column",
         gap: "4px",

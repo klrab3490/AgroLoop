@@ -1,4 +1,4 @@
-import { mobileApiClient } from "../lib/api";
+import { mobileApiClient, getMobileServerUrl } from "../lib/api";
 import type { MediaAssetApiResponse } from "@agroloop/api-types";
 
 export interface MediaUploadOptions {
@@ -44,7 +44,18 @@ export async function uploadMediaAsset(options: MediaUploadOptions): Promise<Med
 
   // Phase 2: Binary direct upload
   onProgress?.("UPLOADING_BYTES");
-  await mobileApiClient.media.directUpload(ticket.uploadUrl, data, contentType);
+  let uploadUrl = ticket.uploadUrl;
+  try {
+    const currentBaseUrl = getMobileServerUrl();
+    const currentOrigin = new URL(currentBaseUrl).origin;
+    if (uploadUrl.includes("localhost:8080") || uploadUrl.includes("127.0.0.1:8080")) {
+      uploadUrl = uploadUrl.replace(/http:\/\/(localhost|127\.0\.0\.1):8080/, currentOrigin);
+    }
+  } catch {
+    // If URL parsing fails, retain original ticket.uploadUrl
+  }
+
+  await mobileApiClient.media.directUpload(uploadUrl, data, contentType);
 
   // Phase 3: Idempotent confirmation
   onProgress?.("CONFIRMING");
