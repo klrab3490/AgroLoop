@@ -4,13 +4,15 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   # ============================================================================
@@ -93,6 +95,11 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: clients/pnpm-lock.yaml
 
+      - name: Free Runner Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          df -h
+
       - name: Install Workspace Dependencies
         run: pnpm install --frozen-lockfile
 
@@ -118,7 +125,7 @@ jobs:
         working-directory: clients/mobile/android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug -PreactNativeArchitectures=arm64-v8a,x86_64 --no-daemon
 
       - name: Upload Standalone Android APK Artifact
         uses: actions/upload-artifact@v4
@@ -228,3 +235,79 @@ jobs:
             clients/desktop/src-tauri/target/release/agroloop-desktop.exe
           if-no-files-found: warn
           retention-days: 14
+
+  # ============================================================================
+  # 5. Automated GitHub Release Publication
+  # ============================================================================
+  publish-release:
+    name: Publish GitHub Release (v1.0.1)
+    needs: [docker-build, mobile-packages, desktop-linux, desktop-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Mobile Bundle Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: agroloop-mobile-expo-export
+          path: release-assets/mobile-expo-bundle
+
+      - name: Download Mobile APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: agroloop-mobile-android-debug
+          path: release-assets/mobile-android
+
+      - name: Download Desktop Linux Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: agroloop-desktop-linux-x86_64
+          path: release-assets/desktop-linux
+
+      - name: Download Desktop Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: agroloop-desktop-windows-x64
+          path: release-assets/desktop-windows
+
+      - name: Consolidate Release Distribution Files
+        run: |
+          mkdir -p dist-release
+          # Package Mobile Expo Web Bundle into Zip
+          (cd release-assets/mobile-expo-bundle && zip -r ../../dist-release/AgroLoop-Mobile-v1.0.1-expo-bundle.zip .)
+          # Android APK
+          cp release-assets/mobile-android/*.apk dist-release/AgroLoop-Mobile-v1.0.1-android-debug.apk || true
+          # Desktop Linux packages (.deb, .AppImage)
+          find release-assets/desktop-linux -name "*.deb" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.1-linux-amd64.deb \;
+          find release-assets/desktop-linux -name "*.AppImage" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.1-linux-x86_64.AppImage \;
+          # Desktop Windows packages (.msi, setup .exe)
+          find release-assets/desktop-windows -name "*.msi" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.1-windows-x64.msi \;
+          find release-assets/desktop-windows -name "*setup.exe" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.1-windows-x64-setup.exe \;
+          ls -lh dist-release/
+
+      - name: Upload Consolidated Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: agroloop-v1.0.1-release-distribution
+          path: dist-release/
+          retention-days: 14
+
+      - name: Publish or Update GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          gh release view "$TAG_NAME" >/dev/null 2>&1 && {
+            echo "Release $TAG_NAME already exists, uploading assets..."
+            gh release upload "$TAG_NAME" dist-release/* --clobber
+          } || {
+            echo "Creating new release $TAG_NAME..."
+            gh release create "$TAG_NAME" dist-release/* \
+              --title "AgroLoop $TAG_NAME — Production Release" \
+              --notes "Production release packages for Linux (.deb, .AppImage), Windows (.msi, .exe), Android (.apk), and Mobile Expo Bundle."
+          }
