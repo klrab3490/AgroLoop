@@ -6,13 +6,15 @@ import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { CartDrawer } from "./cart-drawer";
-import { formatRole } from "@agroloop/api-client";
+import { UpdateCheckerModal } from "./update-checker-modal";
+import { formatRole, CURRENT_PLATFORM_VERSION } from "@agroloop/api-client";
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   const backendOrigin = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   const adminDashboardUrl = `${backendOrigin.replace(/\/+$/, "")}/admin/dashboard`;
@@ -40,6 +42,17 @@ export function Navbar() {
                   </span>
                 </div>
               </Link>
+
+              {/* Version Check Chip */}
+              <button
+                type="button"
+                onClick={() => setIsUpdateModalOpen(true)}
+                className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 text-3xs font-bold rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:border-emerald-500 hover:text-emerald-700 transition"
+                title="Check for AgroLoop updates on GitHub"
+              >
+                <span>v{CURRENT_PLATFORM_VERSION}</span>
+                <span className="text-emerald-600">🚀</span>
+              </button>
 
               {/* Primary Navigation */}
               <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
@@ -258,6 +271,21 @@ export function Navbar() {
                   🛡️ Admin Portal
                 </a>
               )}
+              <div className="pt-2 border-t border-slate-100 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsUpdateModalOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-600 hover:text-emerald-700 flex items-center justify-between"
+                >
+                  <span>Check for Updates</span>
+                  <span className="text-3xs bg-slate-100 px-2 py-0.5 rounded text-slate-500 font-bold">
+                    v{CURRENT_PLATFORM_VERSION} 🚀
+                  </span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -265,6 +293,9 @@ export function Navbar() {
 
       {/* Slide-over cart */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
+      {/* GitHub Releases update checker modal */}
+      <UpdateCheckerModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
     </>
   );
 }

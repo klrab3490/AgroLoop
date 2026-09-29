@@ -31,10 +31,21 @@ public class MarketplaceApiController {
     ) {
         ProductCategory cat = null;
         if (category != null && !category.isBlank()) {
-            try {
-                cat = ProductCategory.valueOf(category.toUpperCase());
-            } catch (IllegalArgumentException ignored) {
-                // invalid category returns empty or all
+            String upper = category.trim().toUpperCase();
+            switch (upper) {
+                case "COMPOST", "FERTILIZER", "SOIL_AMENDMENT", "COMPOST_AND_SOIL" -> cat = ProductCategory.COMPOST_AND_SOIL;
+                case "SEEDS", "SEEDLINGS", "SEEDS_AND_SAPLINGS" -> cat = ProductCategory.SEEDS_AND_SAPLINGS;
+                case "VEGETABLES", "ORGANIC_VEGETABLES" -> cat = ProductCategory.ORGANIC_VEGETABLES;
+                case "FRUITS", "FRESH_FRUITS" -> cat = ProductCategory.FRESH_FRUITS;
+                case "DAIRY", "FARM_DAIRY" -> cat = ProductCategory.FARM_DAIRY;
+                case "HERBS", "SPICES", "HERBS_AND_SPICES" -> cat = ProductCategory.HERBS_AND_SPICES;
+                default -> {
+                    try {
+                        cat = ProductCategory.valueOf(upper);
+                    } catch (IllegalArgumentException ignored) {
+                        // invalid category returns all or empty based on service
+                    }
+                }
             }
         }
 

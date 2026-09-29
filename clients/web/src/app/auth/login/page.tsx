@@ -29,12 +29,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoFill = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setErrorMsg(null);
-  };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50">
@@ -51,36 +45,6 @@ export default function LoginPage() {
           </div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sign In to AgroLoop</h2>
           <p className="text-xs text-slate-500">Access your household wallet, farmer routes, or orders</p>
-        </div>
-
-        {/* Demo Quick-Fill Buttons */}
-        <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/70 space-y-2">
-          <p className="text-3xs font-bold text-slate-500 uppercase tracking-wider text-center">
-            One-Tap Demo Credentials
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleDemoFill("household@agroloop.com", "household123")}
-              className="py-1.5 px-2 text-2xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 text-slate-700 transition"
-            >
-              🏡 Household
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoFill("farmer@agroloop.com", "farmer123")}
-              className="py-1.5 px-2 text-2xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 text-slate-700 transition"
-            >
-              🚜 Farmer
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoFill("admin@agroloop.com", "admin123")}
-              className="py-1.5 px-2 text-2xs font-bold bg-white border border-slate-200 rounded-lg hover:border-emerald-500 text-slate-700 transition"
-            >
-              🛡️ Admin
-            </button>
-          </div>
         </div>
 
         {errorMsg && (

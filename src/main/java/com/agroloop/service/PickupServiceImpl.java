@@ -70,6 +70,12 @@ public class PickupServiceImpl implements PickupService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PickupRequest> getAllPickups() {
+        return pickupRequestRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PickupRequest> getFarmerPickups(Long farmerId) {
         return pickupRequestRepository.findByAssignedFarmerIdOrderByCreatedAtDesc(farmerId);
     }

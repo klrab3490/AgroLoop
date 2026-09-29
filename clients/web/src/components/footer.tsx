@@ -80,6 +80,16 @@ export function Footer() {
                 </a>
               </li>
               <li>
+                <a
+                  href="https://github.com/AgnaMariya/AgroLoop/releases"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-400 transition"
+                >
+                  Releases & Changelog
+                </a>
+              </li>
+              <li>
                 <Link href="/marketplace" className="hover:text-emerald-400 transition">
                   OpenAPI 3.1 Contract
                 </Link>

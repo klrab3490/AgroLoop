@@ -17,6 +17,7 @@ export * from "./auth/session.js";
 export * from "./auth/refresh.js";
 export * from "./server-verification.js";
 export * from "./formatters.js";
+export * from "./version-checker.js";
 
 export type {
   AuthEndpoints,

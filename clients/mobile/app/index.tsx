@@ -3,12 +3,14 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator
 import { Link, useRouter } from "expo-router";
 import { useAuth } from "../src/context/auth-context";
 import { getServerConfig, getServerHostname } from "../src/storage/server-config";
-import { formatRole } from "@agroloop/api-client";
+import { formatRole, CURRENT_PLATFORM_VERSION } from "@agroloop/api-client";
+import { UpdateCheckerModal } from "../src/components/update-checker-modal";
 
 export default function IndexScreen() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [serverHost, setServerHost] = useState<string>("Detecting server...");
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
     getServerConfig().then((config) => {
@@ -102,7 +104,27 @@ export default function IndexScreen() {
             <Text style={styles.cardAction}>Open Farmer Marketplace &rarr;</Text>
           </TouchableOpacity>
         </Link>
+
+        {/* Version & GitHub Release Checker */}
+        <TouchableOpacity
+          style={styles.updateCard}
+          onPress={() => setShowUpdateModal(true)}
+        >
+          <View style={styles.updateCardLeft}>
+            <Text style={styles.updateCardIcon}>🚀</Text>
+            <View>
+              <Text style={styles.updateCardTitle}>AgroLoop v{CURRENT_PLATFORM_VERSION}</Text>
+              <Text style={styles.updateCardSubtitle}>Check for new releases on GitHub</Text>
+            </View>
+          </View>
+          <Text style={styles.updateCardAction}>Check &rarr;</Text>
+        </TouchableOpacity>
       </View>
+
+      <UpdateCheckerModal
+        visible={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+      />
     </ScrollView>
   );
 }
@@ -304,5 +326,39 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
     fontSize: 13,
+  },
+  updateCard: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  updateCardLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  updateCardIcon: {
+    fontSize: 22,
+  },
+  updateCardTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0f172a",
+  },
+  updateCardSubtitle: {
+    fontSize: 11,
+    color: "#64748b",
+    marginTop: 2,
+  },
+  updateCardAction: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#16a34a",
   },
 });

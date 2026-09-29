@@ -3,7 +3,9 @@ import { desktopApiClient } from "../lib/api.js";
 import { formatRole } from "@agroloop/api-client";
 import type { UserApiResponse } from "@agroloop/api-types";
 import { ServerManagerModal } from "./ServerManagerModal.js";
+import { UpdateCheckerModal } from "./UpdateCheckerModal.js";
 import { getActiveServerProfile, type DesktopServerProfile } from "../storage/server-config.js";
+import { CURRENT_PLATFORM_VERSION } from "@agroloop/api-client";
 
 interface HeaderProps {
   currentUser: UserApiResponse | null;
@@ -14,9 +16,10 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauriActive }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showServerManager, setShowServerManager] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [activeServer, setActiveServer] = useState<DesktopServerProfile>(getActiveServerProfile());
-  const [email, setEmail] = useState("admin@agroloop.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -129,6 +132,30 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
             <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>
               {activeServer.url.replace(/^https?:\/\//i, "")}
             </span>
+          </button>
+
+          {/* GitHub Release & Version Check Chip */}
+          <button
+            type="button"
+            data-testid="header-version-check-btn"
+            onClick={() => setShowUpdateModal(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 12px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "8px",
+              color: "var(--text-secondary)",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+            title="Check for software updates via GitHub Releases"
+          >
+            <span>v{CURRENT_PLATFORM_VERSION}</span>
+            <span style={{ color: "var(--accent-emerald)", fontSize: "11px" }}>🚀 Check Updates</span>
           </button>
 
           {currentUser ? (
@@ -318,6 +345,11 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onUserChange, tauri
           onUserChange(null);
           setShowServerManager(false);
         }}
+      />
+
+      <UpdateCheckerModal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
       />
     </>
   );

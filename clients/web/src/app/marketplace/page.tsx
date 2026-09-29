@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
+import type { ProductApiResponse } from "@agroloop/api-types";
 
 const CATEGORIES = [
   { label: "All Categories", value: "" },
-  { label: "Compost", value: "COMPOST" },
-  { label: "Organic Fertilizer", value: "FERTILIZER" },
-  { label: "Seeds & Seedlings", value: "SEEDS" },
-  { label: "Soil Amendments", value: "SOIL_AMENDMENT" },
+  { label: "Compost & Soil", value: "COMPOST_AND_SOIL" },
+  { label: "Organic Vegetables", value: "ORGANIC_VEGETABLES" },
+  { label: "Fresh Fruits", value: "FRESH_FRUITS" },
+  { label: "Farm Fresh Dairy", value: "FARM_DAIRY" },
+  { label: "Seeds & Saplings", value: "SEEDS_AND_SAPLINGS" },
+  { label: "Herbs & Spices", value: "HERBS_AND_SPICES" },
 ];
 
 export default function MarketplacePage() {
@@ -26,23 +29,28 @@ export default function MarketplacePage() {
         category: selectedCategory || undefined,
         keyword: searchKeyword || undefined,
       }),
+    retry: 2,
   });
 
-  const products = pageResult?.content ?? [];
+  const products: ProductApiResponse[] = pageResult?.content ?? [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Header */}
-      <div>
-        <span className="text-2xs font-bold uppercase tracking-widest text-emerald-600">
-          Sustainable Circular Marketplace
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">
-          Redeem EcoTokens for Farm-Grade Inputs
-        </h1>
-        <p className="text-sm text-slate-600 mt-2 max-w-2xl">
-          Purchase certified organic compost, biological fertilizers, and seeds produced by regional farmers using your collected waste.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xs font-bold uppercase tracking-widest text-emerald-600">
+              Sustainable Circular Marketplace
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">
+            Redeem EcoTokens for Farm-Grade Inputs
+          </h1>
+          <p className="text-sm text-slate-600 mt-2 max-w-2xl">
+            Purchase certified organic compost, biological fertilizers, and seeds produced by regional farmers using your collected waste.
+          </p>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -84,10 +92,6 @@ export default function MarketplacePage() {
             <div key={i} className="h-72 rounded-2xl bg-slate-200/60 animate-pulse" />
           ))}
         </div>
-      ) : error ? (
-        <div className="p-8 text-center bg-red-50 rounded-2xl border border-red-200 text-red-600 text-sm">
-          Failed to load marketplace products. Please check your connection.
-        </div>
       ) : products.length === 0 ? (
         <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 space-y-3">
           <p className="text-4xl">🌾</p>
@@ -97,6 +101,7 @@ export default function MarketplacePage() {
           </p>
         </div>
       ) : (
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
             <div

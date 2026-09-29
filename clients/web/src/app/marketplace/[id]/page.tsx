@@ -17,6 +17,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     queryKey: ["product", productId],
     queryFn: () => webApiClient.marketplace.getProduct(productId),
     enabled: !isNaN(productId),
+    retry: 2,
   });
 
   const handleAddToCart = () => {
@@ -34,7 +35,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  if (error || !product) {
+  if (!product) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-4xl">⚠️</p>

@@ -35,6 +35,11 @@ public interface PickupService {
     List<PickupRequest> getAvailablePickups();
 
     /**
+     * Retrieves all pickups across all lifecycle states for fleet telemetry and dispatch monitoring.
+     */
+    List<PickupRequest> getAllPickups();
+
+    /**
      * Retrieves all pickups assigned to a specific farmer.
      */
     List<PickupRequest> getFarmerPickups(Long farmerId);

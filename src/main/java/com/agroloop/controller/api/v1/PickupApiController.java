@@ -49,7 +49,7 @@ public class PickupApiController {
         Long userId = getUserId(auth);
         List<PickupRequest> pickups;
         if (hasRole(auth, "ROLE_ADMIN")) {
-            pickups = pickupService.getAvailablePickups();
+            pickups = pickupService.getAllPickups();
         } else if (hasRole(auth, "ROLE_FARMER")) {
             pickups = pickupService.getFarmerPickups(userId);
         } else {

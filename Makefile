@@ -49,6 +49,7 @@ help: ## Display this interactive help menu with all available commands
 		category = "General"; \
 		if ($$1 ~ /^(install|setup)/) category = "Setup & Installation"; \
 		else if ($$1 ~ /^(run|dev|start|docker)/) category = "Development & Runtime"; \
+		else if ($$1 ~ /^(seed|db)/) category = "Database & Seeding"; \
 		else if ($$1 ~ /^(build|package)/) category = "Build & Packaging"; \
 		else if ($$1 ~ /^(test|lint|type-check|check)/) category = "Testing & Quality"; \
 		else if ($$1 ~ /^(clean)/) category = "Clean & Reset"; \
@@ -146,6 +147,18 @@ docker-tunnel: ## Start ngrok public tunnel service for mobile/webhook testing
 
 docker-logs: ## Follow Docker container logs in real time
 	@docker compose logs -f
+
+# ------------------------------------------------------------------------------
+# Database & Seeding
+# ------------------------------------------------------------------------------
+.PHONY: seed seed-db db-seed
+
+seed-db: ## Seed PostgreSQL database with Fleet and Marketplace dummy data
+	@bash ./scripts/seed-data.sh
+
+seed: seed-db ## Alias for seed-db
+
+db-seed: seed-db ## Alias for seed-db
 
 # ------------------------------------------------------------------------------
 # Build & Packaging
