@@ -18,7 +18,14 @@ public record OrderItemApiResponse(
         if (item == null) {
             return null;
         }
-        Long productId = item.getProduct() != null ? item.getProduct().getId() : null;
+        Long productId = null;
+        try {
+            if (item.getProduct() != null) {
+                productId = item.getProduct().getId();
+            }
+        } catch (Exception ignored) {
+            // Safe fallback if proxy session is detached
+        }
         return new OrderItemApiResponse(
                 item.getId(),
                 productId,

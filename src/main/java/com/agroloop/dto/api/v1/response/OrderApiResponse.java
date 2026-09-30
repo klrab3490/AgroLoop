@@ -30,11 +30,25 @@ public record OrderApiResponse(
         if (order == null) {
             return null;
         }
-        Long householdId = order.getHousehold() != null ? order.getHousehold().getId() : null;
-        String householdName = (order.getHousehold() != null) ? order.getHousehold().getName() : null;
-        List<OrderItemApiResponse> items = order.getItems() != null
-                ? order.getItems().stream().map(OrderItemApiResponse::from).toList()
-                : List.of();
+        Long householdId = null;
+        String householdName = null;
+        try {
+            if (order.getHousehold() != null) {
+                householdId = order.getHousehold().getId();
+                householdName = order.getHousehold().getName();
+            }
+        } catch (Exception ignored) {
+            // Safe fallback if proxy session is detached
+        }
+
+        List<OrderItemApiResponse> items = List.of();
+        try {
+            if (order.getItems() != null) {
+                items = order.getItems().stream().map(OrderItemApiResponse::from).toList();
+            }
+        } catch (Exception ignored) {
+            // Safe fallback if items collection is detached
+        }
 
         return new OrderApiResponse(
                 order.getId(),

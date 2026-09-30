@@ -27,6 +27,8 @@ import java.util.Map;
 @RestControllerAdvice(basePackages = "com.agroloop.controller.api.v1")
 public class RestExceptionHandler {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RestExceptionHandler.class);
+
     private ProblemDetail buildProblem(HttpStatus status, String code, String title, String detail, HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setType(URI.create("https://agroloop.com/errors/" + code.toLowerCase().replace("_", "-")));
@@ -147,6 +149,7 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
+        logger.error("Unhandled REST exception on URI {}: {}", request.getRequestURI(), ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(buildProblem(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "Internal Server Error", "An unexpected error occurred. Please contact support.", request));
     }

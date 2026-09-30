@@ -20,10 +20,10 @@ export function resolveEnv(key: string, defaultValue: string): string {
   }
 
   try {
-    // @ts-expect-error Vite env support
-    if (typeof import.meta !== "undefined" && import.meta?.env) {
-      // @ts-expect-error Vite env support
-      const val = import.meta.env[key] || import.meta.env[`VITE_${key}`];
+    // @ts-expect-error Vite env support - direct property access avoids webpack warning
+    const metaEnv = import.meta.env as Record<string, string | undefined> | undefined;
+    if (metaEnv) {
+      const val = metaEnv[key] || metaEnv[`VITE_${key}`];
       if (val && typeof val === "string") return val.trim();
     }
   } catch {

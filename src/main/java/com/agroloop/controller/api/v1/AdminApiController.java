@@ -74,6 +74,7 @@ public class AdminApiController {
     }
 
     @GetMapping("/orders")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<OrderApiResponse>> listOrders(@RequestParam(required = false) String status) {
         OrderStatus orderStatus = null;
         if (status != null && !status.isBlank()) {

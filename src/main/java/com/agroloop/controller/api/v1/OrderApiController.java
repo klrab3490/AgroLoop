@@ -27,6 +27,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/orders")
+@Transactional(readOnly = true)
 public class OrderApiController {
 
     private final MarketplaceService marketplaceService;
@@ -89,6 +91,7 @@ public class OrderApiController {
     }
 
     @PostMapping
+    @Transactional
     @PreAuthorize("hasAuthority('ROLE_HOUSEHOLD')")
     public ResponseEntity<OrderApiResponse> createOrder(
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
@@ -139,6 +142,7 @@ public class OrderApiController {
     }
 
     @PostMapping("/{id}/cancel")
+    @Transactional
     @PreAuthorize("@orderAuth.canCancelAsHousehold(authentication, #id)")
     public ResponseEntity<OrderApiResponse> cancelOrder(
             @PathVariable Long id,
@@ -171,6 +175,7 @@ public class OrderApiController {
     }
 
     @PostMapping("/{id}/dispute")
+    @Transactional
     public ResponseEntity<OrderApiResponse> disputeOrder(
             @PathVariable Long id,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,

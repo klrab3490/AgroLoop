@@ -23,8 +23,16 @@ public record ProductApiResponse(
         if (product == null) {
             return null;
         }
-        Long farmerId = product.getFarmer() != null ? product.getFarmer().getId() : null;
-        String farmerName = product.getFarmer() != null ? product.getFarmer().getFullName() : null;
+        Long farmerId = null;
+        String farmerName = null;
+        try {
+            if (product.getFarmer() != null) {
+                farmerId = product.getFarmer().getId();
+                farmerName = product.getFarmer().getFullName();
+            }
+        } catch (Exception ignored) {
+            // Safe fallback if proxy session is detached
+        }
         return new ProductApiResponse(
                 product.getId(),
                 product.getName(),

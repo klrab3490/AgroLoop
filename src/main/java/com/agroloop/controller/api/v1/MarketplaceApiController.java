@@ -6,6 +6,7 @@ import com.agroloop.model.Product;
 import com.agroloop.model.ProductCategory;
 import com.agroloop.service.ProductService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/marketplace")
+@Transactional(readOnly = true)
 public class MarketplaceApiController {
 
     private final ProductService productService;
