@@ -178,15 +178,15 @@ export function Navbar() {
               {user?.role === "ROLE_ADMIN" && (
                 <>
                   <div className="h-4 w-px bg-slate-200 mx-1" />
-                  <a
-                    href={adminDashboardUrl}
+                  <Link
+                    href="/admin"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-500/10 border border-emerald-400/40 rounded-xl hover:bg-emerald-500/20 hover:border-emerald-500/60 transition shadow-2xs"
                   >
                     <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span>Admin Portal</span>
-                  </a>
+                  </Link>
                 </>
               )}
             </nav>
@@ -293,15 +293,16 @@ export function Navbar() {
                         )}
 
                         {user.role === "ROLE_ADMIN" && (
-                          <a
-                            href={adminDashboardUrl}
+                          <Link
+                            href="/admin"
+                            onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-emerald-800 font-semibold bg-emerald-50 hover:bg-emerald-100/70 transition"
                           >
                             <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                             </svg>
                             <span>Admin Portal Console</span>
-                          </a>
+                          </Link>
                         )}
                       </div>
 
@@ -482,8 +483,8 @@ export function Navbar() {
                 {/* Mobile Admin Link */}
                 {user?.role === "ROLE_ADMIN" && (
                   <div className="pt-2 border-t border-slate-100">
-                    <a
-                      href={adminDashboardUrl}
+                    <Link
+                      href="/admin"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-bold text-emerald-800 bg-emerald-50"
                     >
@@ -491,7 +492,7 @@ export function Navbar() {
                       <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
-                    </a>
+                    </Link>
                   </div>
                 )}
               </div>

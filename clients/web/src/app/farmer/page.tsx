@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
 export default function FarmerHubPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: availablePickups } = useQuery({
     queryKey: ["farmer-available-pickups"],
@@ -26,6 +26,19 @@ export default function FarmerHubPage() {
     queryFn: () => webApiClient.farmer.getOrders(),
     enabled: isAuthenticated && user?.role === "ROLE_FARMER",
   });
+
+  if (authLoading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+        <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
+          <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
+          <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== "ROLE_FARMER") {
     return (

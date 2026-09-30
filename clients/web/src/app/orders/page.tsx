@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
 export default function OrdersPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: orders, isLoading, error } = useQuery({
     queryKey: ["user-orders"],
@@ -15,15 +15,27 @@ export default function OrdersPage() {
     enabled: isAuthenticated,
   });
 
+  if (authLoading) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-4">
+        <div className="h-28 rounded-3xl bg-slate-200/60 animate-pulse" />
+        <div className="h-28 rounded-3xl bg-slate-200/60 animate-pulse" />
+        <div className="h-28 rounded-3xl bg-slate-200/60 animate-pulse" />
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
-        <p className="text-4xl">📦</p>
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-black">
+          📦
+        </div>
         <h2 className="text-2xl font-black text-slate-900">Sign In to View Orders</h2>
-        <p className="text-xs text-slate-500">Access your historical orders and dispute tracking.</p>
+        <p className="text-xs text-slate-500">Access your historical orders, tracking, and dispute adjudication.</p>
         <Link
           href="/auth/login"
-          className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition"
+          className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition shadow-sm"
         >
           Sign In
         </Link>
@@ -34,8 +46,11 @@ export default function OrdersPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
       <div>
-        <span className="text-2xs font-bold uppercase tracking-widest text-emerald-600">History & Tracking</span>
+        <span className="text-2xs font-bold uppercase tracking-widest text-emerald-600">History & Settlement</span>
         <h1 className="text-3xl font-black text-slate-900 tracking-tight mt-1">My Marketplace Orders</h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Review placed orders, examine transaction proofs, and file dispute claims if necessary.
+        </p>
       </div>
 
       {isLoading ? (
@@ -49,15 +64,17 @@ export default function OrdersPage() {
           Failed to load orders. Please refresh or check your connection.
         </div>
       ) : !orders || orders.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 space-y-3">
-          <p className="text-4xl">🛍️</p>
-          <h3 className="text-base font-bold text-slate-800">No orders placed yet</h3>
+        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/80 shadow-2xs space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl">
+            🛍️
+          </div>
+          <h3 className="text-base font-bold text-slate-900">No orders placed yet</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Browse our farmer marketplace to redeem your EcoTokens for organic farm supplies.
+            Browse our farmer marketplace to redeem your EcoTokens for verified organic farm supplies.
           </p>
           <Link
             href="/marketplace"
-            className="inline-block px-4 py-2 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition"
+            className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition shadow-sm"
           >
             Explore Marketplace
           </Link>
@@ -67,13 +84,13 @@ export default function OrdersPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-emerald-300 transition"
+              className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-emerald-300 transition"
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2.5">
                   <span className="font-bold text-sm text-slate-900">Order #{order.id}</span>
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-3xs font-bold ${
+                    className={`px-2.5 py-0.5 rounded-full text-3xs font-bold uppercase tracking-wider ${
                       order.status === "COMPLETED"
                         ? "bg-emerald-100 text-emerald-800"
                         : order.status === "PLACED"
@@ -92,12 +109,15 @@ export default function OrdersPage() {
               </div>
 
               <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="text-base font-black text-emerald-700">
-                  {order.totalTokens} Tokens
-                </span>
+                <div className="text-right">
+                  <span className="text-2xs text-slate-400 block font-medium">Total Tokens</span>
+                  <span className="text-base font-black text-emerald-700">
+                    {order.totalTokens} Tokens
+                  </span>
+                </div>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition"
+                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-emerald-50 hover:text-emerald-700 transition"
                 >
                   View Details
                 </Link>
