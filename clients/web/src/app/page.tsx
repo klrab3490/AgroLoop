@@ -5,45 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
-
-const CATEGORY_META: Record<string, { label: string; icon: string; bgGradient: string; unitDefault: string }> = {
-  COMPOST_AND_SOIL: {
-    label: "Compost & Living Soil",
-    icon: "🌱",
-    bgGradient: "from-emerald-900/10 via-emerald-800/20 to-teal-900/15",
-    unitDefault: "25kg bag",
-  },
-  ORGANIC_VEGETABLES: {
-    label: "Organic Vegetables",
-    icon: "🥕",
-    bgGradient: "from-amber-600/15 via-orange-600/15 to-emerald-800/10",
-    unitDefault: "500g bundle",
-  },
-  FRESH_FRUITS: {
-    label: "Orchard Fruits",
-    icon: "🍎",
-    bgGradient: "from-rose-600/15 via-amber-600/15 to-emerald-800/10",
-    unitDefault: "3kg crate",
-  },
-  FARM_DAIRY: {
-    label: "Pasture Dairy & Honey",
-    icon: "🥛",
-    bgGradient: "from-sky-600/15 via-indigo-600/15 to-teal-800/10",
-    unitDefault: "1L glass bottle",
-  },
-  SEEDS_AND_SAPLINGS: {
-    label: "Seeds & Saplings",
-    icon: "🌾",
-    bgGradient: "from-lime-600/15 via-emerald-700/15 to-teal-800/10",
-    unitDefault: "Pack of 5",
-  },
-  HERBS_AND_SPICES: {
-    label: "Aromatic Herbs",
-    icon: "🪴",
-    bgGradient: "from-teal-600/15 via-emerald-700/15 to-cyan-800/10",
-    unitDefault: "Fresh bundle",
-  },
-};
+import { ProductCard } from "@/components/product-card";
 
 export default function HomePage() {
   const { addItem } = useCart();
@@ -220,106 +182,14 @@ export default function HomePage() {
             <p className="text-xs text-slate-500">Live products will synchronize as farmers register harvest batches.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product) => {
-              const meta = (product.category && CATEGORY_META[product.category]) || {
-                label: product.category?.replace(/_/g, " ") || "Agricultural Input",
-                icon: "🌿",
-                bgGradient: "from-slate-200 to-slate-100",
-                unitDefault: "Standard Unit",
-              };
-              const stock = product.stock ?? 0;
-              const isOutOfStock = stock <= 0;
-              const isLowStock = stock > 0 && stock <= 15;
-
-              return (
-                <div
-                  key={product.id}
-                  className="group bg-white rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-xl hover:border-emerald-300 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-                >
-                  {/* Top Visual Showcase Banner */}
-                  <div className={`relative h-44 bg-gradient-to-br ${meta.bgGradient} p-4 flex flex-col justify-between border-b border-slate-100`}>
-                    <div className="flex items-center justify-between z-10">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-bold bg-white/90 backdrop-blur-md text-slate-700 shadow-2xs border border-white/60">
-                        <span>{meta.icon}</span>
-                        <span className="truncate max-w-[120px]">{meta.label}</span>
-                      </span>
-
-                      {/* Stock Beacon */}
-                      {isOutOfStock ? (
-                        <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                          Sold Out
-                        </span>
-                      ) : isLowStock ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-3xs font-bold bg-amber-500 text-white shadow-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                          <span>Only {stock} left</span>
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full text-3xs font-bold bg-slate-800 text-white shadow-xs">
-                          {stock} in stock
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Centered Emoji Illustration */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-6xl drop-shadow-sm select-none opacity-90">{meta.icon}</span>
-                    </div>
-
-                    {/* Pack Size / Unit Pill */}
-                    <div className="z-10 self-center">
-                      <span className="px-3 py-0.5 rounded-full text-3xs font-black uppercase tracking-wider bg-white/90 backdrop-blur-md text-slate-700 shadow-2xs border border-white/80">
-                        {meta.unitDefault}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Body Content */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-1.5">
-                      <Link
-                        href={`/marketplace/${product.id}`}
-                        className="block font-bold text-slate-900 text-base group-hover:text-emerald-700 transition line-clamp-1"
-                      >
-                        {product.name}
-                      </Link>
-                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                        {product.description || "Certified regional farm input cultivated with closed-loop organic soil amendments."}
-                      </p>
-                    </div>
-
-                    {/* Producer & Price Footer */}
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                      <div>
-                        <span className="text-3xs uppercase tracking-wider text-slate-400 font-bold block">
-                          Settlement Price
-                        </span>
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-lg font-black text-emerald-700 tracking-tight">
-                            {product.price}
-                          </span>
-                          <span className="text-3xs font-bold text-emerald-800 uppercase tracking-wider">
-                            Tokens
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        disabled={isOutOfStock || !product.id}
-                        onClick={() => product.id && handleAddToCart(product.id, product.name || "Agricultural Product")}
-                        className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md hover:shadow-emerald-700/20 active:scale-98 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>Cart</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={(prod) => prod.id && handleAddToCart(prod.id, prod.name || "Agricultural Product")}
+              />
+            ))}
           </div>
         )}
       </section>
