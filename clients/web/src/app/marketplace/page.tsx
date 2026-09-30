@@ -1,26 +1,112 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
+import { CartDrawer } from "@/components/cart-drawer";
 import type { ProductApiResponse } from "@agroloop/api-types";
 
-const CATEGORIES = [
-  { label: "All Categories", value: "" },
-  { label: "Compost & Soil", value: "COMPOST_AND_SOIL" },
-  { label: "Organic Vegetables", value: "ORGANIC_VEGETABLES" },
-  { label: "Fresh Fruits", value: "FRESH_FRUITS" },
-  { label: "Farm Fresh Dairy", value: "FARM_DAIRY" },
-  { label: "Seeds & Saplings", value: "SEEDS_AND_SAPLINGS" },
-  { label: "Herbs & Spices", value: "HERBS_AND_SPICES" },
+interface CategoryMeta {
+  label: string;
+  value: string;
+  icon: string;
+  badgeColor: string;
+  gradient: string;
+  textColor: string;
+  accentBg: string;
+}
+
+const CATEGORIES: CategoryMeta[] = [
+  {
+    label: "All Offerings",
+    value: "",
+    icon: "🌱",
+    badgeColor: "bg-slate-100 text-slate-800 border-slate-200",
+    gradient: "from-emerald-900/15 via-teal-900/10 to-emerald-950/20",
+    textColor: "text-slate-800",
+    accentBg: "bg-emerald-50",
+  },
+  {
+    label: "Compost & Living Soil",
+    value: "COMPOST_AND_SOIL",
+    icon: "🌿",
+    badgeColor: "bg-emerald-100/80 text-emerald-900 border-emerald-300/80",
+    gradient: "from-emerald-700/20 via-teal-800/15 to-stone-900/25",
+    textColor: "text-emerald-900",
+    accentBg: "bg-emerald-50",
+  },
+  {
+    label: "Organic Vegetables",
+    value: "ORGANIC_VEGETABLES",
+    icon: "🥕",
+    badgeColor: "bg-lime-100/80 text-lime-900 border-lime-300/80",
+    gradient: "from-lime-600/20 via-emerald-700/15 to-green-950/20",
+    textColor: "text-lime-950",
+    accentBg: "bg-lime-50",
+  },
+  {
+    label: "Orchard Fruits",
+    value: "FRESH_FRUITS",
+    icon: "🍎",
+    badgeColor: "bg-amber-100/80 text-amber-900 border-amber-300/80",
+    gradient: "from-amber-600/20 via-orange-600/15 to-rose-950/20",
+    textColor: "text-amber-950",
+    accentBg: "bg-amber-50",
+  },
+  {
+    label: "Pasture Dairy & Honey",
+    value: "FARM_DAIRY",
+    icon: "🥛",
+    badgeColor: "bg-sky-100/80 text-sky-900 border-sky-300/80",
+    gradient: "from-sky-600/20 via-indigo-600/15 to-slate-950/20",
+    textColor: "text-sky-950",
+    accentBg: "bg-sky-50",
+  },
+  {
+    label: "Seeds & Saplings",
+    value: "SEEDS_AND_SAPLINGS",
+    icon: "🌾",
+    badgeColor: "bg-emerald-100/80 text-teal-950 border-teal-300/80",
+    gradient: "from-teal-700/20 via-cyan-800/15 to-emerald-950/20",
+    textColor: "text-teal-950",
+    accentBg: "bg-teal-50",
+  },
+  {
+    label: "Aromatic Herbs",
+    value: "HERBS_AND_SPICES",
+    icon: "🪴",
+    badgeColor: "bg-purple-100/80 text-purple-950 border-purple-300/80",
+    gradient: "from-purple-600/20 via-fuchsia-700/15 to-slate-950/20",
+    textColor: "text-purple-950",
+    accentBg: "bg-purple-50",
+  },
 ];
+
+const categoryMetaMap = new Map<string, CategoryMeta>(
+  CATEGORIES.map((cat) => [cat.value, cat])
+);
+
+function formatCategoryName(categoryString: string | null | undefined): string {
+  if (!categoryString) return "Organic Input";
+  const match = categoryMetaMap.get(categoryString);
+  if (match && match.value !== "") return match.label;
+  return categoryString
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export default function MarketplacePage() {
   const { addItem } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("featured");
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+  const [recentlyAdded, setRecentlyAdded] = useState<{ id: number; name: string } | null>(null);
 
   const { data: pageResult, isLoading, error } = useQuery({
     queryKey: ["marketplace-products", selectedCategory, searchKeyword],
@@ -32,140 +118,363 @@ export default function MarketplacePage() {
     retry: 2,
   });
 
-  const products: ProductApiResponse[] = pageResult?.content ?? [];
+  const rawProducts: ProductApiResponse[] = pageResult?.content ?? [];
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let list = [...rawProducts];
+
+    if (inStockOnly) {
+      list = list.filter((p) => (p.stock ?? 0) > 0);
+    }
+
+    if (sortBy === "price-low") {
+      list.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0));
+    } else if (sortBy === "price-high") {
+      list.sort((a, b) => Number(b.price ?? 0) - Number(a.price ?? 0));
+    } else if (sortBy === "stock-high") {
+      list.sort((a, b) => (b.stock ?? 0) - (a.stock ?? 0));
+    }
+
+    return list;
+  }, [rawProducts, inStockOnly, sortBy]);
+
+  const handleAddToCart = (product: ProductApiResponse) => {
+    if (!product.id) return;
+    addItem(product.id, 1);
+    setRecentlyAdded({ id: product.id, name: product.name ?? "Item" });
+    setTimeout(() => {
+      setRecentlyAdded(null);
+    }, 3500);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <span className="text-2xs font-bold uppercase tracking-widest text-emerald-600">
-              Sustainable Circular Marketplace
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/50 pb-20">
+      {/* Toast Feedback when Item is Added to Cart */}
+      {recentlyAdded && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-slate-900/95 text-white px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700/80 flex items-center gap-3">
+            <span className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-sm border border-emerald-500/40">
+              ✓
             </span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1">
-            Redeem EcoTokens for Farm-Grade Inputs
-          </h1>
-          <p className="text-sm text-slate-600 mt-2 max-w-2xl">
-            Purchase certified organic compost, biological fertilizers, and seeds produced by regional farmers using your collected waste.
-          </p>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setSelectedCategory(cat.value)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition ${
-                selectedCategory === cat.value
-                  ? "bg-emerald-600 text-white shadow-sm shadow-emerald-200"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search Input */}
-        <div className="relative min-w-[240px]">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-          <span className="absolute left-3 top-2 text-xs text-slate-400">🔍</span>
-        </div>
-      </div>
-
-      {/* Product Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-72 rounded-2xl bg-slate-200/60 animate-pulse" />
-          ))}
-        </div>
-      ) : products.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-500 space-y-3">
-          <p className="text-4xl">🌾</p>
-          <p className="text-base font-semibold text-slate-800">No products found</p>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Try adjusting your search keywords or switching category filters.
-          </p>
-        </div>
-      ) : (
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
-            >
-              <div className="p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 text-3xs font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {product.category}
-                  </span>
-                  <span
-                    className={`text-3xs font-semibold px-2 py-0.5 rounded-md ${
-                      (product.stock ?? 0) > 0 ? "bg-slate-100 text-slate-600" : "bg-red-50 text-red-600"
-                    }`}
-                  >
-                    {(product.stock ?? 0) > 0 ? `${product.stock} in stock` : "Sold out"}
-                  </span>
-                </div>
-
-                <Link href={`/marketplace/${product.id}`} className="block group">
-                  <h3 className="font-bold text-slate-900 text-base group-hover:text-emerald-700 transition">
-                    {product.name}
-                  </h3>
-                </Link>
-
-                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                  {product.description || "Certified organic soil enrichment product directly from regional farmers."}
-                </p>
-
-                {product.farmerName && (
-                  <p className="text-2xs text-slate-400 font-medium">
-                    🚜 Producer: <span className="text-slate-700">{product.farmerName}</span>
-                  </p>
-                )}
-              </div>
-
-              <div className="p-5 pt-0 border-t border-slate-100 flex items-center justify-between mt-auto">
-                <div>
-                  <span className="text-3xs text-slate-400 block font-bold uppercase">Price</span>
-                  <span className="text-base font-black text-emerald-700">
-                    {product.price} <span className="text-xs font-normal">Tokens</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/marketplace/${product.id}`}
-                    className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-700 transition"
-                  >
-                    Details
-                  </Link>
-                  <button
-                    disabled={(product.stock ?? 0) <= 0 || !product.id}
-                    onClick={() => product.id && addItem(product.id, 1)}
-                    className="px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 transition"
-                  >
-                    + Cart
-                  </button>
-                </div>
-              </div>
+            <div>
+              <p className="text-xs font-bold text-slate-100 truncate max-w-xs">{recentlyAdded.name}</p>
+              <p className="text-[11px] text-slate-400">Added to your shopping cart</p>
             </div>
-          ))}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="ml-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition"
+            >
+              View Cart
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Hero Showcase Banner */}
+      <div className="relative overflow-hidden border-b border-emerald-900/10 bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white">
+        {/* Subtle decorative grid overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#05966912_1px,transparent_1px),linear-gradient(to_bottom,#05966912_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+          <div className="max-w-3xl space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 tracking-wide uppercase">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Closed-Loop Regional Agriculture</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-[1.15]">
+              Redeem EcoTokens for <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent">Farm-Grade Inputs</span>
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-300/90 leading-relaxed font-normal">
+              Every purchase closes the nutrient cycle. Acquire verified organic compost, biochar conditioners, cold-pressed sprays, and heirloom seeds produced by regional farmers using circular waste collections.
+            </p>
+
+            {/* Highlights Bar */}
+            <div className="pt-2 flex flex-wrap gap-4 sm:gap-6 text-xs text-slate-300/80 font-medium">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">✓</span>
+                <span>Zero Synthetic Additives</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">✓</span>
+                <span>Verified Regional Producers</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">✓</span>
+                <span>Instant EcoToken Settlement</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Search, Filter & Sort Controls */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-6 space-y-4">
+          {/* Top Row: Search and Sort */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="Search compost, heirloom seeds, honey, milk..."
+                className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition text-slate-800 placeholder-slate-400"
+              />
+              {searchKeyword && (
+                <button
+                  type="button"
+                  onClick={() => setSearchKeyword("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Quick Filters & Sorting */}
+            <div className="flex items-center gap-3 justify-between sm:justify-end">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-xl border border-slate-200 transition">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                />
+                <span>In Stock Only</span>
+              </label>
+
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                <span className="hidden md:inline font-medium">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="featured">Featured Catalog</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="stock-high">Highest Stock</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Row: Category Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none">
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.value;
+              return (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.value)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold tracking-tight whitespace-nowrap transition-all duration-200 ${
+                    isSelected
+                      ? "bg-slate-900 text-white shadow-md shadow-slate-900/15 scale-[1.02]"
+                      : "bg-slate-100/80 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60"
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Results Count Banner */}
+        <div className="flex items-center justify-between px-2">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            {isLoading ? (
+              "Loading offerings..."
+            ) : (
+              <>
+                Showing <span className="text-slate-900 font-black">{filteredAndSortedProducts.length}</span> Verified{" "}
+                {selectedCategory ? formatCategoryName(selectedCategory) : "Agricultural Inputs"}
+              </>
+            )}
+          </p>
+        </div>
+
+        {/* Product Cards Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div
+                key={i}
+                className="h-88 rounded-3xl bg-slate-100/90 border border-slate-200/60 animate-pulse overflow-hidden flex flex-col justify-between p-5"
+              >
+                <div className="w-full h-36 bg-slate-200 rounded-2xl mb-4" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-slate-200 rounded w-3/4" />
+                  <div className="h-3 bg-slate-200 rounded w-full" />
+                </div>
+                <div className="h-8 bg-slate-200 rounded-xl mt-4" />
+              </div>
+            ))}
+          </div>
+        ) : filteredAndSortedProducts.length === 0 ? (
+          <div className="p-16 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4 max-w-lg mx-auto">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-700 text-3xl flex items-center justify-center mx-auto border border-emerald-100">
+              🌱
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">No matching offerings found</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              We couldn’t find any products matching your search or category filter. Try clearing the filters or searching for terms like &quot;compost&quot;, &quot;tomatoes&quot;, or &quot;seeds&quot;.
+            </p>
+            <button
+              onClick={() => {
+                setSelectedCategory("");
+                setSearchKeyword("");
+                setInStockOnly(false);
+              }}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredAndSortedProducts.map((product) => {
+              const meta = categoryMetaMap.get(product.category ?? "") || CATEGORIES[1]!;
+              const inStock = (product.stock ?? 0) > 0;
+              const isLowStock = inStock && (product.stock ?? 0) <= 15;
+
+              return (
+                <div
+                  key={product.id}
+                  className="group bg-white rounded-3xl border border-slate-200/90 hover:border-emerald-500/40 shadow-xs hover:shadow-xl hover:shadow-emerald-900/5 transition-all duration-300 flex flex-col justify-between overflow-hidden relative"
+                >
+                  {/* Top Image Showcase Banner */}
+                  <div className={`relative h-44 w-full bg-gradient-to-br ${meta.gradient} flex items-center justify-center p-4 overflow-hidden border-b border-slate-100`}>
+                    {/* Background subtle circle ambient */}
+                    <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/25 blur-2xl pointer-events-none" />
+
+                    {/* Stock Status Pill */}
+                    <div className="absolute top-3.5 right-3.5 z-10">
+                      {inStock ? (
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-full backdrop-blur-md shadow-xs ${
+                            isLowStock
+                              ? "bg-amber-500/90 text-white border border-amber-400"
+                              : "bg-slate-900/80 text-white border border-slate-700/60"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isLowStock ? "bg-amber-200 animate-ping" : "bg-emerald-400"
+                            }`}
+                          />
+                          <span>{isLowStock ? `Only ${product.stock} left` : `${product.stock} in stock`}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-bold rounded-full bg-rose-600/90 text-white border border-rose-500 backdrop-blur-md">
+                          Sold Out
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Category Label Pill */}
+                    <div className="absolute top-3.5 left-3.5 z-10">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/95 text-slate-800 shadow-xs border border-slate-200/60">
+                        <span>{meta.icon}</span>
+                        <span>{formatCategoryName(product.category)}</span>
+                      </span>
+                    </div>
+
+                    {/* Product Main Visual Artwork / Placeholder */}
+                    <div className="transform group-hover:scale-110 transition-transform duration-300 flex flex-col items-center justify-center text-center">
+                      <span className="text-6xl drop-shadow-md select-none">{meta.icon}</span>
+                      {product.unit && (
+                        <span className="mt-2 text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-white/80 text-slate-700 border border-slate-200/50 backdrop-blur-xs">
+                          {product.unit}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Body Content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <Link href={`/marketplace/${product.id}`} className="block group/title">
+                        <h3 className="font-extrabold text-slate-900 text-base leading-snug group-hover/title:text-emerald-700 transition">
+                          {product.name}
+                        </h3>
+                      </Link>
+
+                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {product.description || "Certified organic soil enhancement and sustainable harvest directly from regional farmers."}
+                      </p>
+                    </div>
+
+                    {/* Producer & Trust Tag */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-black">
+                          {product.farmerName?.[0] || "F"}
+                        </div>
+                        <div className="leading-tight">
+                          <p className="text-[11px] font-bold text-slate-800 truncate max-w-[130px]">
+                            {product.farmerName || "Verified Producer"}
+                          </p>
+                          <p className="text-[9px] text-emerald-600 font-semibold">Verified Farm</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Action Footer */}
+                  <div className="px-5 py-4 bg-slate-50/70 border-t border-slate-100/80 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-bold uppercase tracking-wider leading-none">
+                        Token Price
+                      </span>
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-xl font-black text-slate-900 tracking-tight">
+                          {product.price}
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-700">ECO</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/marketplace/${product.id}`}
+                        className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition"
+                      >
+                        Details
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={!inStock || !product.id}
+                        onClick={() => handleAddToCart(product)}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white disabled:text-slate-400 text-xs font-bold rounded-xl shadow-xs shadow-emerald-700/20 hover:shadow-md hover:shadow-emerald-700/30 transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Add</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Slide-over cart */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 }
