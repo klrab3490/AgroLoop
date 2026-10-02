@@ -28,7 +28,7 @@ echo ""
 
 POSTGRES_USER="${POSTGRES_USER:-postgres}"
 POSTGRES_DB="${POSTGRES_DB:-agroloop}"
-POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-7200}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-postgres}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 
 # 1. Try finding a running Docker postgres container

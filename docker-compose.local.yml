@@ -21,7 +21,7 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:-host.docker.internal}:${DB_PORT:-5432}/${POSTGRES_DB:-agroloop}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-7200}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       PORT: 8080
       UPLOAD_DIR: /app/uploads
       SERVER_VERSION: ${SERVER_VERSION:-8.0.0}

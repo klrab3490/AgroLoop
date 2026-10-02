@@ -263,7 +263,7 @@ docker compose up -d postgres
 > - **Host:** `localhost:5432`
 > - **Database:** `agroloop`
 > - **User:** `postgres`
-> - **Password:** `7200`
+> - **Password:** `postgres`
 > - **JDBC URL:** `jdbc:postgresql://localhost:5432/agroloop`
 
 #### Step 2: Configure Environment (Optional)
@@ -297,7 +297,7 @@ You will see the AgroLoop homepage with a green **PostgreSQL Connected** status 
 
 | Service / Role | Username / Email | Password | URL / Port | Purpose |
 | :--- | :--- | :--- | :--- | :--- |
-| **PostgreSQL** | `postgres` | `7200` | `localhost:5432` / `agroloop` | Core relational database |
+| **PostgreSQL** | `postgres` | `postgres` | `localhost:5432` / `agroloop` | Core relational database |
 | **pgAdmin (Optional)** | `admin@agroloop.local` | `admin` | `http://localhost:5055` | DB Admin UI (`--profile tools`) |
 | **App: Admin** | `admin@agroloop.com` | `admin123` | `http://localhost:8080/login` | System administrator dashboard |
 | **App: Household** | `household@agroloop.com` | `household123` | `http://localhost:8080/login` | Household waste submission & wallet |

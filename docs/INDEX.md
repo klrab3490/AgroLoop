@@ -153,7 +153,7 @@ cd AgroLoop
    ```bash
    docker compose up -d postgres
    ```
-   *(Default connection: `postgresql://postgres:7200@localhost:5432/agroloop`)*
+   *(Default connection: `postgresql://postgres:postgres@localhost:5432/agroloop`)*
 
 2. **Run the Spring Boot Backend**:
    - **macOS / Linux:**
@@ -228,7 +228,7 @@ The `clients/` directory contains a high-performance Turborepo monorepo:
 
 | Service / Role | Username / Email | Password | Port / URL | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **PostgreSQL Database** | `postgres` | `7200` | `localhost:5432` / `agroloop` | Pre-configured in `.env` & Docker |
+| **PostgreSQL Database** | `postgres` | `postgres` | `localhost:5432` / `agroloop` | Pre-configured in `.env` & Docker |
 | **pgAdmin (Optional)** | `admin@agroloop.local` | `admin` | `http://localhost:5055` | Run with `--profile tools` |
 | **App: Admin (Seeded)** | `admin@agroloop.com` | `admin123` | `http://localhost:8080/login` | Full system administration & solvency |
 | **App: Household (Demo)** | `household@agroloop.com` | `household123` | `http://localhost:8080/login` | Waste submission & token spending |

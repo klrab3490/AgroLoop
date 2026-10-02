@@ -61,3 +61,7 @@ clients/mobile/android/
 clients/mobile/ios/
 node_modules/
 .pnpm-store/
+
+### GitGuardian ###
+.cache_ggshield
+.cache_ggshield/
