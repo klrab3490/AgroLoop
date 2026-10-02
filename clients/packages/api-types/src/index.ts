@@ -13,6 +13,30 @@ export type LoginApiRequest = Schemas["LoginApiRequest"];
 export type RegisterApiRequest = Schemas["RegisterApiRequest"];
 export type RefreshTokenApiRequest = Schemas["RefreshTokenApiRequest"];
 
+export interface FarmerApplicationApiResponse {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  farmName: string;
+  farmAddress: string;
+  notes?: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
+  rejectionReason?: string | null;
+  createdAt: string;
+  reviewedAt?: string | null;
+}
+
+export interface ConvertUserToFarmerRequest {
+  farmName: string;
+  farmAddress: string;
+  notes?: string | null;
+}
+
+export interface UserStatusApiRequest {
+  enabled: boolean;
+}
+
 // Marketplace & Products DTOs
 export type ProductApiResponse = Schemas["ProductApiResponse"];
 export type FarmerProductApiRequest = Schemas["FarmerProductApiRequest"];

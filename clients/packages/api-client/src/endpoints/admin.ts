@@ -7,6 +7,8 @@ import type {
   UserApiResponse,
   TokenAdjustmentApiRequest,
   HouseholdBalanceResponse,
+  FarmerApplicationApiResponse,
+  ConvertUserToFarmerRequest,
 } from "@agroloop/api-types";
 import type { AgroLoopApiClient } from "../client.js";
 import type { MutationOptions } from "../idempotency.js";
@@ -20,6 +22,10 @@ export interface AdminEndpoints {
   listUsers(): Promise<UserApiResponse[]>;
   setUserStatus(id: number, enabled: boolean): Promise<UserApiResponse>;
   adjustTokens(id: number, request: TokenAdjustmentApiRequest, options?: MutationOptions): Promise<HouseholdBalanceResponse>;
+  listFarmerApplications(): Promise<FarmerApplicationApiResponse[]>;
+  approveFarmerApplication(id: number): Promise<{ message: string }>;
+  rejectFarmerApplication(id: number, reason?: string): Promise<{ message: string }>;
+  convertUserToFarmer(id: number, request: ConvertUserToFarmerRequest): Promise<UserApiResponse>;
 }
 
 export function createAdminEndpoints(client: AgroLoopApiClient): AdminEndpoints {
@@ -72,6 +78,22 @@ export function createAdminEndpoints(client: AgroLoopApiClient): AdminEndpoints 
         idempotentMutation: true,
         idempotencyKey: options?.idempotencyKey,
       });
+    },
+
+    async listFarmerApplications() {
+      return client.get<FarmerApplicationApiResponse[]>("/admin/farmer-applications");
+    },
+
+    async approveFarmerApplication(id: number) {
+      return client.post<{ message: string }>(`/admin/farmer-applications/${id}/approve`);
+    },
+
+    async rejectFarmerApplication(id: number, reason?: string) {
+      return client.post<{ message: string }>(`/admin/farmer-applications/${id}/reject`, { reason });
+    },
+
+    async convertUserToFarmer(id: number, request: ConvertUserToFarmerRequest) {
+      return client.post<UserApiResponse>(`/admin/users/${id}/convert-to-farmer`, request);
     },
   };
 }

@@ -158,6 +158,65 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public User convertUserToFarmer(Long userId, String farmName, String farmAddress, String notes) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        if (user.getRole() == Role.ROLE_FARMER) {
+            throw new IllegalStateException("User is already registered as a verified Farmer.");
+        }
+
+        // 1. Update user role in base users table to ROLE_FARMER
+        entityManager.createNativeQuery("UPDATE users SET role = 'ROLE_FARMER', updated_at = NOW() WHERE id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+
+        // 2. Insert into or update farmers subtype table
+        Number existingCount = (Number) entityManager.createNativeQuery(
+                        "SELECT COUNT(*) FROM farmers WHERE id = :userId")
+                .setParameter("userId", userId)
+                .getSingleResult();
+
+        String resolvedFarmName = (farmName != null && !farmName.isBlank()) ? farmName.trim() : user.getName() + " Farm";
+        String resolvedFarmAddress = (farmAddress != null && !farmAddress.isBlank()) ? farmAddress.trim() : "Registered Address";
+        String resolvedNotes = (notes != null && !notes.isBlank()) ? notes.trim() : "Converted to Farmer by Administrator";
+
+        if (existingCount.intValue() == 0) {
+            entityManager.createNativeQuery(
+                            "INSERT INTO farmers (id, farm_name, farm_address, notes, service_radius_km, max_daily_capacity_kg, average_rating, review_count) VALUES (:userId, :farmName, :farmAddress, :notes, 25.0, 200.00, 0.00, 0)")
+                    .setParameter("userId", userId)
+                    .setParameter("farmName", resolvedFarmName)
+                    .setParameter("farmAddress", resolvedFarmAddress)
+                    .setParameter("notes", resolvedNotes)
+                    .executeUpdate();
+        } else {
+            entityManager.createNativeQuery(
+                            "UPDATE farmers SET farm_name = :farmName, farm_address = :farmAddress, notes = :notes WHERE id = :userId")
+                    .setParameter("userId", userId)
+                    .setParameter("farmName", resolvedFarmName)
+                    .setParameter("farmAddress", resolvedFarmAddress)
+                    .setParameter("notes", resolvedNotes)
+                    .executeUpdate();
+        }
+
+        // 3. If there are any pending applications for this user, approve them
+        farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(userId).ifPresent(app -> {
+            if (app.getStatus() == FarmerApplicationStatus.PENDING) {
+                app.approve();
+                farmerApplicationRepository.save(app);
+            }
+        });
+
+        // Flush and clear 1st-level cache so subsequent queries fetch the updated entity
+        entityManager.flush();
+        entityManager.clear();
+
+        logger.info("Directly converted user id={} to ROLE_FARMER with farmName='{}'", userId, resolvedFarmName);
+        return userRepository.findById(userId).orElseThrow();
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<FarmerApplication> getLatestApplicationForUser(Long userId) {
         return farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(userId);

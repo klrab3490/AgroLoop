@@ -37,6 +37,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.agroloop.dto.api.v1.request.ConvertUserToFarmerApiRequest;
+import com.agroloop.dto.api.v1.response.FarmerApplicationApiResponse;
+import com.agroloop.model.FarmerApplication;
+import com.agroloop.service.UserService;
 import java.util.Map;
 
 @RestController
@@ -45,6 +49,7 @@ import java.util.Map;
 public class AdminApiController {
 
     private final AdminGovernanceService adminGovernanceService;
+    private final UserService userService;
     private final MarketplaceService marketplaceService;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -55,6 +60,7 @@ public class AdminApiController {
 
     public AdminApiController(
             AdminGovernanceService adminGovernanceService,
+            UserService userService,
             MarketplaceService marketplaceService,
             OrderRepository orderRepository,
             UserRepository userRepository,
@@ -64,6 +70,7 @@ public class AdminApiController {
             com.agroloop.service.storage.StorageManager storageManager
     ) {
         this.adminGovernanceService = adminGovernanceService;
+        this.userService = userService;
         this.marketplaceService = marketplaceService;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
@@ -209,6 +216,39 @@ public class AdminApiController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/users/{id}/convert-to-farmer")
+    public ResponseEntity<UserApiResponse> convertUserToFarmer(
+            @PathVariable Long id,
+            @Valid @RequestBody ConvertUserToFarmerApiRequest request
+    ) {
+        User converted = userService.convertUserToFarmer(id, request.farmName(), request.farmAddress(), request.notes());
+        return ResponseEntity.ok(UserApiResponse.from(converted));
+    }
+
+    @GetMapping("/farmer-applications")
+    public ResponseEntity<List<FarmerApplicationApiResponse>> listPendingFarmerApplications() {
+        List<FarmerApplication> applications = userService.getPendingFarmerApplications();
+        return ResponseEntity.ok(applications.stream().map(FarmerApplicationApiResponse::from).toList());
+    }
+
+    @PostMapping("/farmer-applications/{id}/approve")
+    public ResponseEntity<Map<String, String>> approveFarmerApplication(@PathVariable Long id) {
+        userService.approveFarmerApplication(id);
+        return ResponseEntity.ok(Map.of("message", "Farmer application approved successfully"));
+    }
+
+    @PostMapping("/farmer-applications/{id}/reject")
+    public ResponseEntity<Map<String, String>> rejectFarmerApplication(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        String reason = (body != null && body.containsKey("reason") && !body.get("reason").isBlank())
+                ? body.get("reason")
+                : "Administrative rejection";
+        userService.rejectFarmerApplication(id, reason);
+        return ResponseEntity.ok(Map.of("message", "Farmer application rejected successfully"));
     }
 
     @GetMapping("/solvency")

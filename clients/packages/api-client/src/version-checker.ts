@@ -34,7 +34,7 @@ export function resolveEnv(key: string, defaultValue: string): string {
 }
 
 export const DEFAULT_GITHUB_REPO = resolveEnv("GITHUB_REPO", "AgnaMariya/AgroLoop");
-export const CURRENT_PLATFORM_VERSION = resolveEnv("APP_VERSION", "1.0.2");
+export const CURRENT_PLATFORM_VERSION = resolveEnv("APP_VERSION", "1.0.3");
 
 export interface GitHubReleaseAsset {
   name: string;

@@ -4,6 +4,7 @@ import com.agroloop.dto.FarmerApplicationRequest;
 import com.agroloop.dto.RegisterRequest;
 import com.agroloop.model.FarmerApplication;
 import com.agroloop.model.Household;
+import com.agroloop.model.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +35,11 @@ public interface UserService {
      * Returns all applications currently awaiting administrative review.
      */
     List<FarmerApplication> getPendingFarmerApplications();
+
+    /**
+     * Directly converts an existing Household or user into a verified Farmer partner.
+     */
+    User convertUserToFarmer(Long userId, String farmName, String farmAddress, String notes);
 
     /**
      * Returns the most recent application for a given user ID, if any exists.

@@ -240,7 +240,7 @@ jobs:
   # 5. Automated GitHub Release Publication
   # ============================================================================
   publish-release:
-    name: Publish GitHub Release (v1.0.2)
+    name: Publish GitHub Release (v1.0.3)
     needs: [docker-build, mobile-packages, desktop-linux, desktop-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
@@ -278,21 +278,21 @@ jobs:
         run: |
           mkdir -p dist-release
           # Package Mobile Expo Web Bundle into Zip
-          (cd release-assets/mobile-expo-bundle && zip -r ../../dist-release/AgroLoop-Mobile-v1.0.2-expo-bundle.zip .)
+          (cd release-assets/mobile-expo-bundle && zip -r ../../dist-release/AgroLoop-Mobile-v1.0.3-expo-bundle.zip .)
           # Android APK
-          cp release-assets/mobile-android/*.apk dist-release/AgroLoop-Mobile-v1.0.2-android-debug.apk || true
+          cp release-assets/mobile-android/*.apk dist-release/AgroLoop-Mobile-v1.0.3-android-debug.apk || true
           # Desktop Linux packages (.deb, .AppImage)
-          find release-assets/desktop-linux -name "*.deb" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.2-linux-amd64.deb \;
-          find release-assets/desktop-linux -name "*.AppImage" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.2-linux-x86_64.AppImage \;
+          find release-assets/desktop-linux -name "*.deb" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.3-linux-amd64.deb \;
+          find release-assets/desktop-linux -name "*.AppImage" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.3-linux-x86_64.AppImage \;
           # Desktop Windows packages (.msi, setup .exe)
-          find release-assets/desktop-windows -name "*.msi" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.2-windows-x64.msi \;
-          find release-assets/desktop-windows -name "*setup.exe" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.2-windows-x64-setup.exe \;
+          find release-assets/desktop-windows -name "*.msi" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.3-windows-x64.msi \;
+          find release-assets/desktop-windows -name "*setup.exe" -exec cp {} dist-release/AgroLoop-Desktop-v1.0.3-windows-x64-setup.exe \;
           ls -lh dist-release/
 
       - name: Upload Consolidated Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: agroloop-v1.0.2-release-distribution
+          name: agroloop-v1.0.3-release-distribution
           path: dist-release/
           retention-days: 14
 

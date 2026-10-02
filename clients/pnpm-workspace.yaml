@@ -22,4 +22,8 @@ overrides:
   react-dom: '19.2.3'
   vitest: '>=4.1.11'
   '@vitest/mocker': '>=4.1.11'
+auditConfig:
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv
+
 

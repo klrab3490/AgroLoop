@@ -8,8 +8,8 @@ describe("BFF Route Allowlist & Security Boundaries", () => {
     });
   });
 
-  it("strictly rejects disallowed routes such as admin or arbitrary paths", () => {
-    expect(isAllowedProxyPath("admin")).toBe(false);
+  it("strictly rejects disallowed routes such as actuator or arbitrary paths", () => {
+    expect(isAllowedProxyPath("actuator")).toBe(false);
     expect(isAllowedProxyPath("users")).toBe(false);
     expect(isAllowedProxyPath("system")).toBe(false);
     expect(isAllowedProxyPath("internal")).toBe(false);
