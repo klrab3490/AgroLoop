@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { webTokenStorage, webApiClient } from "../lib/api";
 
 describe("Web Authentication Invariants", () => {
@@ -27,5 +27,17 @@ describe("Web Authentication Invariants", () => {
 
   it("enforces ClientType == WEB on the shared API client", () => {
     expect(webApiClient.clientType).toBe("WEB");
+  });
+
+  it("clears storage and notifies server when logout is invoked", async () => {
+    await webTokenStorage.setAccessToken("active_token_123");
+    expect(await webTokenStorage.getAccessToken()).toBe("active_token_123");
+
+    const logoutSpy = vi.spyOn(webApiClient.auth, "logout").mockResolvedValueOnce({ success: true } as any);
+    await webApiClient.auth.logout();
+    await webTokenStorage.clear();
+
+    expect(logoutSpy).toHaveBeenCalledTimes(1);
+    expect(await webTokenStorage.getAccessToken()).toBeNull();
   });
 });

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { CartDrawer } from "./cart-drawer";
@@ -14,6 +14,7 @@ export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
   const pathname = usePathname();
+  const router = useRouter();
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -21,6 +22,17 @@ export function Navbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    await logout("/");
+    try {
+      router.push("/");
+    } catch {
+      // In case router navigation fails or fallback needed
+    }
+  };
 
   const backendOrigin = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   const adminDashboardUrl = `${backendOrigin.replace(/\/+$/, "")}/admin/dashboard`;
@@ -320,10 +332,8 @@ export function Navbar() {
 
                       <div className="pt-2 mt-1.5 border-t border-slate-100">
                         <button
-                          onClick={() => {
-                            setIsUserMenuOpen(false);
-                            logout();
-                          }}
+                          onClick={handleLogout}
+                          data-testid="navbar-logout-btn"
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50/80 transition"
                         >
                           <svg className="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -537,10 +547,8 @@ export function Navbar() {
 
                 {isAuthenticated && (
                   <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      logout();
-                    }}
+                    onClick={handleLogout}
+                    data-testid="mobile-navbar-logout-btn"
                     className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition flex items-center gap-2"
                   >
                     <svg className="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">

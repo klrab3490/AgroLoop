@@ -2,12 +2,15 @@
   "expo": {
     "name": "AgroLoop Mobile",
     "slug": "agroloop-mobile",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "agroloop",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",

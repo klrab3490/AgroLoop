@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/v1/admin/users/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateUserRole_1"];
+        post: operations["updateUserRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/notifications/{id}/read": {
         parameters: {
             query?: never;
@@ -260,6 +276,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/household/farmer-application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getFarmerApplication"];
+        put?: never;
+        post: operations["submitFarmerApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/farmer/routes/{id}/stops/{stopId}/complete": {
         parameters: {
             query?: never;
@@ -484,6 +516,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listUsers"];
+        put?: never;
+        post: operations["createUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users/{id}/token-adjustment": {
         parameters: {
             query?: never;
@@ -516,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{id}/convert-to-farmer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["convertUserToFarmer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/{id}/dispute/resolve": {
         parameters: {
             query?: never;
@@ -542,6 +606,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["cancelOrder_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/farmer-applications/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectFarmerApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/farmer-applications/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveFarmerApplication"];
         delete?: never;
         options?: never;
         head?: never;
@@ -956,14 +1052,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/users": {
+    "/api/v1/admin/users/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["listUsers"];
+        get: operations["getUser"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1036,10 +1132,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/farmer-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPendingFarmerApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        UpdateUserRoleApiRequest: {
+            /** @enum {string} */
+            role: "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN";
+            address?: string;
+            farmName?: string;
+            farmAddress?: string;
+            notes?: string;
+        };
+        UserApiResponse: {
+            /** Format: int64 */
+            id?: number;
+            email?: string;
+            name?: string;
+            /** @enum {string} */
+            role?: "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN";
+            enabled?: boolean;
+            tokenBalance?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            address?: string;
+            farmName?: string;
+            farmAddress?: string;
+            notes?: string;
+            /** Format: double */
+            serviceRadiusKm?: number;
+            maxDailyCapacityKg?: number;
+            /** Format: double */
+            averageRating?: number;
+            /** Format: int32 */
+            reviewCount?: number;
+        };
         FarmerProductApiRequest: {
             name: string;
             description?: string;
@@ -1314,6 +1457,28 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        FarmerApplicationApiRequest: {
+            farmName: string;
+            farmAddress: string;
+            notes?: string;
+        };
+        FarmerApplicationApiResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            userId?: number;
+            userName?: string;
+            userEmail?: string;
+            farmName?: string;
+            farmAddress?: string;
+            notes?: string;
+            status?: string;
+            rejectionReason?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            reviewedAt?: string;
+        };
         CollectionRouteApiResponse: {
             /** Format: int64 */
             id?: number;
@@ -1392,6 +1557,18 @@ export interface components {
             /** @enum {string} */
             clientType: "MOBILE" | "DESKTOP" | "WEB";
         };
+        CreateUserApiRequest: {
+            name: string;
+            email: string;
+            password?: string;
+            /** @enum {string} */
+            role: "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN";
+            address?: string;
+            farmName?: string;
+            farmAddress?: string;
+            notes?: string;
+            initialTokens?: number;
+        };
         TokenAdjustmentApiRequest: {
             amount: number;
             /** @enum {string} */
@@ -1409,14 +1586,10 @@ export interface components {
         UserStatusApiRequest: {
             enabled?: boolean;
         };
-        UserApiResponse: {
-            /** Format: int64 */
-            id?: number;
-            email?: string;
-            name?: string;
-            /** @enum {string} */
-            role?: "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN";
-            enabled?: boolean;
+        ConvertUserToFarmerApiRequest: {
+            farmName: string;
+            farmAddress: string;
+            notes?: string;
         };
         ResolveDisputeApiRequest: {
             /** @enum {string} */
@@ -1432,12 +1605,12 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
             last?: boolean;
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ReviewApiResponse"][];
@@ -1504,12 +1677,12 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
             last?: boolean;
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["NotificationApiResponse"][];
@@ -1614,6 +1787,58 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    updateUserRole_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRoleApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserApiResponse"];
+                };
+            };
+        };
+    };
+    updateUserRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRoleApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserApiResponse"];
+                };
+            };
+        };
+    };
     markAsRead: {
         parameters: {
             query?: never;
@@ -2048,6 +2273,50 @@ export interface operations {
             };
         };
     };
+    getFarmerApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FarmerApplicationApiResponse"];
+                };
+            };
+        };
+    };
+    submitFarmerApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FarmerApplicationApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FarmerApplicationApiResponse"];
+                };
+            };
+        };
+    };
     completeStop: {
         parameters: {
             query?: never;
@@ -2401,6 +2670,50 @@ export interface operations {
             };
         };
     };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserApiResponse"][];
+                };
+            };
+        };
+    };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserApiResponse"];
+                };
+            };
+        };
+    };
     adjustTokens: {
         parameters: {
             query?: never;
@@ -2441,6 +2754,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UserStatusApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserApiResponse"];
+                };
+            };
+        };
+    };
+    convertUserToFarmer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConvertUserToFarmerApiRequest"];
             };
         };
         responses: {
@@ -2507,6 +2846,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["OrderApiResponse"];
+                };
+            };
+        };
+    };
+    rejectFarmerApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    approveFarmerApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
                 };
             };
         };
@@ -3050,11 +3437,13 @@ export interface operations {
             };
         };
     };
-    listUsers: {
+    getUser: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3065,7 +3454,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["UserApiResponse"][];
+                    "*/*": components["schemas"]["UserApiResponse"];
                 };
             };
         };
@@ -3151,6 +3540,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PageApiResponseEcoTokenTransactionApiResponse"];
+                };
+            };
+        };
+    };
+    listPendingFarmerApplications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FarmerApplicationApiResponse"][];
                 };
             };
         };

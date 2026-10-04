@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import type { UserApiResponse } from "@agroloop/api-types";
 import { webApiClient, webTokenStorage } from "./api";
 
@@ -11,13 +12,14 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (fullName: string, email: string, password: string, address?: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<UserApiResponse | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (redirectTo: string = "/") => {
     setIsLoading(true);
     try {
       await webApiClient.auth.logout();
@@ -115,6 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       await updateAccessToken(null);
       setIsLoading(false);
+      if (redirectTo) {
+        try {
+          router.push(redirectTo);
+        } catch {
+          if (typeof window !== "undefined") {
+            window.location.href = redirectTo;
+          }
+        }
+      }
     }
   };
 

@@ -173,4 +173,61 @@ test.describe("Web UI - Navigation, Marketplace & Roles", () => {
     // Verify Admin Portal link is visible
     await expect(page.getByRole("link", { name: /Admin Portal/ })).toBeVisible();
   });
+
+  test("redirects to home '/' route on logout by default", async ({ page }) => {
+    await page.route("**/api/auth/refresh", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ accessToken: "mock-household-token" }),
+      });
+    });
+
+    await page.route("**/api/auth/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 101,
+          name: "Alice Johnson",
+          email: "alice@household.org",
+          role: "ROLE_HOUSEHOLD",
+          verified: true,
+        }),
+      });
+    });
+
+    await page.route("**/api/auth/logout", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true }),
+      });
+    });
+
+    await page.goto("/marketplace");
+
+    // Open user menu dropdown
+    const userMenuButton = page.getByRole("button", { name: /Alice Johnson/i });
+    await expect(userMenuButton).toBeVisible();
+    await userMenuButton.click();
+
+    // Next refresh call after logout must return unauthenticated
+    await page.route("**/api/auth/refresh", async (route) => {
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "No active session" }),
+      });
+    });
+
+    // Click sign out button
+    const signOutBtn = page.getByTestId("navbar-logout-btn");
+    await expect(signOutBtn).toBeVisible();
+    await signOutBtn.click();
+
+    // Verify redirected to home route '/'
+    await page.waitForURL("**/");
+    expect(new URL(page.url()).pathname).toBe("/");
+  });
 });
