@@ -203,17 +203,17 @@ class AdminApiControllerTest {
     @Test
     @DisplayName("POST /api/v1/admin/users provisions new account")
     void createUser_asAdmin_provisionsAccount() throws Exception {
+        String uniqueEmail = "managed." + System.currentTimeMillis() + "@agroloop.com";
         String newUserPayload = """
                 {
                     "name": "Test Managed User",
-                    "email": "managed.user." + System.currentTimeMillis() + "@agroloop.com",
+                    "email": "%s",
                     "password": "Password123!",
                     "role": "ROLE_HOUSEHOLD",
                     "address": "123 Eco Way",
                     "initialTokens": 50
                 }
-                """.replace("\"managed.user.\" + System.currentTimeMillis() + \"@agroloop.com\"",
-                "\"managed." + System.currentTimeMillis() + "@agroloop.com\"");
+                """.formatted(uniqueEmail);
 
         mockMvc.perform(post("/api/v1/admin/users")
                         .header("Authorization", "Bearer " + adminAccessToken)
@@ -222,12 +222,16 @@ class AdminApiControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.role", is("ROLE_HOUSEHOLD")))
-                .andExpect(jsonPath("$.tokenBalance", is(50)));
+                .andExpect(jsonPath("$.tokenBalance").value(50));
     }
 
     @Test
     @DisplayName("PUT /api/v1/admin/users/{id}/role transitions role to FARMER")
     void updateUserRole_asAdmin_transitionsRole() throws Exception {
+        Household transitionSubject = householdRepository.save(
+                new Household("Transition Subject", "transition." + System.currentTimeMillis() + "@agroloop.com", "secret", "Green St")
+        );
+
         String rolePayload = """
                 {
                     "role": "ROLE_FARMER",
@@ -237,12 +241,12 @@ class AdminApiControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v1/admin/users/" + householdUser.getId() + "/role")
+        mockMvc.perform(post("/api/v1/admin/users/" + transitionSubject.getId() + "/role")
                         .header("Authorization", "Bearer " + adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(rolePayload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(householdUser.getId().intValue())))
+                .andExpect(jsonPath("$.id", is(transitionSubject.getId().intValue())))
                 .andExpect(jsonPath("$.role", is("ROLE_FARMER")))
                 .andExpect(jsonPath("$.farmName", is("Orchard Valley")));
     }

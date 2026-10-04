@@ -56,8 +56,9 @@ class HouseholdApiControllerTest {
         });
 
         // Ensure clean state for farmer applications
-        farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(householdUser.getId())
-                .ifPresent(farmerApplicationRepository::delete);
+        farmerApplicationRepository.deleteAll(
+                farmerApplicationRepository.findByUserIdOrderByCreatedAtDesc(householdUser.getId())
+        );
 
         householdAccessToken = tokenService.createInitialSession(householdUser, "Household Mobile App", ClientType.MOBILE).accessToken();
     }
