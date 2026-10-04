@@ -21,7 +21,10 @@ export default function SubmitWastePage() {
   const [weight, setWeight] = useState("5.0");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,6 +32,37 @@ export default function SubmitWastePage() {
       setAddress(user.address);
     }
   }, [user?.address]);
+
+  // Clean up object URL on unmount or file change
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setErrorMsg("Photo size exceeds 10 MB limit.");
+        return;
+      }
+      setSelectedFile(file);
+      setErrorMsg(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+  };
 
   if (!isAuthenticated || user?.role !== "ROLE_HOUSEHOLD") {
     return (
@@ -45,19 +79,45 @@ export default function SubmitWastePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus("Preparing submission...");
     setErrorMsg(null);
 
     const parsedWeight = parseFloat(weight);
     if (isNaN(parsedWeight) || parsedWeight < 0.1) {
       setErrorMsg("Please provide a valid estimated weight of at least 0.1 kg.");
       setIsSubmitting(false);
+      setSubmitStatus(null);
       return;
     }
 
     try {
+      let mediaId: string | undefined = undefined;
+
+      if (selectedFile) {
+        setSubmitStatus("Requesting upload ticket...");
+        const ticket = await webApiClient.media.createUploadTicket({
+          contentType: selectedFile.type || "image/jpeg",
+          sizeBytes: selectedFile.size,
+          purpose: "WASTE_SUBMISSION",
+        });
+
+        if (ticket.mediaId) {
+          setSubmitStatus("Uploading verification photo...");
+          const uploadUrl = `/api/proxy/media/upload/${ticket.mediaId}`;
+          const buffer = await selectedFile.arrayBuffer();
+          await webApiClient.media.directUpload(uploadUrl, buffer, selectedFile.type || "image/jpeg");
+
+          setSubmitStatus("Confirming media verification...");
+          await webApiClient.media.confirmUpload(ticket.mediaId, {});
+          mediaId = ticket.mediaId;
+        }
+      }
+
+      setSubmitStatus("Queueing waste submission...");
       await webApiClient.household.submitWaste({
         category: category as "FOOD_SCRAPS" | "GARDEN_WASTE" | "AGRICULTURAL_ORGANIC" | "COFFEE_GROUNDS",
         estimatedWeight: parsedWeight,
+        mediaId,
         addressOverride: address.trim() || undefined,
         notes: notes.trim() || undefined,
       });
@@ -67,6 +127,7 @@ export default function SubmitWastePage() {
       setErrorMsg(err instanceof Error ? err.message : "Failed to log waste submission");
     } finally {
       setIsSubmitting(false);
+      setSubmitStatus(null);
     }
   };
 
@@ -122,7 +183,7 @@ export default function SubmitWastePage() {
           <input
             type="number"
             step="0.5"
-            min="0.5"
+            min="0.1"
             required
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
@@ -145,6 +206,50 @@ export default function SubmitWastePage() {
           />
         </div>
 
+        {/* Optional Photo Input */}
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-slate-700">
+            Batch Verification Photo <span className="text-slate-400 font-normal">(Optional)</span>
+          </label>
+          
+          {previewUrl ? (
+            <div className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+              <img
+                src={previewUrl}
+                alt="Selected waste batch"
+                className="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-2xs"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-800 truncate">{selectedFile?.name}</p>
+                <p className="text-3xs text-slate-400 mt-0.5">
+                  {selectedFile ? (selectedFile.size / 1024).toFixed(1) + " KB" : ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-2xl cursor-pointer bg-slate-50/50 hover:bg-emerald-50/20 transition group">
+              <div className="flex items-center gap-2 text-slate-500 group-hover:text-emerald-700">
+                <span className="text-xl">📷</span>
+                <span className="text-xs font-semibold">Upload photo or take picture (JPEG, PNG, WebP)</span>
+              </div>
+              <p className="text-3xs text-slate-400 mt-1">Maximum file size: 10 MB</p>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
+
         {/* Notes */}
         <div className="space-y-1">
           <label className="block text-xs font-bold text-slate-700">Special Collection Notes (Optional)</label>
@@ -160,9 +265,16 @@ export default function SubmitWastePage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-3.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 transition shadow-lg shadow-emerald-200"
+          className="w-full py-3.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 transition shadow-lg shadow-emerald-200 flex items-center justify-center gap-2"
         >
-          {isSubmitting ? "Queueing Submission..." : "Confirm & Request Collection"}
+          {isSubmitting ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>{submitStatus || "Processing..."}</span>
+            </>
+          ) : (
+            "Confirm & Request Collection"
+          )}
         </button>
       </form>
     </div>

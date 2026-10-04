@@ -10,6 +10,7 @@ export const ALLOWED_PROXY_PREFIXES = [
   "farmer",
   "pickups",
   "admin",
+  "media",
 ] as const;
 
 export type AllowedProxyPrefix = (typeof ALLOWED_PROXY_PREFIXES)[number];

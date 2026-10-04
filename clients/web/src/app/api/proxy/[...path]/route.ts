@@ -41,7 +41,7 @@ async function proxyRequest(req: NextRequest, { params }: { params: Promise<{ pa
   try {
     let body: BodyInit | undefined = undefined;
     if (req.method !== "GET" && req.method !== "HEAD") {
-      body = await req.text();
+      body = await req.arrayBuffer();
     }
 
     const backendRes = await fetch(targetUrl, {
