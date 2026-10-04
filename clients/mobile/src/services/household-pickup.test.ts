@@ -101,4 +101,44 @@ describe("Household Pickup Operations", () => {
     expect(ledger).toHaveLength(1);
     expect(ledger[0].direction).toBe("CREDIT");
   });
+
+  it("submits and retrieves farmer partner applications", async () => {
+    const mockApp = {
+      id: 8,
+      userId: 2,
+      userName: "Alice Green",
+      userEmail: "household@agroloop.com",
+      farmName: "Green Pastures",
+      farmAddress: "44 High Range",
+      notes: "Organic composting facility",
+      status: "PENDING",
+      createdAt: "2026-10-04T12:00:00Z",
+    };
+
+    const submitSpy = vi
+      .spyOn(mobileApiClient.household, "submitFarmerApplication")
+      .mockResolvedValue(mockApp);
+
+    const getSpy = vi
+      .spyOn(mobileApiClient.household, "getFarmerApplication")
+      .mockResolvedValue(mockApp);
+
+    const submitted = await mobileApiClient.household.submitFarmerApplication({
+      farmName: "Green Pastures",
+      farmAddress: "44 High Range",
+      notes: "Organic composting facility",
+    });
+
+    expect(submitSpy).toHaveBeenCalledWith({
+      farmName: "Green Pastures",
+      farmAddress: "44 High Range",
+      notes: "Organic composting facility",
+    });
+    expect(submitted.id).toBe(8);
+    expect(submitted.status).toBe("PENDING");
+
+    const fetched = await mobileApiClient.household.getFarmerApplication();
+    expect(getSpy).toHaveBeenCalled();
+    expect(fetched?.farmName).toBe("Green Pastures");
+  });
 });

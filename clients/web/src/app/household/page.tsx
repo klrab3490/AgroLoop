@@ -21,6 +21,12 @@ export default function HouseholdHubPage() {
     enabled: isAuthenticated && user?.role === "ROLE_HOUSEHOLD",
   });
 
+  const { data: farmerApp } = useQuery({
+    queryKey: ["household-farmer-app"],
+    queryFn: () => webApiClient.household.getFarmerApplication(),
+    enabled: isAuthenticated && user?.role === "ROLE_HOUSEHOLD",
+  });
+
   if (authLoading) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
@@ -104,10 +110,33 @@ export default function HouseholdHubPage() {
         </div>
       </div>
 
+      {/* Farmer Partner Application Banner if Pending or Rejected */}
+      {farmerApp?.status === "PENDING" && (
+        <div className="p-5 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🌾</span>
+            <div>
+              <h3 className="text-sm font-bold text-amber-900">
+                Farmer Partner Application Under Review
+              </h3>
+              <p className="text-2xs text-amber-700">
+                Application for &quot;{farmerApp.farmName}&quot; submitted on {new Date(farmerApp.createdAt).toLocaleDateString()} is pending admin verification.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/household/apply-farmer"
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition"
+          >
+            View Details
+          </Link>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <div className="space-y-4">
         <h2 className="text-lg font-black text-slate-900">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/household/submit"
             className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 transition shadow-sm flex items-center gap-4 group"
@@ -144,6 +173,23 @@ export default function HouseholdHubPage() {
             <div>
               <h4 className="font-bold text-sm text-slate-900">Token Ledger</h4>
               <p className="text-2xs text-slate-500">Auditable transaction history</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/household/apply-farmer"
+            className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 hover:border-amber-400 rounded-2xl transition shadow-sm flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+              🌾
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-amber-950">Become a Farmer</h4>
+              <p className="text-2xs text-amber-800">
+                {farmerApp?.status === "PENDING"
+                  ? "Application in review"
+                  : "Apply for producer status"}
+              </p>
             </div>
           </Link>
         </div>

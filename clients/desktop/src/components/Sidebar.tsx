@@ -1,6 +1,6 @@
 import React from "react";
 
-export type AdminTab = "solvency" | "governance" | "disputes" | "ledger" | "fleet";
+export type AdminTab = "solvency" | "governance" | "farmer-apps" | "disputes" | "ledger" | "fleet";
 
 interface SidebarProps {
   activeTab: AdminTab;
@@ -20,6 +20,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
       label: "User Governance",
       icon: "👥",
       description: "RBAC, Statuses, Token Adjustments",
+    },
+    {
+      id: "farmer-apps",
+      label: "Farmer Applications",
+      icon: "🌱",
+      description: "Household Conversions & Vetting",
     },
     {
       id: "disputes",

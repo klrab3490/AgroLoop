@@ -2,8 +2,10 @@ package com.agroloop.service;
 
 import com.agroloop.dto.FarmerApplicationRequest;
 import com.agroloop.dto.RegisterRequest;
+import com.agroloop.dto.api.v1.request.CreateUserApiRequest;
 import com.agroloop.model.FarmerApplication;
 import com.agroloop.model.Household;
+import com.agroloop.model.Role;
 import com.agroloop.model.User;
 
 import java.util.List;
@@ -45,4 +47,14 @@ public interface UserService {
      * Returns the most recent application for a given user ID, if any exists.
      */
     Optional<FarmerApplication> getLatestApplicationForUser(Long userId);
+
+    /**
+     * Admin creates a new system user across any platform role.
+     */
+    User createUser(CreateUserApiRequest request);
+
+    /**
+     * Admin modifies a user's platform role with safety guards.
+     */
+    User updateUserRole(Long userId, Role newRole, String address, String farmName, String farmAddress, String notes, String adminEmail);
 }

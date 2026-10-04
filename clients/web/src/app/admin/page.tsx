@@ -10,9 +10,12 @@ import type {
   UserApiResponse,
   HouseholdBalanceResponse,
   FarmerApplicationApiResponse,
+  CreateUserApiRequest,
+  UpdateUserRoleApiRequest,
+  OrderApiResponse,
 } from "@agroloop/api-types";
 
-type AdminTab = "overview" | "users" | "farmer-applications";
+type AdminTab = "overview" | "users" | "farmer-applications" | "orders-disputes";
 
 export default function AdminHubPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -24,6 +27,31 @@ export default function AdminHubPage() {
   const [userSearch, setUserSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+
+  // User Details Inspection Modal State
+  const [inspectedUser, setInspectedUser] = useState<UserApiResponse | null>(null);
+
+  // Add User Modal State
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addPassword, setAddPassword] = useState("ecoNexus2026!");
+  const [addRole, setAddRole] = useState<"ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN">("ROLE_HOUSEHOLD");
+  const [addAddress, setAddAddress] = useState("");
+  const [addFarmName, setAddFarmName] = useState("");
+  const [addFarmAddress, setAddFarmAddress] = useState("");
+  const [addNotes, setAddNotes] = useState("");
+  const [addInitialTokens, setAddInitialTokens] = useState("0");
+  const [addUserError, setAddUserError] = useState<string | null>(null);
+
+  // Modify Role Modal State
+  const [modifyRoleUser, setModifyRoleUser] = useState<UserApiResponse | null>(null);
+  const [targetRole, setTargetRole] = useState<"ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN">("ROLE_HOUSEHOLD");
+  const [roleAddress, setRoleAddress] = useState("");
+  const [roleFarmName, setRoleFarmName] = useState("");
+  const [roleFarmAddress, setRoleFarmAddress] = useState("");
+  const [roleNotes, setRoleNotes] = useState("");
+  const [modifyRoleError, setModifyRoleError] = useState<string | null>(null);
 
   // Direct Conversion Modal State
   const [conversionTargetUser, setConversionTargetUser] = useState<UserApiResponse | null>(null);
@@ -46,12 +74,17 @@ export default function AdminHubPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionError, setRejectionError] = useState<string | null>(null);
 
+  // Dispute Resolution Modal State
+  const [disputeTargetOrder, setDisputeTargetOrder] = useState<OrderApiResponse | null>(null);
+  const [disputeResolution, setDisputeResolution] = useState<"APPROVED_REFUND" | "DISMISSED">("APPROVED_REFUND");
+  const [disputeAdminNotes, setDisputeAdminNotes] = useState("");
+  const [disputeError, setDisputeError] = useState<string | null>(null);
+
   // General Notification Banner
   const [bannerNotice, setBannerNotice] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const backendOrigin = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
   const actuatorUrl = `${backendOrigin.replace(/\/+$/, "")}/admin/dashboard`;
-  const swaggerUrl = `${backendOrigin.replace(/\/+$/, "")}/swagger-ui.html`;
 
   // Query: Users Directory
   const {
@@ -84,6 +117,73 @@ export default function AdminHubPage() {
     enabled: isAuthenticated && user?.role === "ROLE_ADMIN",
   });
 
+  // Query: Storage Diagnostics
+  const { data: storageDiagnostics } = useQuery({
+    queryKey: ["admin-storage-diagnostics"],
+    queryFn: () => webApiClient.admin.getStorageDiagnostics(),
+    enabled: isAuthenticated && user?.role === "ROLE_ADMIN",
+  });
+
+  // Query: Orders & Disputes
+  const {
+    data: orders = [],
+    isLoading: ordersLoading,
+    refetch: refetchOrders,
+  } = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: () => webApiClient.admin.listOrders(),
+    enabled: isAuthenticated && user?.role === "ROLE_ADMIN",
+  });
+
+  // Mutation: Create User
+  const createUserMutation = useMutation({
+    mutationFn: (req: CreateUserApiRequest) => webApiClient.admin.createUser(req),
+    onSuccess: (created) => {
+      refetchUsers();
+      setIsAddUserModalOpen(false);
+      setAddName("");
+      setAddEmail("");
+      setAddPassword("ecoNexus2026!");
+      setAddAddress("");
+      setAddFarmName("");
+      setAddFarmAddress("");
+      setAddNotes("");
+      setAddInitialTokens("0");
+      setAddUserError(null);
+      setBannerNotice({
+        type: "success",
+        text: `User #${created.id} (${created.email}) created successfully as ${formatRole(created.role)}.`,
+      });
+      setTimeout(() => setBannerNotice(null), 5000);
+    },
+    onError: (err: unknown) => {
+      setAddUserError(err instanceof Error ? err.message : "Failed to create user");
+    },
+  });
+
+  // Mutation: Modify Role
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ userId, req }: { userId: number; req: UpdateUserRoleApiRequest }) =>
+      webApiClient.admin.updateUserRole(userId, req),
+    onSuccess: (updated) => {
+      refetchUsers();
+      refetchApplications();
+      setModifyRoleUser(null);
+      setModifyRoleError(null);
+      if (inspectedUser?.id === updated.id) {
+        setInspectedUser(updated);
+      }
+      setBannerNotice({
+        type: "success",
+        text: `User #${updated.id} role updated to ${formatRole(updated.role)}.`,
+      });
+      setTimeout(() => setBannerNotice(null), 5000);
+    },
+    onError: (err: unknown) => {
+      setModifyRoleError(err instanceof Error ? err.message : "Failed to modify role");
+    },
+  });
+
   // Mutation: User Status (Enable / Disable)
   const statusMutation = useMutation({
     mutationFn: ({ userId, enabled }: { userId: number; enabled: boolean }) =>
@@ -92,6 +192,9 @@ export default function AdminHubPage() {
       queryClient.setQueryData<UserApiResponse[]>(["admin-users"], (old = []) =>
         old.map((u) => (u.id === updatedUser.id ? updatedUser : u))
       );
+      if (inspectedUser?.id === updatedUser.id) {
+        setInspectedUser(updatedUser);
+      }
       setBannerNotice({
         type: "success",
         text: `User #${updatedUser.id} (${updatedUser.email}) status updated to ${updatedUser.enabled ? "Active" : "Disabled"}.`,
@@ -123,6 +226,9 @@ export default function AdminHubPage() {
     onSuccess: (convertedUser) => {
       refetchUsers();
       refetchApplications();
+      if (inspectedUser?.id === convertedUser.id) {
+        setInspectedUser(convertedUser);
+      }
       setConversionSuccess(
         `Successfully converted ${convertedUser.name || convertedUser.email} to Farmer partner!`
       );
@@ -132,7 +238,7 @@ export default function AdminHubPage() {
         setFarmName("");
         setFarmAddress("");
         setConversionNotes("");
-      }, 1800);
+      }, 1500);
     },
     onError: (err: unknown) => {
       setConversionError(err instanceof Error ? err.message : "Conversion failed");
@@ -197,9 +303,46 @@ export default function AdminHubPage() {
       setAdjustResult(result);
       setAdjustReason("");
       refetchUsers();
+      if (inspectedUser && adjustTargetUser && inspectedUser.id === adjustTargetUser.id) {
+        setInspectedUser({
+          ...inspectedUser,
+          tokenBalance: result.availableBalance,
+        });
+      }
     },
     onError: (err: unknown) => {
       setAdjustError(err instanceof Error ? err.message : "Token adjustment failed");
+    },
+  });
+
+  // Mutation: Resolve Dispute
+  const resolveDisputeMutation = useMutation({
+    mutationFn: ({
+      orderId,
+      resolution,
+      notes,
+    }: {
+      orderId: number;
+      resolution: "APPROVED_REFUND" | "DISMISSED";
+      notes?: string;
+    }) =>
+      webApiClient.admin.resolveDispute(orderId, {
+        resolution,
+        adminNotes: notes,
+      }),
+    onSuccess: () => {
+      refetchOrders();
+      setDisputeTargetOrder(null);
+      setDisputeAdminNotes("");
+      setDisputeError(null);
+      setBannerNotice({
+        type: "success",
+        text: "Order dispute adjudicated and updated in ledger.",
+      });
+      setTimeout(() => setBannerNotice(null), 5000);
+    },
+    onError: (err: unknown) => {
+      setDisputeError(err instanceof Error ? err.message : "Failed to resolve dispute");
     },
   });
 
@@ -207,13 +350,11 @@ export default function AdminHubPage() {
   const handleToggleStatus = (target: UserApiResponse) => {
     if (!target.id) return;
 
-    // Self-disable guard
     if (target.id === user?.id) {
       alert("Safety Guard: You cannot disable your own active administrator account.");
       return;
     }
 
-    // Last-admin guard
     if (target.role === "ROLE_ADMIN" && target.enabled) {
       const activeAdmins = users.filter((u) => u.role === "ROLE_ADMIN" && u.enabled);
       if (activeAdmins.length <= 1) {
@@ -226,6 +367,67 @@ export default function AdminHubPage() {
     if (confirm(`Are you sure you want to ${actionText} user "${target.email}" (#${target.id})?`)) {
       statusMutation.mutate({ userId: target.id, enabled: !target.enabled });
     }
+  };
+
+  const handleOpenModifyRole = (target: UserApiResponse) => {
+    setModifyRoleUser(target);
+    setTargetRole(target.role || "ROLE_HOUSEHOLD");
+    setRoleAddress(target.address || "");
+    setRoleFarmName(target.farmName || `${target.name || "Community"}'s Farm`);
+    setRoleFarmAddress(target.farmAddress || target.address || "");
+    setRoleNotes(target.notes || "");
+    setModifyRoleError(null);
+  };
+
+  const handleModifyRoleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modifyRoleUser?.id) return;
+
+    if (modifyRoleUser.id === user?.id && targetRole !== "ROLE_ADMIN") {
+      alert("Safety Guard: You cannot demote your own administrator account.");
+      return;
+    }
+
+    if (modifyRoleUser.role === "ROLE_ADMIN" && targetRole !== "ROLE_ADMIN") {
+      const activeAdmins = users.filter((u) => u.role === "ROLE_ADMIN" && u.enabled);
+      if (activeAdmins.length <= 1) {
+        alert("Safety Guard: Cannot demote the sole remaining active administrator account.");
+        return;
+      }
+    }
+
+    setModifyRoleError(null);
+    updateRoleMutation.mutate({
+      userId: modifyRoleUser.id,
+      req: {
+        role: targetRole,
+        address: roleAddress.trim() || undefined,
+        farmName: roleFarmName.trim() || undefined,
+        farmAddress: roleFarmAddress.trim() || undefined,
+        notes: roleNotes.trim() || undefined,
+      },
+    });
+  };
+
+  const handleCreateUserSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addName.trim() || !addEmail.trim()) {
+      setAddUserError("Name and email are required.");
+      return;
+    }
+    const tokenParsed = parseFloat(addInitialTokens);
+    setAddUserError(null);
+    createUserMutation.mutate({
+      name: addName.trim(),
+      email: addEmail.trim(),
+      password: addPassword.trim() || undefined,
+      role: addRole,
+      address: addAddress.trim() || undefined,
+      farmName: addFarmName.trim() || undefined,
+      farmAddress: addFarmAddress.trim() || undefined,
+      notes: addNotes.trim() || undefined,
+      initialTokens: !isNaN(tokenParsed) && tokenParsed > 0 ? tokenParsed : undefined,
+    });
   };
 
   const handleConvertSubmit = (e: React.FormEvent) => {
@@ -279,10 +481,20 @@ export default function AdminHubPage() {
     });
   };
 
+  const handleDisputeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!disputeTargetOrder?.id) return;
+    setDisputeError(null);
+    resolveDisputeMutation.mutate({
+      orderId: disputeTargetOrder.id,
+      resolution: disputeResolution,
+      notes: disputeAdminNotes.trim() || undefined,
+    });
+  };
+
   // Filtered Users
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      // Search
       const searchLower = userSearch.toLowerCase();
       const matchesSearch =
         !searchLower ||
@@ -290,7 +502,6 @@ export default function AdminHubPage() {
         (u.email && u.email.toLowerCase().includes(searchLower)) ||
         (u.id && u.id.toString().includes(searchLower));
 
-      // Role
       const roleStr = u.role || "";
       const matchesRole =
         roleFilter === "ALL" ||
@@ -298,7 +509,6 @@ export default function AdminHubPage() {
         (roleFilter === "FARMER" && roleStr.includes("FARMER")) ||
         (roleFilter === "ADMIN" && roleStr.includes("ADMIN"));
 
-      // Status
       const matchesStatus =
         statusFilter === "ALL" ||
         (statusFilter === "ACTIVE" && u.enabled) ||
@@ -308,10 +518,15 @@ export default function AdminHubPage() {
     });
   }, [users, userSearch, roleFilter, statusFilter]);
 
-  // Pending Applications Count
+  // Pending Applications
   const pendingApps = useMemo(() => {
     return applications.filter((app) => app.status === "PENDING");
   }, [applications]);
+
+  // Disputed Orders
+  const disputedOrders = useMemo(() => {
+    return orders.filter((o) => o.status === "DISPUTED");
+  }, [orders]);
 
   // User Counts
   const counts = useMemo(() => {
@@ -462,7 +677,32 @@ export default function AdminHubPage() {
                 activeTab === "farmer-applications" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
               }`}
             >
-              0
+              {applications.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("orders-disputes")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            activeTab === "orders-disputes"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200/60"
+          }`}
+        >
+          <span>⚖️</span>
+          <span>Orders & Disputes</span>
+          {disputedOrders.length > 0 ? (
+            <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-rose-500 text-white animate-pulse">
+              {disputedOrders.length} disputed
+            </span>
+          ) : (
+            <span
+              className={`px-2 py-0.5 rounded-full text-3xs font-mono ${
+                activeTab === "orders-disputes" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+              }`}
+            >
+              {orders.length}
             </span>
           )}
         </button>
@@ -476,21 +716,21 @@ export default function AdminHubPage() {
           {/* Key Metric Tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2 hover:border-emerald-300 transition">
-              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Waste Diverted</span>
+              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Registered Identities</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-slate-900">49.4</span>
-                <span className="text-xs font-semibold text-slate-500">kg total</span>
+                <span className="text-2xl font-black text-slate-900">{counts.total}</span>
+                <span className="text-xs font-semibold text-slate-500">accounts</span>
               </div>
-              <p className="text-2xs text-emerald-600 font-medium">✓ Closed-loop organic verification</p>
+              <p className="text-2xs text-emerald-600 font-medium">✓ {counts.households} households • {counts.farmers} farmers</p>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2 hover:border-emerald-300 transition">
-              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Marketplace Inputs</span>
+              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Farmer Verifications</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-slate-900">20</span>
-                <span className="text-xs font-semibold text-slate-500">active products</span>
+                <span className="text-2xl font-black text-slate-900">{pendingApps.length}</span>
+                <span className="text-xs font-semibold text-slate-500">pending queue</span>
               </div>
-              <p className="text-2xs text-emerald-600 font-medium">✓ {counts.farmers} verified agricultural producers</p>
+              <p className="text-2xs text-amber-600 font-medium">⚡ Producer conversion requests</p>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2 hover:border-emerald-300 transition">
@@ -501,21 +741,28 @@ export default function AdminHubPage() {
                 </span>
               </div>
               <p className="text-2xs text-slate-500 font-medium">
-                {solvencyMetrics ? `${solvencyMetrics.totalHouseholdBalances} tokens in circulation` : "Double-spend verified"}
+                {solvencyMetrics ? `${solvencyMetrics.totalHouseholdBalances} tokens in circulation` : "Pessimistic write locked"}
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2 hover:border-emerald-300 transition">
-              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Active Release</span>
+              <span className="text-2xs font-bold text-slate-400 uppercase tracking-wider block">Cloud Storage SPI</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-emerald-600">v1.0.3</span>
-                <span className="text-xs font-semibold text-slate-500">production</span>
+                <span className="text-2xl font-black text-slate-900">
+                  {storageDiagnostics?.activeProvider || "LOCAL"}
+                </span>
+                <span className="inline-flex items-center gap-1 text-2xs font-bold text-emerald-600">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Healthy
+                </span>
               </div>
-              <p className="text-2xs text-slate-500 font-medium">Synced with Git release tags</p>
+              <p className="text-2xs text-slate-400 font-mono truncate">
+                {storageDiagnostics?.targetLocation || "Local uploads container"}
+              </p>
             </div>
           </div>
 
-          {/* User & Farmer Queue Quick Status Banners */}
+          {/* Quick Action Banners */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl border border-slate-700/60 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
@@ -527,7 +774,7 @@ export default function AdminHubPage() {
                 </div>
                 <h3 className="text-lg font-bold">User Identity & Access Governance</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Manage permissions, deactivate rogue accounts with safety guards, and grant or adjust audit-backed EcoToken balances.
+                  Manage permissions, inspect detailed user profiles, add new platform users, modify roles, and execute audit-backed EcoToken balance adjustments.
                 </p>
               </div>
               <div className="flex items-center gap-3 pt-2">
@@ -538,6 +785,12 @@ export default function AdminHubPage() {
                   <span>Open User Directory</span>
                   <span>→</span>
                 </button>
+                <button
+                  onClick={() => setIsAddUserModalOpen(true)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                >
+                  <span>+ Add New User</span>
+                </button>
               </div>
             </div>
 
@@ -546,12 +799,12 @@ export default function AdminHubPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-2xs font-bold text-amber-400 uppercase tracking-wider">Producer Pipeline</span>
                   <span className="text-xs font-bold bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                    {pendingApps.length} Awaiting Approval
+                    {pendingApps.length} Awaiting Verification
                   </span>
                 </div>
-                <h3 className="text-lg font-bold">Household to Farmer Conversion Queue</h3>
+                <h3 className="text-lg font-bold">Farmer Partner Conversion Queue</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Review applications from households seeking agricultural producer verification, inspect submitted farm locations, and authorize marketplace selling access.
+                  Verify submitted agricultural applications from households, evaluate physical farm addresses, and authorize producer credentials for selling in the circular marketplace.
                 </p>
               </div>
               <div className="flex items-center gap-3 pt-2">
@@ -566,67 +819,38 @@ export default function AdminHubPage() {
             </div>
           </div>
 
-          {/* Operational Actions */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Auxiliary Administrative Services</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="p-6 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3 flex flex-col justify-between hover:border-emerald-300 transition">
-                <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg">
-                    🛒
-                  </div>
-                  <h4 className="text-base font-bold text-slate-900">Agricultural Marketplace</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Inspect live seed inventory, price indices in EcoTokens, and regional producer claims.
-                  </p>
-                </div>
-                <Link
-                  href="/marketplace"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 pt-2"
-                >
-                  <span>Explore Marketplace Catalog</span>
-                  <span>→</span>
-                </Link>
+          {/* Platform Access & System Infrastructure */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-2xs space-y-4">
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <span>🔐</span>
+              <span>Platform Access & Infrastructure</span>
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span className="text-3xs uppercase tracking-wider font-bold text-slate-400 block">Canonical Operator</span>
+                <p className="font-bold text-slate-900">admin@agroloop.com</p>
+                <p className="text-2xs text-emerald-600 font-mono">ROLE_ADMIN (Authoritative)</p>
               </div>
 
-              <div className="p-6 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3 flex flex-col justify-between hover:border-emerald-300 transition">
-                <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-lg">
-                    📦
-                  </div>
-                  <h4 className="text-base font-bold text-slate-900">Orders & Dispute Auditing</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Review placed orders, investigate discrepancies, and adjudicate consumer claims.
-                  </p>
-                </div>
-                <Link
-                  href="/orders"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 hover:text-blue-800 pt-2"
-                >
-                  <span>Audit Orders & Disputes</span>
-                  <span>→</span>
-                </Link>
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span className="text-3xs uppercase tracking-wider font-bold text-slate-400 block">Active Administrators</span>
+                <p className="font-bold text-slate-900">{counts.admins} System Administrators</p>
+                <p className="text-2xs text-slate-500">Concurrency-safe last-admin protection active</p>
               </div>
 
-              <div className="p-6 bg-white rounded-2xl border border-slate-200/80 shadow-2xs space-y-3 flex flex-col justify-between hover:border-emerald-300 transition">
-                <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center text-lg">
-                    ⚡
-                  </div>
-                  <h4 className="text-base font-bold text-slate-900">Spring Boot Actuator</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Direct access to backend application metrics, DB pool health, and REST endpoint routes.
-                  </p>
-                </div>
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                <span className="text-3xs uppercase tracking-wider font-bold text-slate-400 block">Backend Actuator Engine</span>
                 <a
                   href={actuatorUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 hover:text-purple-800 pt-2"
+                  className="font-bold text-purple-700 hover:text-purple-800 flex items-center gap-1"
                 >
-                  <span>Open Actuator Dashboard</span>
+                  <span>Actuator Telemetry</span>
                   <span>↗</span>
                 </a>
+                <p className="text-2xs text-slate-500">Health checks & DB pool metrics</p>
               </div>
             </div>
           </div>
@@ -645,11 +869,19 @@ export default function AdminHubPage() {
                 <span>User Identity & Access Governance</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Manage all registered platform participants, toggle account states with safeguards, adjust token ledgers, and promote households to farmers.
+                Inspect complete user details, create new participants, modify platform roles, toggle account states, and execute audit-logged token adjustments.
               </p>
             </div>
 
             <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => setIsAddUserModalOpen(true)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-xs"
+              >
+                <span>+</span>
+                <span>Add User</span>
+              </button>
+
               <button
                 onClick={() => refetchUsers()}
                 disabled={usersLoading}
@@ -767,6 +999,7 @@ export default function AdminHubPage() {
                       <th className="py-3.5 px-4">User Identity</th>
                       <th className="py-3.5 px-4">Role</th>
                       <th className="py-3.5 px-4">Account Status</th>
+                      <th className="py-3.5 px-4">Token Balance</th>
                       <th className="py-3.5 px-4 text-right">Administrative Actions</th>
                     </tr>
                   </thead>
@@ -781,9 +1014,10 @@ export default function AdminHubPage() {
                       return (
                         <tr
                           key={u.id}
-                          className={`hover:bg-slate-50/60 transition ${
+                          className={`hover:bg-slate-50/60 transition cursor-pointer ${
                             isSelf ? "bg-emerald-50/30" : ""
                           }`}
+                          onClick={() => setInspectedUser(u)}
                         >
                           <td className="py-3.5 px-4 font-mono text-slate-400">
                             #{u.id}
@@ -802,6 +1036,11 @@ export default function AdminHubPage() {
                             <span className="text-2xs text-slate-500 font-mono block">
                               {u.email}
                             </span>
+                            {u.createdAt && (
+                              <span className="text-3xs text-slate-400 mt-0.5 block">
+                                Joined {new Date(u.createdAt).toLocaleDateString()}
+                              </span>
+                            )}
                           </td>
                           <td className="py-3.5 px-4">
                             <span
@@ -831,15 +1070,47 @@ export default function AdminHubPage() {
                               <span>{u.enabled ? "Active" : "Disabled"}</span>
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                          <td className="py-3.5 px-4 font-mono">
+                            {u.tokenBalance != null ? (
+                              <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                {u.tokenBalance} 🪙
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td
+                            className="py-3.5 px-4 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              {/* Inspect Details Button */}
+                              <button
+                                onClick={() => setInspectedUser(u)}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-2xs font-bold transition flex items-center gap-1"
+                                title="Inspect User Identity & Platform Profile"
+                              >
+                                <span>👁️</span>
+                                <span>Details</span>
+                              </button>
+
+                              {/* Modify Role Button */}
+                              <button
+                                onClick={() => handleOpenModifyRole(u)}
+                                className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
+                                title="Change Platform Role"
+                              >
+                                <span>🔄</span>
+                                <span>Role</span>
+                              </button>
+
                               {/* Convert to Farmer Action (Available for Households) */}
                               {isHousehold && (
                                 <button
                                   onClick={() => {
                                     setConversionTargetUser(u);
                                     setFarmName(`${u.name || "Community"}'s Farm`);
-                                    setFarmAddress("");
+                                    setFarmAddress(u.address || "");
                                     setConversionNotes("");
                                     setConversionError(null);
                                     setConversionSuccess(null);
@@ -848,7 +1119,7 @@ export default function AdminHubPage() {
                                   title="Promote Household to Verified Farmer"
                                 >
                                   <span>🌾</span>
-                                  <span>Convert to Farmer</span>
+                                  <span>Convert</span>
                                 </button>
                               )}
 
@@ -866,7 +1137,7 @@ export default function AdminHubPage() {
                                   title="Adjust EcoToken Balance with Audit Trail"
                                 >
                                   <span>🪙</span>
-                                  <span>Adjust Tokens</span>
+                                  <span>Adjust</span>
                                 </button>
                               )}
 
@@ -957,7 +1228,7 @@ export default function AdminHubPage() {
               <p className="text-3xl">🌱</p>
               <h4 className="text-sm font-bold text-slate-800">No Farmer Applications Found</h4>
               <p className="text-xs text-slate-500 max-w-md mx-auto">
-                No household users currently have pending or past producer upgrade applications. You can also directly onboard any household into a farmer from the User Directory tab.
+                No household users currently have pending producer upgrade applications. You can also directly onboard any household into a farmer from the User Directory tab.
               </p>
               <button
                 onClick={() => setActiveTab("users")}
@@ -1088,7 +1359,659 @@ export default function AdminHubPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 1: DIRECT CONVERT HOUSEHOLD TO FARMER */}
+      {/* TAB 4: ORDERS & DISPUTE ADJUDICATION */}
+      {/* ========================================================================= */}
+      {activeTab === "orders-disputes" && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <span>⚖️</span>
+                <span>Platform Orders & Dispute Adjudication</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Review platform transactions, adjudicate consumer disputes, and issue atomic refunds or release funds with ledger audit trails.
+              </p>
+            </div>
+
+            <button
+              onClick={() => refetchOrders()}
+              disabled={ordersLoading}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5"
+            >
+              <span>🔄</span>
+              <span>{ordersLoading ? "Refreshing..." : "Refresh Orders"}</span>
+            </button>
+          </div>
+
+          {orders.length === 0 ? (
+            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200/80 space-y-2">
+              <p className="text-3xl">📦</p>
+              <h4 className="text-sm font-bold text-slate-800">No Orders Placed Yet</h4>
+              <p className="text-xs text-slate-500">Orders placed across the platform will appear here for administrative oversight.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 border-b border-slate-200 text-2xs font-bold uppercase tracking-wider text-slate-500">
+                      <th className="py-3.5 px-4">Order ID</th>
+                      <th className="py-3.5 px-4">Buyer / Household</th>
+                      <th className="py-3.5 px-4">Total Tokens</th>
+                      <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-4">Date</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {orders.map((o) => {
+                      const isDisputed = o.status === "DISPUTED";
+                      return (
+                        <tr
+                          key={o.id}
+                          className={`hover:bg-slate-50/60 transition ${
+                            isDisputed ? "bg-rose-50/40" : ""
+                          }`}
+                        >
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                            #{o.id}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-slate-900 block">{o.householdName || `User #${o.householdId}`}</span>
+                            <span className="text-2xs text-slate-400 font-mono">ID: {o.householdId}</span>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono font-bold text-emerald-700">
+                            {o.totalTokens ?? 0} 🪙
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-2xs font-bold ${
+                                isDisputed
+                                  ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                  : o.status === "COMPLETED"
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  : "bg-blue-100 text-blue-800 border border-blue-200"
+                              }`}
+                            >
+                              {o.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-500 font-mono text-2xs">
+                            {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "Recent"}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {isDisputed ? (
+                              <button
+                                onClick={() => {
+                                  setDisputeTargetOrder(o);
+                                  setDisputeResolution("APPROVED_REFUND");
+                                  setDisputeAdminNotes("");
+                                  setDisputeError(null);
+                                }}
+                                className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-2xs font-bold transition shadow-xs"
+                              >
+                                Adjudicate Dispute
+                              </button>
+                            ) : (
+                              <Link
+                                href={`/orders/${o.id}`}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-2xs font-bold transition"
+                              >
+                                View Order
+                              </Link>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 0: USER DETAILS INSPECTION MODAL */}
+      {/* ========================================================================= */}
+      {inspectedUser && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 font-black flex items-center justify-center text-xl">
+                  {(inspectedUser.role || "").includes("ADMIN") ? "🛡️" : (inspectedUser.role || "").includes("FARMER") ? "🌾" : "🏠"}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-900">
+                      {inspectedUser.name || "Nameless User"}
+                    </h3>
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">
+                      #{inspectedUser.id}
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500 font-mono block">
+                    {inspectedUser.email}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setInspectedUser(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Identity Status & Roles Banner */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-3xs uppercase font-bold text-slate-400 block">Role</span>
+                <span className="text-xs font-bold text-slate-800">{formatRole(inspectedUser.role)}</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-3xs uppercase font-bold text-slate-400 block">Account Status</span>
+                <span className={`text-xs font-bold ${inspectedUser.enabled ? "text-emerald-700" : "text-rose-700"}`}>
+                  {inspectedUser.enabled ? "● Active" : "● Disabled"}
+                </span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-3xs uppercase font-bold text-slate-400 block">Token Balance</span>
+                <span className="text-xs font-mono font-bold text-blue-700">
+                  {inspectedUser.tokenBalance != null ? `${inspectedUser.tokenBalance} 🪙` : "0.00 🪙"}
+                </span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-3xs uppercase font-bold text-slate-400 block">Registered On</span>
+                <span className="text-xs font-mono text-slate-700">
+                  {inspectedUser.createdAt ? new Date(inspectedUser.createdAt).toLocaleDateString() : "Historical"}
+                </span>
+              </div>
+            </div>
+
+            {/* Role Specific Details Section */}
+            {(inspectedUser.role || "").includes("FARMER") && (
+              <div className="p-5 bg-amber-50/50 border border-amber-200/60 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <span>🌾</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                    Agricultural Producer Profile
+                  </h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Farm Name</span>
+                    <p className="font-bold text-slate-800">{inspectedUser.farmName || "Not assigned"}</p>
+                  </div>
+                  <div>
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Farm Physical Location</span>
+                    <p className="font-medium text-slate-700">{inspectedUser.farmAddress || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Service Radius & Daily Capacity</span>
+                    <p className="font-medium text-slate-700">
+                      {inspectedUser.serviceRadiusKm ?? 25} km • {inspectedUser.maxDailyCapacityKg ?? 200} kg/day
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Producer Reputation</span>
+                    <p className="font-medium text-slate-700">
+                      {inspectedUser.averageRating ?? 0} ★ ({inspectedUser.reviewCount ?? 0} verified reviews)
+                    </p>
+                  </div>
+                </div>
+                {inspectedUser.notes && (
+                  <div className="pt-2 border-t border-amber-200/40 text-xs">
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Producer Operations Notes</span>
+                    <p className="text-slate-600 mt-0.5">{inspectedUser.notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(inspectedUser.role || "").includes("HOUSEHOLD") && (
+              <div className="p-5 bg-blue-50/50 border border-blue-200/60 rounded-2xl space-y-3">
+                <div className="flex items-center gap-2">
+                  <span>🏠</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-blue-900">
+                    Household Residence & Composting Profile
+                  </h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Registered Address</span>
+                    <p className="font-medium text-slate-700">{inspectedUser.address || "Community Resident"}</p>
+                  </div>
+                  <div>
+                    <span className="text-3xs font-bold uppercase text-slate-400 block">Participant Standing</span>
+                    <p className="font-medium text-slate-700">
+                      {inspectedUser.averageRating ?? 0} ★ ({inspectedUser.reviewCount ?? 0} collection audits)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(inspectedUser.role || "").includes("ADMIN") && (
+              <div className="p-5 bg-purple-50/50 border border-purple-200/60 rounded-2xl space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span>🛡️</span>
+                  <h4 className="font-bold uppercase tracking-wider text-purple-900">
+                    System Administrator Privileges
+                  </h4>
+                </div>
+                <p className="text-slate-600">
+                  Full operator capabilities across decentralized token ledgers, dispute adjudication, user role configuration, and storage SPI diagnostics.
+                </p>
+              </div>
+            )}
+
+            {/* Quick Actions Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100 flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => {
+                    handleOpenModifyRole(inspectedUser);
+                  }}
+                  className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                >
+                  <span>🔄</span>
+                  <span>Modify Role</span>
+                </button>
+
+                {(inspectedUser.role || "").includes("HOUSEHOLD") && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setConversionTargetUser(inspectedUser);
+                        setFarmName(`${inspectedUser.name || "Community"}'s Farm`);
+                        setFarmAddress(inspectedUser.address || "");
+                        setConversionNotes("");
+                        setConversionError(null);
+                        setConversionSuccess(null);
+                      }}
+                      className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    >
+                      <span>🌾</span>
+                      <span>Convert to Farmer</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setAdjustTargetUser(inspectedUser);
+                        setAdjustResult(null);
+                        setAdjustError(null);
+                        setAdjustAmount("10");
+                        setAdjustReason("");
+                      }}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    >
+                      <span>🪙</span>
+                      <span>Adjust Tokens</span>
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => handleToggleStatus(inspectedUser)}
+                  disabled={inspectedUser.id === user?.id}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition ${
+                    inspectedUser.id === user?.id
+                      ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : inspectedUser.enabled
+                      ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
+                      : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
+                  }`}
+                >
+                  {inspectedUser.enabled ? "Disable Account" : "Enable Account"}
+                </button>
+              </div>
+
+              <button
+                onClick={() => setInspectedUser(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 1: ADD NEW USER MODAL */}
+      {/* ========================================================================= */}
+      {isAddUserModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-2xs font-bold uppercase tracking-wider text-emerald-600 block">
+                  Identity Provisioning
+                </span>
+                <h3 className="text-lg font-black text-slate-900">
+                  Add New Platform User
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Provision an authoritative account directly with chosen role and credentials.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddUserModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {addUserError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold">
+                ⚠️ {addUserError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateUserSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Maya Sharma"
+                  value={addName}
+                  onChange={(e) => setAddName(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. maya@example.com"
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Initial Password <span className="text-slate-400">(Default: ecoNexus2026!)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Password"
+                  value={addPassword}
+                  onChange={(e) => setAddPassword(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:border-emerald-500 focus:bg-white"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Platform Role <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={addRole}
+                  onChange={(e) => setAddRole(e.target.value as "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN")}
+                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-emerald-500 focus:bg-white"
+                >
+                  <option value="ROLE_HOUSEHOLD">Household (Composter)</option>
+                  <option value="ROLE_FARMER">Farmer (Agricultural Producer)</option>
+                  <option value="ROLE_ADMIN">Administrator (Operator)</option>
+                </select>
+              </div>
+
+              {addRole === "ROLE_HOUSEHOLD" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Residential Address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Apt 4B, Green Acres, Kochi"
+                      value={addAddress}
+                      onChange={(e) => setAddAddress(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Initial Token Grant (EcoTokens)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="0"
+                      value={addInitialTokens}
+                      onChange={(e) => setAddInitialTokens(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:border-emerald-500 focus:bg-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              {addRole === "ROLE_FARMER" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Farm Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Sunrise Organic Farm"
+                      value={addFarmName}
+                      onChange={(e) => setAddFarmName(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Farm Address & Region <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Plot 12, Agri Hub, Aluva"
+                      value={addFarmAddress}
+                      onChange={(e) => setAddFarmAddress(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Producer Notes
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Certified organic banana and ginger cultivation."
+                      value={addNotes}
+                      onChange={(e) => setAddNotes(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white resize-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createUserMutation.isPending}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
+                >
+                  {createUserMutation.isPending ? "Creating Account..." : "Create User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: MODIFY USER ROLE MODAL */}
+      {/* ========================================================================= */}
+      {modifyRoleUser && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-2xs font-bold uppercase tracking-wider text-purple-600 block">
+                  RBAC Reconfiguration
+                </span>
+                <h3 className="text-lg font-black text-slate-900">
+                  Modify Role for User #{modifyRoleUser.id}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Reconfigure platform permissions and assign role-specific attributes.
+                </p>
+              </div>
+              <button
+                onClick={() => setModifyRoleUser(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Target User Info */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+              <span className="text-3xs uppercase tracking-wider font-bold text-slate-400 block">
+                Target User
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                {modifyRoleUser.name || "Nameless User"} ({modifyRoleUser.email})
+              </div>
+              <div className="text-2xs text-purple-700 font-bold">
+                Current Role: {formatRole(modifyRoleUser.role)}
+              </div>
+            </div>
+
+            {modifyRoleError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold">
+                ⚠️ {modifyRoleError}
+              </div>
+            )}
+
+            <form onSubmit={handleModifyRoleSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  New Role Target <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value as "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN")}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-purple-500 focus:bg-white"
+                >
+                  <option value="ROLE_HOUSEHOLD">Household (Composter)</option>
+                  <option value="ROLE_FARMER">Farmer (Agricultural Producer)</option>
+                  <option value="ROLE_ADMIN">Administrator (System Governance)</option>
+                </select>
+              </div>
+
+              {targetRole === "ROLE_FARMER" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Farm Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Green Valley Farm"
+                      value={roleFarmName}
+                      onChange={(e) => setRoleFarmName(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-purple-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Farm Physical Address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Agricultural Sector 4"
+                      value={roleFarmAddress}
+                      onChange={(e) => setRoleFarmAddress(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-purple-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                      Operational Notes
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. Transitioned from household composter."
+                      value={roleNotes}
+                      onChange={(e) => setRoleNotes(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-purple-500 focus:bg-white resize-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {targetRole === "ROLE_HOUSEHOLD" && (
+                <div className="space-y-1">
+                  <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                    Residential Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Residential Street"
+                    value={roleAddress}
+                    onChange={(e) => setRoleAddress(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-purple-500 focus:bg-white"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setModifyRoleUser(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateRoleMutation.isPending}
+                  className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
+                >
+                  {updateRoleMutation.isPending ? "Updating Role..." : "Confirm Role Change"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: DIRECT CONVERT HOUSEHOLD TO FARMER */}
       {/* ========================================================================= */}
       {conversionTargetUser && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
@@ -1202,7 +2125,7 @@ export default function AdminHubPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 2: TOKEN ADJUSTMENT MODAL */}
+      {/* MODAL 4: TOKEN ADJUSTMENT MODAL */}
       {/* ========================================================================= */}
       {adjustTargetUser && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
@@ -1297,7 +2220,7 @@ export default function AdminHubPage() {
                 <textarea
                   rows={3}
                   required
-                  placeholder="e.g. Compensatory credit for verified on-site composting weight discrepancy in Batch #819."
+                  placeholder="e.g. Compensatory credit for verified on-site composting weight discrepancy."
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition resize-none"
@@ -1326,7 +2249,7 @@ export default function AdminHubPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 3: REJECT APPLICATION MODAL */}
+      {/* MODAL 5: REJECT APPLICATION MODAL */}
       {/* ========================================================================= */}
       {rejectTargetApp && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
@@ -1399,6 +2322,102 @@ export default function AdminHubPage() {
                   className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
                 >
                   {rejectAppMutation.isPending ? "Rejecting..." : "Confirm Rejection"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 6: RESOLVE DISPUTE MODAL */}
+      {/* ========================================================================= */}
+      {disputeTargetOrder && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-2xs font-bold uppercase tracking-wider text-rose-600 block">
+                  Dispute Adjudication
+                </span>
+                <h3 className="text-lg font-black text-slate-900">
+                  Resolve Dispute for Order #{disputeTargetOrder.id}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Adjudicate consumer claim, specify resolution, and execute atomic escrow release or buyer refund.
+                </p>
+              </div>
+              <button
+                onClick={() => setDisputeTargetOrder(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Dispute Order Info */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1">
+              <span className="text-3xs uppercase tracking-wider font-bold text-slate-400 block">
+                Order Escrow
+              </span>
+              <div className="text-xs font-bold text-slate-900">
+                Amount in Escrow: {disputeTargetOrder.totalTokens ?? 0} EcoTokens
+              </div>
+              {disputeTargetOrder.disputeReason && (
+                <div className="text-2xs text-rose-700 mt-1">
+                  <strong>Claim Reason: </strong> {disputeTargetOrder.disputeReason}
+                </div>
+              )}
+            </div>
+
+            {disputeError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-semibold">
+                ⚠️ {disputeError}
+              </div>
+            )}
+
+            <form onSubmit={handleDisputeSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Adjudication Verdict <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={disputeResolution}
+                  onChange={(e) => setDisputeResolution(e.target.value as "APPROVED_REFUND" | "DISMISSED")}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-rose-500 focus:bg-white"
+                >
+                  <option value="APPROVED_REFUND">Approve Full Refund to Buyer</option>
+                  <option value="DISMISSED">Dismiss Claim & Release Escrow to Seller</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-2xs font-bold uppercase tracking-wider text-slate-700 block">
+                  Administrative Notes / Justification
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Producer provided delivery photographic verification."
+                  value={disputeAdminNotes}
+                  onChange={(e) => setDisputeAdminNotes(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-rose-500 focus:bg-white transition resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDisputeTargetOrder(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resolveDisputeMutation.isPending}
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-50"
+                >
+                  {resolveDisputeMutation.isPending ? "Executing Adjudication..." : "Apply Adjudication Verdict"}
                 </button>
               </div>
             </form>

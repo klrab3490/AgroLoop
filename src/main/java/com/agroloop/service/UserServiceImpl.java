@@ -3,7 +3,9 @@ package com.agroloop.service;
 import com.agroloop.dto.FarmerApplicationRequest;
 import com.agroloop.dto.RegisterRequest;
 import com.agroloop.model.*;
+import com.agroloop.repository.AdminRepository;
 import com.agroloop.repository.FarmerApplicationRepository;
+import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -27,17 +29,24 @@ public class UserServiceImpl implements UserService {
     private final FarmerApplicationRepository farmerApplicationRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final FarmerRepository farmerRepository;
+    private final AdminRepository adminRepository;
+
     @PersistenceContext
     private EntityManager entityManager;
 
     public UserServiceImpl(
             UserRepository userRepository,
             HouseholdRepository householdRepository,
+            FarmerRepository farmerRepository,
+            AdminRepository adminRepository,
             FarmerApplicationRepository farmerApplicationRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.householdRepository = householdRepository;
+        this.farmerRepository = farmerRepository;
+        this.adminRepository = adminRepository;
         this.farmerApplicationRepository = farmerApplicationRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -220,5 +229,157 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Optional<FarmerApplication> getLatestApplicationForUser(Long userId) {
         return farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Override
+    @Transactional
+    public User createUser(com.agroloop.dto.api.v1.request.CreateUserApiRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new IllegalArgumentException("An account with email " + normalizedEmail + " already exists.");
+        }
+
+        String rawPassword = (request.password() != null && !request.password().isBlank())
+                ? request.password().trim()
+                : "ecoNexus2026!";
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+
+        Role role = request.role() != null ? request.role() : Role.ROLE_HOUSEHOLD;
+
+        User savedUser;
+        switch (role) {
+            case ROLE_ADMIN -> {
+                com.agroloop.model.Admin admin = new com.agroloop.model.Admin(request.name().trim(), normalizedEmail, encodedPassword);
+                savedUser = adminRepository.save(admin);
+            }
+            case ROLE_FARMER -> {
+                String farmName = (request.farmName() != null && !request.farmName().isBlank())
+                        ? request.farmName().trim()
+                        : request.name().trim() + "'s Farm";
+                String farmAddress = (request.farmAddress() != null && !request.farmAddress().isBlank())
+                        ? request.farmAddress().trim()
+                        : (request.address() != null && !request.address().isBlank() ? request.address().trim() : "Registered Farm Address");
+                com.agroloop.model.Farmer farmer = new com.agroloop.model.Farmer(request.name().trim(), normalizedEmail, encodedPassword, farmName, farmAddress, request.notes());
+                savedUser = farmerRepository.save(farmer);
+            }
+            case ROLE_HOUSEHOLD -> {
+                String address = (request.address() != null && !request.address().isBlank())
+                        ? request.address().trim()
+                        : "Household Residence";
+                Household household = new Household(request.name().trim(), normalizedEmail, encodedPassword, address);
+                if (request.initialTokens() != null && request.initialTokens().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    household.addTokens(request.initialTokens());
+                }
+                savedUser = householdRepository.save(household);
+            }
+            default -> throw new IllegalArgumentException("Unsupported role: " + role);
+        }
+
+        logger.info("Admin created new user id={}, email={}, role={}", savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+        return savedUser;
+    }
+
+    @Override
+    @Transactional
+    public User updateUserRole(Long userId, Role newRole, String address, String farmName, String farmAddress, String notes, String adminEmail) {
+        if (newRole == null) {
+            throw new IllegalArgumentException("Target role cannot be null");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        Role currentRole = user.getRole();
+        if (currentRole == newRole) {
+            return user;
+        }
+
+        // Concurrency-safe Last-Admin guard if demoting an active admin
+        if (currentRole == Role.ROLE_ADMIN && user.isEnabled()) {
+            List<User> activeAdmins = userRepository.findActiveUsersByRoleForUpdate(Role.ROLE_ADMIN);
+            if (activeAdmins.size() <= 1) {
+                throw new IllegalStateException("Safety Guard: Cannot demote the sole remaining active administrator account.");
+            }
+        }
+
+        // 1. Update base users table role
+        entityManager.createNativeQuery("UPDATE users SET role = :newRole, updated_at = NOW() WHERE id = :userId")
+                .setParameter("newRole", newRole.name())
+                .setParameter("userId", userId)
+                .executeUpdate();
+
+        // 2. Ensure row in target role table
+        switch (newRole) {
+            case ROLE_FARMER -> {
+                Number farmerCount = (Number) entityManager.createNativeQuery(
+                                "SELECT COUNT(*) FROM farmers WHERE id = :userId")
+                        .setParameter("userId", userId)
+                        .getSingleResult();
+
+                String resolvedFarmName = (farmName != null && !farmName.isBlank()) ? farmName.trim() : user.getName() + "'s Farm";
+                String resolvedFarmAddress = (farmAddress != null && !farmAddress.isBlank()) ? farmAddress.trim() : (address != null && !address.isBlank() ? address.trim() : "Registered Farm Location");
+                String resolvedNotes = (notes != null && !notes.isBlank()) ? notes.trim() : "Role updated to Farmer by admin " + adminEmail;
+
+                if (farmerCount.intValue() == 0) {
+                    entityManager.createNativeQuery(
+                                    "INSERT INTO farmers (id, farm_name, farm_address, notes, service_radius_km, max_daily_capacity_kg, average_rating, review_count) VALUES (:userId, :farmName, :farmAddress, :notes, 25.0, 200.00, 0.00, 0)")
+                            .setParameter("userId", userId)
+                            .setParameter("farmName", resolvedFarmName)
+                            .setParameter("farmAddress", resolvedFarmAddress)
+                            .setParameter("notes", resolvedNotes)
+                            .executeUpdate();
+                } else {
+                    entityManager.createNativeQuery(
+                                    "UPDATE farmers SET farm_name = :farmName, farm_address = :farmAddress, notes = :notes WHERE id = :userId")
+                            .setParameter("userId", userId)
+                            .setParameter("farmName", resolvedFarmName)
+                            .setParameter("farmAddress", resolvedFarmAddress)
+                            .setParameter("notes", resolvedNotes)
+                            .executeUpdate();
+                }
+
+                // If user had a pending farmer application, approve it
+                farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(userId).ifPresent(app -> {
+                    if (app.getStatus() == FarmerApplicationStatus.PENDING) {
+                        app.approve();
+                        farmerApplicationRepository.save(app);
+                    }
+                });
+            }
+            case ROLE_HOUSEHOLD -> {
+                Number householdCount = (Number) entityManager.createNativeQuery(
+                                "SELECT COUNT(*) FROM households WHERE id = :userId")
+                        .setParameter("userId", userId)
+                        .getSingleResult();
+
+                String resolvedAddress = (address != null && !address.isBlank()) ? address.trim() : "Household Community Residence";
+                if (householdCount.intValue() == 0) {
+                    entityManager.createNativeQuery(
+                                    "INSERT INTO households (id, token_balance, address, average_rating, review_count) VALUES (:userId, 0.00, :address, 0.00, 0)")
+                            .setParameter("userId", userId)
+                            .setParameter("address", resolvedAddress)
+                            .executeUpdate();
+                }
+            }
+            case ROLE_ADMIN -> {
+                Number adminCount = (Number) entityManager.createNativeQuery(
+                                "SELECT COUNT(*) FROM admins WHERE id = :userId")
+                        .setParameter("userId", userId)
+                        .getSingleResult();
+
+                if (adminCount.intValue() == 0) {
+                    entityManager.createNativeQuery(
+                                    "INSERT INTO admins (id) VALUES (:userId)")
+                            .setParameter("userId", userId)
+                            .executeUpdate();
+                }
+            }
+        }
+
+        entityManager.flush();
+        entityManager.clear();
+
+        logger.info("Admin {} updated user id={} role from {} to {}", adminEmail, userId, currentRole, newRole);
+        return userRepository.findById(userId).orElseThrow();
     }
 }

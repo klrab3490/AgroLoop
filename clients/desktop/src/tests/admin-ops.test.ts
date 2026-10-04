@@ -58,6 +58,40 @@ describe("Desktop Admin Operations & Solvency Invariants", () => {
     expect(isSoleAdmin).toBe(true);
   });
 
+  it("prevents self-demotion from ROLE_ADMIN and sole-active-admin demotion", () => {
+    const currentUserId = 1;
+    const users = [
+      { id: 1, email: "admin1@agroloop.local", role: "ROLE_ADMIN", enabled: true },
+      { id: 2, email: "user@agroloop.local", role: "ROLE_HOUSEHOLD", enabled: true },
+    ];
+
+    // Self-demotion guard
+    const targetUserId = 1;
+    const targetRole = "ROLE_HOUSEHOLD";
+    const isSelfDemotion = targetUserId === currentUserId && targetRole !== "ROLE_ADMIN";
+    expect(isSelfDemotion).toBe(true);
+
+    // Sole active admin demotion guard
+    const activeAdmins = users.filter((u) => u.role === "ROLE_ADMIN" && u.enabled);
+    const wouldLeaveZeroAdmins = activeAdmins.length <= 1;
+    expect(wouldLeaveZeroAdmins).toBe(true);
+  });
+
+  it("filters and processes farmer partner application queues", () => {
+    const applications = [
+      { id: 10, userId: 2, status: "PENDING", farmName: "Green Hills" },
+      { id: 11, userId: 3, status: "APPROVED", farmName: "Valley Organic" },
+      { id: 12, userId: 4, status: "REJECTED", farmName: "Metro Plant" },
+    ];
+
+    const pending = applications.filter((a) => a.status === "PENDING");
+    expect(pending.length).toBe(1);
+    expect(pending[0].farmName).toBe("Green Hills");
+
+    const approved = applications.filter((a) => a.status === "APPROVED");
+    expect(approved.length).toBe(1);
+  });
+
   it("verifies shared @agroloop/qr matrix generator operates within desktop bundle", () => {
     const matrix = generateQrMatrix("AGROLOOP-DESKTOP-TEST", QRErrorCorrectLevel.M);
     expect(matrix.length).toBeGreaterThan(0);

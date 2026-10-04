@@ -2,7 +2,7 @@
   "name": "agroloop-clients-workspace",
   "version": "1.0.3",
   "private": true,
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@12.9.1",
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",

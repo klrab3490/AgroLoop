@@ -6,6 +6,7 @@ import { UserGovernance } from "./components/UserGovernance.js";
 import { OrderDisputes } from "./components/OrderDisputes.js";
 import { LedgerExplorer } from "./components/LedgerExplorer.js";
 import { FleetDispatch } from "./components/FleetDispatch.js";
+import { FarmerApplications } from "./components/FarmerApplications.js";
 import { desktopApiClient } from "./lib/api.js";
 import type { UserApiResponse } from "@agroloop/api-types";
 
@@ -108,6 +109,7 @@ export default function App() {
           <main style={{ flex: 1, overflowY: "auto" }}>
             {activeTab === "solvency" && <SolvencyAudit />}
             {activeTab === "governance" && <UserGovernance currentUserId={currentUser.id} />}
+            {activeTab === "farmer-apps" && <FarmerApplications />}
             {activeTab === "disputes" && <OrderDisputes />}
             {activeTab === "ledger" && <LedgerExplorer />}
             {activeTab === "fleet" && <FleetDispatch />}

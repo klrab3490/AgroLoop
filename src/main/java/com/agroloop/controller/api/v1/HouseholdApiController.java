@@ -22,6 +22,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.agroloop.dto.FarmerApplicationRequest;
+import com.agroloop.dto.api.v1.request.FarmerApplicationApiRequest;
+import com.agroloop.dto.api.v1.response.FarmerApplicationApiResponse;
+import com.agroloop.service.UserService;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -36,6 +41,7 @@ public class HouseholdApiController {
     private final MediaService mediaService;
     private final IdempotencyService idempotencyService;
     private final OrderSecurityEvaluator orderSecurityEvaluator;
+    private final UserService userService;
 
     public HouseholdApiController(
             HouseholdRepository householdRepository,
@@ -43,7 +49,8 @@ public class HouseholdApiController {
             TokenRewardService tokenRewardService,
             MediaService mediaService,
             IdempotencyService idempotencyService,
-            OrderSecurityEvaluator orderSecurityEvaluator
+            OrderSecurityEvaluator orderSecurityEvaluator,
+            UserService userService
     ) {
         this.householdRepository = householdRepository;
         this.wasteSubmissionService = wasteSubmissionService;
@@ -51,6 +58,30 @@ public class HouseholdApiController {
         this.mediaService = mediaService;
         this.idempotencyService = idempotencyService;
         this.orderSecurityEvaluator = orderSecurityEvaluator;
+        this.userService = userService;
+    }
+
+    @PostMapping("/farmer-application")
+    public ResponseEntity<FarmerApplicationApiResponse> submitFarmerApplication(
+            @Valid @RequestBody FarmerApplicationApiRequest request,
+            Authentication auth
+    ) {
+        Household household = getAuthenticatedHousehold(auth);
+        FarmerApplicationRequest formReq = new FarmerApplicationRequest(
+                request.farmName(),
+                request.farmAddress(),
+                request.notes()
+        );
+        FarmerApplication saved = userService.submitFarmerApplication(household.getEmail(), formReq);
+        return ResponseEntity.status(HttpStatus.CREATED).body(FarmerApplicationApiResponse.from(saved));
+    }
+
+    @GetMapping("/farmer-application")
+    public ResponseEntity<FarmerApplicationApiResponse> getFarmerApplication(Authentication auth) {
+        Household household = getAuthenticatedHousehold(auth);
+        return userService.getLatestApplicationForUser(household.getId())
+                .map(app -> ResponseEntity.ok(FarmerApplicationApiResponse.from(app)))
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/balance")

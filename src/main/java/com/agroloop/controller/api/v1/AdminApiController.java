@@ -38,10 +38,14 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import com.agroloop.dto.api.v1.request.ConvertUserToFarmerApiRequest;
+import com.agroloop.dto.api.v1.request.CreateUserApiRequest;
+import com.agroloop.dto.api.v1.request.UpdateUserRoleApiRequest;
 import com.agroloop.dto.api.v1.response.FarmerApplicationApiResponse;
 import com.agroloop.model.FarmerApplication;
 import com.agroloop.service.UserService;
+import org.springframework.http.HttpStatus;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -161,6 +165,42 @@ public class AdminApiController {
     public ResponseEntity<List<UserApiResponse>> listUsers() {
         List<User> users = adminGovernanceService.getAllUsers();
         return ResponseEntity.ok(users.stream().map(UserApiResponse::from).toList());
+    }
+
+    @GetMapping("/users/{id}")
+    public ResponseEntity<UserApiResponse> getUser(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        return ResponseEntity.ok(UserApiResponse.from(user));
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserApiResponse> createUser(@Valid @RequestBody CreateUserApiRequest request) {
+        User created = userService.createUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserApiResponse.from(created));
+    }
+
+    @RequestMapping(value = "/users/{id}/role", method = {RequestMethod.PUT, RequestMethod.POST})
+    public ResponseEntity<UserApiResponse> updateUserRole(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserRoleApiRequest request,
+            Authentication auth
+    ) {
+        String adminEmail = extractAdminEmail(auth);
+        Long currentAdminId = orderSecurityEvaluator.extractUserId(auth);
+        if (Objects.equals(id, currentAdminId) && request.role() != com.agroloop.model.Role.ROLE_ADMIN) {
+            throw new IllegalStateException("Safety Guard: You cannot demote your own administrator account.");
+        }
+        User updated = userService.updateUserRole(
+                id,
+                request.role(),
+                request.address(),
+                request.farmName(),
+                request.farmAddress(),
+                request.notes(),
+                adminEmail
+        );
+        return ResponseEntity.ok(UserApiResponse.from(updated));
     }
 
     @PostMapping("/users/{id}/status")

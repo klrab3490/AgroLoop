@@ -8,10 +8,54 @@ import type { components, paths, operations } from "./generated/schema.js";
 export type Schemas = components["schemas"];
 
 // Core Identity & Auth DTOs
-export type UserApiResponse = Schemas["UserApiResponse"];
+export type UserApiResponse = Schemas["UserApiResponse"] & {
+  tokenBalance?: number | null;
+  createdAt?: string | null;
+  address?: string | null;
+  farmName?: string | null;
+  farmAddress?: string | null;
+  notes?: string | null;
+  serviceRadiusKm?: number | null;
+  maxDailyCapacityKg?: number | null;
+  averageRating?: number | null;
+  reviewCount?: number | null;
+};
 export type LoginApiRequest = Schemas["LoginApiRequest"];
 export type RegisterApiRequest = Schemas["RegisterApiRequest"];
 export type RefreshTokenApiRequest = Schemas["RefreshTokenApiRequest"];
+
+export interface CreateUserApiRequest {
+  name: string;
+  email: string;
+  password?: string;
+  role: "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN";
+  address?: string;
+  farmName?: string;
+  farmAddress?: string;
+  notes?: string;
+  initialTokens?: number;
+}
+
+export interface UpdateUserRoleApiRequest {
+  role: "ROLE_HOUSEHOLD" | "ROLE_FARMER" | "ROLE_ADMIN";
+  address?: string;
+  farmName?: string;
+  farmAddress?: string;
+  notes?: string;
+}
+
+export interface SubmitFarmerApplicationRequest {
+  farmName: string;
+  farmAddress: string;
+  notes?: string | null;
+}
+
+export interface StorageDiagnosticsResponse {
+  activeProvider: string;
+  targetLocation: string;
+  healthy: boolean;
+  message?: string;
+}
 
 export interface FarmerApplicationApiResponse {
   id: number;

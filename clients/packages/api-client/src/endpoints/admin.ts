@@ -9,6 +9,9 @@ import type {
   HouseholdBalanceResponse,
   FarmerApplicationApiResponse,
   ConvertUserToFarmerRequest,
+  CreateUserApiRequest,
+  UpdateUserRoleApiRequest,
+  StorageDiagnosticsResponse,
 } from "@agroloop/api-types";
 import type { AgroLoopApiClient } from "../client.js";
 import type { MutationOptions } from "../idempotency.js";
@@ -20,12 +23,16 @@ export interface AdminEndpoints {
   cancelOrder(id: number, request: CancelOrderApiRequest, options?: MutationOptions): Promise<OrderApiResponse>;
   resolveDispute(id: number, request: ResolveDisputeApiRequest, options?: MutationOptions): Promise<OrderApiResponse>;
   listUsers(): Promise<UserApiResponse[]>;
+  getUser(id: number): Promise<UserApiResponse>;
+  createUser(request: CreateUserApiRequest): Promise<UserApiResponse>;
+  updateUserRole(id: number, request: UpdateUserRoleApiRequest): Promise<UserApiResponse>;
   setUserStatus(id: number, enabled: boolean): Promise<UserApiResponse>;
   adjustTokens(id: number, request: TokenAdjustmentApiRequest, options?: MutationOptions): Promise<HouseholdBalanceResponse>;
   listFarmerApplications(): Promise<FarmerApplicationApiResponse[]>;
   approveFarmerApplication(id: number): Promise<{ message: string }>;
   rejectFarmerApplication(id: number, reason?: string): Promise<{ message: string }>;
   convertUserToFarmer(id: number, request: ConvertUserToFarmerRequest): Promise<UserApiResponse>;
+  getStorageDiagnostics(): Promise<StorageDiagnosticsResponse>;
 }
 
 export function createAdminEndpoints(client: AgroLoopApiClient): AdminEndpoints {
@@ -69,6 +76,18 @@ export function createAdminEndpoints(client: AgroLoopApiClient): AdminEndpoints 
       return client.get<UserApiResponse[]>("/admin/users");
     },
 
+    async getUser(id: number) {
+      return client.get<UserApiResponse>(`/admin/users/${id}`);
+    },
+
+    async createUser(request: CreateUserApiRequest) {
+      return client.post<UserApiResponse>("/admin/users", request);
+    },
+
+    async updateUserRole(id: number, request: UpdateUserRoleApiRequest) {
+      return client.post<UserApiResponse>(`/admin/users/${id}/role`, request);
+    },
+
     async setUserStatus(id: number, enabled: boolean) {
       return client.post<UserApiResponse>(`/admin/users/${id}/status`, { enabled });
     },
@@ -94,6 +113,10 @@ export function createAdminEndpoints(client: AgroLoopApiClient): AdminEndpoints 
 
     async convertUserToFarmer(id: number, request: ConvertUserToFarmerRequest) {
       return client.post<UserApiResponse>(`/admin/users/${id}/convert-to-farmer`, request);
+    },
+
+    async getStorageDiagnostics() {
+      return client.get<StorageDiagnosticsResponse>("/admin/storage/status");
     },
   };
 }

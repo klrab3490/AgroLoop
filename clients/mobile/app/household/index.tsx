@@ -103,6 +103,21 @@ export default function HouseholdScreen() {
             <Text style={styles.arrow}>&rarr;</Text>
           </TouchableOpacity>
         </Link>
+
+        <Link href="/household/apply-farmer" asChild>
+          <TouchableOpacity style={[styles.actionCard, styles.farmerPartnerCard]}>
+            <View style={[styles.actionIconBox, styles.farmerPartnerIconBox]}>
+              <Text style={styles.actionIcon}>🌾</Text>
+            </View>
+            <View style={styles.actionTextCol}>
+              <Text style={[styles.actionTitle, styles.farmerPartnerTitle]}>Become a Farmer Partner</Text>
+              <Text style={styles.actionDesc}>
+                Upgrade from waste contributor to producer. Collect organic compost and sell marketplace goods.
+              </Text>
+            </View>
+            <Text style={[styles.arrow, styles.farmerPartnerArrow]}>&rarr;</Text>
+          </TouchableOpacity>
+        </Link>
       </View>
     </ScrollView>
   );
@@ -210,5 +225,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#16a34a",
     marginLeft: 8,
+  },
+  farmerPartnerCard: {
+    borderColor: "#bbf7d0",
+    backgroundColor: "#f0fdf4",
+  },
+  farmerPartnerIconBox: {
+    backgroundColor: "#dcfce7",
+  },
+  farmerPartnerTitle: {
+    color: "#15803d",
+  },
+  farmerPartnerArrow: {
+    color: "#15803d",
   },
 });
