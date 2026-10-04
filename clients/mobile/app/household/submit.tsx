@@ -158,8 +158,9 @@ export default function SubmitWasteScreen() {
       const result = await mobileApiClient.household.submitWaste({
         category,
         estimatedWeight: weightNum,
-        mediaId: mediaId || `media_${Date.now()}`,
+        mediaId: mediaId || undefined,
         addressOverride: notes.trim() || undefined,
+        notes: notes.trim() || undefined,
       });
 
       setSubmittedResult(result);

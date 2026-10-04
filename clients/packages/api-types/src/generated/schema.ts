@@ -1438,8 +1438,9 @@ export interface components {
             /** @enum {string} */
             category: "FOOD_SCRAPS" | "GARDEN_WASTE" | "AGRICULTURAL_ORGANIC" | "COFFEE_GROUNDS";
             estimatedWeight: number;
-            mediaId: string;
+            mediaId?: string;
             addressOverride?: string;
+            notes?: string;
         };
         WasteSubmissionApiResponse: {
             /** Format: int64 */

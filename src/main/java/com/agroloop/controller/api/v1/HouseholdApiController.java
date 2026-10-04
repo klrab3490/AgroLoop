@@ -139,7 +139,7 @@ public class HouseholdApiController {
                             request.category(),
                             request.estimatedWeight(),
                             request.addressOverride(),
-                            null,
+                            request.notes(),
                             null
                     );
                     WasteSubmission submission = wasteSubmissionService.submitWaste(household.getEmail(), serviceReq);

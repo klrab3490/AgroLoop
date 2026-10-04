@@ -1,28 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
 const WASTE_CATEGORIES = [
-  { value: "FOOD_SCRAPS", label: "Kitchen Scraps", icon: "🥦", desc: "Fruit & vegetable peels, coffee grounds, leftovers" },
-  { value: "YARD_WASTE", label: "Yard Trimmings", icon: "🍂", desc: "Leaves, grass cuttings, plant prunings" },
-  { value: "AGRICULTURAL_RESIDUE", label: "Crop Residue", icon: "🌾", desc: "Stalks, chaff, husk residues" },
-  { value: "LIVESTOCK_MANURE", label: "Animal Manure", icon: "🐄", desc: "Herbivore manure suited for composting" },
-];
+  { value: "FOOD_SCRAPS", label: "Kitchen Scraps", icon: "🥦", desc: "Fruit & vegetable peels, leftover organic food" },
+  { value: "GARDEN_WASTE", label: "Yard Trimmings", icon: "🍂", desc: "Leaves, grass cuttings, plant prunings" },
+  { value: "AGRICULTURAL_ORGANIC", label: "Crop Residue", icon: "🌾", desc: "Stalks, chaff, husk residues, straw" },
+  { value: "COFFEE_GROUNDS", label: "Coffee Grounds & Tea", icon: "☕", desc: "Spent grounds, tea leaves, nitrogen-rich organic residue" },
+] as const;
 
 export default function SubmitWastePage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
-  const [category, setCategory] = useState("FOOD_SCRAPS");
+  const [category, setCategory] = useState<string>("FOOD_SCRAPS");
   const [weight, setWeight] = useState("5.0");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.address && !address) {
+      setAddress(user.address);
+    }
+  }, [user?.address]);
 
   if (!isAuthenticated || user?.role !== "ROLE_HOUSEHOLD") {
     return (
@@ -42,8 +48,8 @@ export default function SubmitWastePage() {
     setErrorMsg(null);
 
     const parsedWeight = parseFloat(weight);
-    if (isNaN(parsedWeight) || parsedWeight <= 0) {
-      setErrorMsg("Please provide a valid estimated weight greater than 0 kg.");
+    if (isNaN(parsedWeight) || parsedWeight < 0.1) {
+      setErrorMsg("Please provide a valid estimated weight of at least 0.1 kg.");
       setIsSubmitting(false);
       return;
     }
@@ -52,8 +58,8 @@ export default function SubmitWastePage() {
       await webApiClient.household.submitWaste({
         category: category as "FOOD_SCRAPS" | "GARDEN_WASTE" | "AGRICULTURAL_ORGANIC" | "COFFEE_GROUNDS",
         estimatedWeight: parsedWeight,
-        mediaId: "med_web_direct_upload",
-        addressOverride: address || undefined,
+        addressOverride: address.trim() || undefined,
+        notes: notes.trim() || undefined,
       });
 
       router.push("/household/pickups");
