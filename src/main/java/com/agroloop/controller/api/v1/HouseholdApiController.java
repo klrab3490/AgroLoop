@@ -140,7 +140,9 @@ public class HouseholdApiController {
                             request.estimatedWeight(),
                             request.addressOverride(),
                             request.notes(),
-                            null
+                            null,
+                            request.latitude(),
+                            request.longitude()
                     );
                     WasteSubmission submission = wasteSubmissionService.submitWaste(household.getEmail(), serviceReq);
                     if (request.mediaId() != null && !request.mediaId().isBlank()) {

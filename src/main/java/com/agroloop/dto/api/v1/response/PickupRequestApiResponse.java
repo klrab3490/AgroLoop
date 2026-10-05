@@ -20,7 +20,12 @@ public record PickupRequestApiResponse(
     Boolean handshakeVerified,
     Long latestHandshakeId,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    String category,
+    Double estimatedWeight,
+    Double latitude,
+    Double longitude,
+    String notes
 ) {
     public static PickupRequestApiResponse from(PickupRequest pickup) {
         return from(pickup, null);
@@ -30,12 +35,19 @@ public record PickupRequestApiResponse(
         if (pickup == null) {
             return null;
         }
-        Long submissionId = pickup.getWasteSubmission() != null ? pickup.getWasteSubmission().getId() : null;
-        Long hId = (pickup.getWasteSubmission() != null && pickup.getWasteSubmission().getHousehold() != null)
-                ? pickup.getWasteSubmission().getHousehold().getId() : null;
-        String hName = (pickup.getWasteSubmission() != null && pickup.getWasteSubmission().getHousehold() != null)
-                ? pickup.getWasteSubmission().getHousehold().getName() : null;
-        String address = pickup.getWasteSubmission() != null ? pickup.getWasteSubmission().getPickupAddress() : null;
+        var sub = pickup.getWasteSubmission();
+        Long submissionId = sub != null ? sub.getId() : null;
+        Long hId = (sub != null && sub.getHousehold() != null)
+                ? sub.getHousehold().getId() : null;
+        String hName = (sub != null && sub.getHousehold() != null)
+                ? sub.getHousehold().getName() : null;
+        String address = sub != null ? sub.getPickupAddress() : null;
+        String category = (sub != null && sub.getCategory() != null) ? sub.getCategory().name() : null;
+        Double estWeight = (sub != null && sub.getEstimatedWeight() != null) ? sub.getEstimatedWeight().doubleValue() : null;
+        Double lat = sub != null ? sub.getLatitude() : null;
+        Double lng = sub != null ? sub.getLongitude() : null;
+        String notes = sub != null ? sub.getNotes() : null;
+
         Long farmerId = pickup.getAssignedFarmer() != null ? pickup.getAssignedFarmer().getId() : null;
         String farmerName = (pickup.getAssignedFarmer() != null)
                 ? pickup.getAssignedFarmer().getName() : null;
@@ -63,7 +75,12 @@ public record PickupRequestApiResponse(
                 verifiedFlag != null && verifiedFlag,
                 pickup.getLatestHandshakeId(),
                 pickup.getCreatedAt(),
-                pickup.getUpdatedAt()
+                pickup.getUpdatedAt(),
+                category,
+                estWeight,
+                lat,
+                lng,
+                notes
         );
     }
 }

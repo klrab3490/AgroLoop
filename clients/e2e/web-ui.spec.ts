@@ -230,4 +230,121 @@ test.describe("Web UI - Navigation, Marketplace & Roles", () => {
     await page.waitForURL("**/");
     expect(new URL(page.url()).pathname).toBe("/");
   });
+
+  test("submits organic waste with photo upload without direct upload 401 error", async ({ page }) => {
+    await page.route("**/api/auth/refresh", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ accessToken: "mock-household-token" }),
+      });
+    });
+
+    await page.route("**/api/auth/me", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 101,
+          name: "Jack Household",
+          email: "jack@household.org",
+          role: "ROLE_HOUSEHOLD",
+          address: "Aluva, Kerala",
+          verified: true,
+        }),
+      });
+    });
+
+    // Mock media upload ticket endpoint
+    await page.route("**/api/proxy/media/upload-ticket", async (route) => {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          mediaId: "med_test123456",
+          uploadUrl: "http://localhost:8080/api/v1/media/upload/med_test123456",
+          expiresAt: new Date(Date.now() + 3600000).toISOString(),
+          maxSizeBytes: 10485760,
+        }),
+      });
+    });
+
+    // Mock direct upload (must receive upload and return 200)
+    let directUploadInvoked = false;
+    let authHeaderPresent = false;
+    await page.route("**/api/proxy/media/upload/med_test123456", async (route) => {
+      directUploadInvoked = true;
+      authHeaderPresent = !!route.request().headers()["authorization"];
+      await route.fulfill({ status: 200 });
+    });
+
+    // Mock confirmation endpoint
+    await page.route("**/api/proxy/media/med_test123456/confirm", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          mediaId: "med_test123456",
+          status: "CONFIRMED",
+        }),
+      });
+    });
+
+    // Mock household submit waste endpoint
+    await page.route("**/api/proxy/household/waste-submissions", async (route) => {
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 42,
+          category: "FOOD_SCRAPS",
+          estimatedWeight: 2.6,
+          status: "PENDING_COLLECTION",
+        }),
+      });
+    });
+
+    // Mock pickups destination
+    await page.route("**/api/proxy/pickups*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ content: [] }),
+      });
+    });
+
+    await page.goto("/household/submit");
+
+    // Verify page header
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Submit Organic Waste");
+
+    // Select category Kitchen Scraps
+    await page.getByRole("button", { name: /Kitchen Scraps/i }).click();
+
+    // Fill estimated weight & address
+    await page.getByPlaceholder("e.g. 5.0").fill("2.6");
+    await page.getByPlaceholder("123 Green Way, Eco City").fill("Aluva, Kerala");
+
+    // Attach batch verification photo
+    const fileChooserInput = page.locator('input[type="file"]');
+    await fileChooserInput.setInputFiles({
+      name: "1000140974.png",
+      mimeType: "image/png",
+      buffer: Buffer.from("fake-verification-photo-data"),
+    });
+
+    // File preview should appear
+    await expect(page.getByText("1000140974.png")).toBeVisible();
+
+    // Click Confirm & Request Collection
+    await page.getByRole("button", { name: "Confirm & Request Collection" }).click();
+
+    // Ensure error banner does NOT show "Media direct upload failed with status 401"
+    await expect(page.getByText(/Media direct upload failed with status 401/i)).not.toBeVisible();
+
+    // Verify redirected to /household/pickups
+    await page.waitForURL("**/household/pickups");
+    expect(directUploadInvoked).toBe(true);
+    expect(authHeaderPresent).toBe(true);
+  });
 });

@@ -18,9 +18,17 @@ public record WasteSubmissionApiRequest(
 
         String addressOverride,
 
-        String notes
+        String notes,
+
+        Double latitude,
+
+        Double longitude
 ) {
     public WasteSubmissionApiRequest(WasteCategory category, BigDecimal estimatedWeight, String mediaId, String addressOverride) {
-        this(category, estimatedWeight, mediaId, addressOverride, null);
+        this(category, estimatedWeight, mediaId, addressOverride, null, null, null);
+    }
+
+    public WasteSubmissionApiRequest(WasteCategory category, BigDecimal estimatedWeight, String mediaId, String addressOverride, String notes) {
+        this(category, estimatedWeight, mediaId, addressOverride, notes, null, null);
     }
 }

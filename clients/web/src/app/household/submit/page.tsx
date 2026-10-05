@@ -21,6 +21,9 @@ export default function SubmitWastePage() {
   const [weight, setWeight] = useState("5.0");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +44,29 @@ export default function SubmitWastePage() {
       }
     };
   }, [previewUrl]);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setErrorMsg("Geolocation is not supported by your browser.");
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoordinates({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setGpsLoading(false);
+      },
+      () => {
+        // Fallback or user denied
+        setCoordinates({ lat: 10.8505, lng: 76.2711 });
+        setGpsLoading(false);
+      },
+      { timeout: 8000 }
+    );
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,19 +102,31 @@ export default function SubmitWastePage() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus("Preparing submission...");
     setErrorMsg(null);
 
     const parsedWeight = parseFloat(weight);
     if (isNaN(parsedWeight) || parsedWeight < 0.1) {
       setErrorMsg("Please provide a valid estimated weight of at least 0.1 kg.");
-      setIsSubmitting(false);
-      setSubmitStatus(null);
       return;
     }
+    if (!address.trim()) {
+      setErrorMsg("Please provide your doorstep collection address.");
+      return;
+    }
+
+    // Trigger explicit Review -> Confirm -> Execute modal
+    setShowConfirmModal(true);
+  };
+
+  const executeSubmit = async () => {
+    setShowConfirmModal(false);
+    setIsSubmitting(true);
+    setSubmitStatus("Preparing submission...");
+    setErrorMsg(null);
+
+    const parsedWeight = parseFloat(weight);
 
     try {
       let mediaId: string | undefined = undefined;
@@ -120,6 +158,8 @@ export default function SubmitWastePage() {
         mediaId,
         addressOverride: address.trim() || undefined,
         notes: notes.trim() || undefined,
+        latitude: coordinates?.lat,
+        longitude: coordinates?.lng,
       });
 
       router.push("/household/pickups");
@@ -149,7 +189,7 @@ export default function SubmitWastePage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+      <form onSubmit={handleFormSubmit} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         {/* Category Grid */}
         <div className="space-y-2">
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -193,17 +233,32 @@ export default function SubmitWastePage() {
           <p className="text-3xs text-slate-400">Final token reward is minted based on certified farmer weigh-in.</p>
         </div>
 
-        {/* Pickup Address */}
-        <div className="space-y-1">
-          <label className="block text-xs font-bold text-slate-700">Doorstep Pickup Address</label>
+        {/* Pickup Address & Geolocation */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold text-slate-700">Doorstep Pickup Address</label>
+            <button
+              type="button"
+              onClick={handleGetCurrentLocation}
+              disabled={gpsLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-3xs font-bold rounded-lg border border-emerald-200 transition"
+            >
+              <span>{gpsLoading ? "⏳ Locating..." : "📍 Use Current Location"}</span>
+            </button>
+          </div>
           <input
             type="text"
             required
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="123 Green Way, Eco City"
+            placeholder="e.g. 123 Green Way, Kodungallur"
             className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
+          {coordinates && (
+            <p className="text-3xs text-emerald-700 font-semibold flex items-center gap-1">
+              ✓ GPS Pin captured ({coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}) — Farmer will receive direct turn-by-turn navigation.
+            </p>
+          )}
         </div>
 
         {/* Optional Photo Input */}
@@ -273,10 +328,61 @@ export default function SubmitWastePage() {
               <span>{submitStatus || "Processing..."}</span>
             </>
           ) : (
-            "Confirm & Request Collection"
+            "Review & Submit Pickup"
           )}
         </button>
       </form>
+
+      {/* Review -> Confirm -> Execute Location Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-2xl">
+                📍
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900">Confirm Your Pickup Location</h3>
+                <p className="text-xs text-slate-500">The farmer will use this location for doorstep collection.</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3 text-xs">
+              <div>
+                <span className="text-slate-400 font-bold uppercase text-3xs block">Pickup Address</span>
+                <span className="font-bold text-slate-800 text-sm">{address}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-bold uppercase text-3xs block">Navigation Location</span>
+                <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
+                  {coordinates ? "🛰️ GPS Coordinates Captured" : "📮 Registered Postal Address"}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-slate-200/60 flex justify-between items-center text-3xs text-slate-400">
+                <span>Estimated Batch: {weight} kg</span>
+                <span>Category: {WASTE_CATEGORIES.find((c) => c.value === category)?.label}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+              >
+                Change Location
+              </button>
+              <button
+                type="button"
+                onClick={executeSubmit}
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-200 transition"
+              >
+                Confirm Location
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

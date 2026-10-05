@@ -19,6 +19,13 @@ export interface FarmerEndpoints {
   createProduct(request: FarmerProductApiRequest, options?: MutationOptions): Promise<ProductApiResponse>;
   updateProduct(id: number, request: FarmerProductApiRequest): Promise<ProductApiResponse>;
   getOrders(): Promise<OrderApiResponse[]>;
+  getActiveRoutes(): Promise<import("@agroloop/api-types").CollectionRouteApiResponse[]>;
+  getRouteDetails(id: number): Promise<import("@agroloop/api-types").CollectionRouteApiResponse>;
+  createOptimizedRoute(request: import("@agroloop/api-types").CreateRouteApiRequest): Promise<import("@agroloop/api-types").CollectionRouteApiResponse>;
+  startRoute(id: number): Promise<import("@agroloop/api-types").CollectionRouteApiResponse>;
+  completeStop(id: number, stopId: number): Promise<void>;
+  cancelRoute(id: number, reason?: string): Promise<void>;
+  updateLocation(request: import("@agroloop/api-types").UpdateFarmerLocationApiRequest): Promise<void>;
 }
 
 export function createFarmerEndpoints(client: AgroLoopApiClient): FarmerEndpoints {
@@ -72,6 +79,34 @@ export function createFarmerEndpoints(client: AgroLoopApiClient): FarmerEndpoint
 
     async getOrders() {
       return client.get<OrderApiResponse[]>("/farmer/orders");
+    },
+
+    async getActiveRoutes() {
+      return client.get<import("@agroloop/api-types").CollectionRouteApiResponse[]>("/farmer/routes/active");
+    },
+
+    async getRouteDetails(id: number) {
+      return client.get<import("@agroloop/api-types").CollectionRouteApiResponse>(`/farmer/routes/${id}`);
+    },
+
+    async createOptimizedRoute(request: import("@agroloop/api-types").CreateRouteApiRequest) {
+      return client.post<import("@agroloop/api-types").CollectionRouteApiResponse>("/farmer/routes/optimize", request);
+    },
+
+    async startRoute(id: number) {
+      return client.post<import("@agroloop/api-types").CollectionRouteApiResponse>(`/farmer/routes/${id}/start`, undefined);
+    },
+
+    async completeStop(id: number, stopId: number) {
+      return client.post<void>(`/farmer/routes/${id}/stops/${stopId}/complete`, undefined);
+    },
+
+    async cancelRoute(id: number, reason?: string) {
+      return client.post<void>(`/farmer/routes/${id}/cancel${reason ? `?reason=${encodeURIComponent(reason)}` : ""}`, undefined);
+    },
+
+    async updateLocation(request: import("@agroloop/api-types").UpdateFarmerLocationApiRequest) {
+      return client.put<void>("/farmer/location", request);
     },
   };
 }

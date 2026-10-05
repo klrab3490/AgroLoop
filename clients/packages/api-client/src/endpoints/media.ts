@@ -21,10 +21,19 @@ export function createMediaEndpoints(client: AgroLoopApiClient): MediaEndpoints 
     },
 
     async directUpload(uploadUrl: string, data: Blob | ArrayBuffer | Uint8Array, contentType: string) {
-      // Direct binary PUT to uploadUrl without JSON serialization or auth header
+      // Direct binary PUT to uploadUrl without JSON serialization
       const headers = new Headers({
         "Content-Type": contentType,
       });
+
+      // If uploading to internal AgroLoop proxy/backend, include Bearer token if available
+      if (uploadUrl.startsWith("/") || uploadUrl.includes("/api/proxy/") || uploadUrl.includes("/api/v1/media/upload/")) {
+        const token = await client.session.getAccessToken();
+        if (token && !headers.has("Authorization")) {
+          headers.set("Authorization", `Bearer ${token}`);
+        }
+      }
+
       const fetchTarget = typeof window !== "undefined" ? window : globalThis;
       const rawFetch = globalThis.fetch;
       const response = await rawFetch.call(fetchTarget, uploadUrl, {

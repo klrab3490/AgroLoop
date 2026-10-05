@@ -89,9 +89,24 @@ public class Household extends User {
             String imagePath,
             String notes
     ) {
+        return submitWaste(category, estimatedWeight, customPickupAddress, imagePath, notes, null, null);
+    }
+
+    public WasteSubmission submitWaste(
+            WasteCategory category,
+            BigDecimal estimatedWeight,
+            String customPickupAddress,
+            String imagePath,
+            String notes,
+            Double latitude,
+            Double longitude
+    ) {
         String resolvedAddress = (customPickupAddress != null && !customPickupAddress.isBlank())
                 ? customPickupAddress.trim()
                 : this.address;
+
+        Double resolvedLat = (latitude != null) ? latitude : 10.8505;
+        Double resolvedLng = (longitude != null) ? longitude : 76.2711;
 
         return new WasteSubmission(
                 this,
@@ -99,9 +114,12 @@ public class Household extends User {
                 estimatedWeight,
                 resolvedAddress,
                 imagePath,
-                notes
+                notes,
+                resolvedLat,
+                resolvedLng
         );
     }
+
 
     public Double getAverageRating() {
         return averageRating != null ? averageRating : 0.0;

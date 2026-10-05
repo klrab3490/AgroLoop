@@ -97,14 +97,67 @@ export type ResolveDisputeApiRequest = Schemas["ResolveDisputeApiRequest"];
 
 // Waste & Verification DTOs
 export type WasteSubmissionApiResponse = Schemas["WasteSubmissionApiResponse"];
-export type WasteSubmissionApiRequest = Schemas["WasteSubmissionApiRequest"];
+export type WasteSubmissionApiRequest = Schemas["WasteSubmissionApiRequest"] & {
+  latitude?: number | null;
+  longitude?: number | null;
+};
 export type PickupRequestApiResponse = Schemas["PickupRequestApiResponse"] & {
   handshakeVerified?: boolean;
   latestHandshakeId?: number | null;
+  category?: string | null;
+  estimatedWeight?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  notes?: string | null;
 };
 export type VerificationApiResponse = Schemas["VerificationApiResponse"];
 export type SchedulePickupApiRequest = Schemas["SchedulePickupApiRequest"];
 export type VerifyWasteApiRequest = Schemas["VerifyWasteApiRequest"];
+
+// Logistics & Route Planning DTOs
+export interface RouteStopApiResponse {
+  id: number;
+  pickupId: number | null;
+  stopOrder: number;
+  status: string;
+  estimatedDistanceFromPrevKm?: number | null;
+  completedAt?: string | null;
+  notes?: string | null;
+  category?: string | null;
+  pickupAddress?: string | null;
+  estimatedWeight?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+export interface CollectionRouteApiResponse {
+  id: number;
+  farmerId: number | null;
+  routeDate: string;
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | string;
+  totalDistanceKm: number;
+  totalEstimatedWeightKg: number;
+  notes?: string | null;
+  stops: RouteStopApiResponse[];
+  createdAt: string;
+  updatedAt: string;
+  farmerLatitude?: number | null;
+  farmerLongitude?: number | null;
+  farmerAddress?: string | null;
+}
+
+export interface CreateRouteApiRequest {
+  pickupIds: number[];
+  routeDate: string;
+  notes?: string;
+}
+
+export interface UpdateFarmerLocationApiRequest {
+  latitude: number;
+  longitude: number;
+  serviceRadiusKm: number;
+  maxDailyCapacityKg: number;
+}
 
 // Physical On-Site Pickup Handshake DTOs
 export interface CompactQrPayload {

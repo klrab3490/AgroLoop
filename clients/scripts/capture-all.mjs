@@ -135,18 +135,87 @@ const MOCK_PICKUPS = [
   {
     id: 901,
     wasteSubmissionId: 501,
-    status: "VERIFIED",
+    status: "SCHEDULED",
+    category: "FOOD_SCRAPS",
+    estimatedWeight: 14.5,
     pickupAddress: "452 Oak Tree Lane, Austin, TX",
+    latitude: 30.2672,
+    longitude: -97.7431,
     scheduledTime: "2026-09-28T14:00:00Z",
     createdAt: "2026-09-28T10:30:00Z",
+    notes: "Gate code #4491. Bin placed near front porch.",
   },
   {
     id: 902,
     wasteSubmissionId: 502,
     status: "SCHEDULED",
+    category: "YARD_WASTE",
+    estimatedWeight: 8.2,
     pickupAddress: "452 Oak Tree Lane, Austin, TX",
+    latitude: 30.2672,
+    longitude: -97.7431,
     scheduledTime: "2026-10-01T09:30:00Z",
     createdAt: "2026-09-30T08:15:00Z",
+    notes: "Leave in driveway.",
+  },
+  {
+    id: 903,
+    wasteSubmissionId: 503,
+    status: "REQUESTED",
+    category: "AGRICULTURAL_ORGANIC",
+    estimatedWeight: 18.0,
+    pickupAddress: "810 Evergreen Terrace, Austin, TX",
+    latitude: 30.275,
+    longitude: -97.74,
+    scheduledTime: "2026-10-02T10:00:00Z",
+    createdAt: "2026-10-01T09:00:00Z",
+    notes: "Call on arrival.",
+  },
+];
+
+const MOCK_COLLECTION_ROUTES = [
+  {
+    id: 401,
+    farmerId: 202,
+    farmerName: "Marcus Aurelius Farm",
+    farmerAddress: "Route 9 Valley Farmstead, Austin, TX",
+    farmerLatitude: 30.25,
+    farmerLongitude: -97.76,
+    routeDate: "2026-10-01",
+    status: "IN_PROGRESS",
+    totalDistanceKm: 8.4,
+    totalEstimatedWeightKg: 32.5,
+    notes: "Morning organic collection loop",
+    createdAt: "2026-10-01T08:00:00Z",
+    updatedAt: "2026-10-01T08:30:00Z",
+    stops: [
+      {
+        id: 701,
+        pickupId: 901,
+        stopOrder: 1,
+        status: "IN_PROGRESS",
+        pickupAddress: "452 Oak Tree Lane, Austin, TX",
+        category: "FOOD_SCRAPS",
+        estimatedWeight: 14.5,
+        estimatedDistanceFromPrevKm: 2.1,
+        latitude: 30.2672,
+        longitude: -97.7431,
+        notes: "Gate code #4491. Bin placed near front porch.",
+      },
+      {
+        id: 702,
+        pickupId: 902,
+        stopOrder: 2,
+        status: "PENDING",
+        pickupAddress: "124 Magnolia Blvd, Austin, TX",
+        category: "AGRICULTURAL_ORGANIC",
+        estimatedWeight: 18.0,
+        estimatedDistanceFromPrevKm: 3.4,
+        latitude: 30.26,
+        longitude: -97.75,
+        notes: "Call on arrival.",
+      },
+    ],
   },
 ];
 
@@ -366,6 +435,14 @@ async function captureAll() {
       });
     });
 
+    await page.route("**/api/proxy/farmer/routes/active**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(MOCK_COLLECTION_ROUTES),
+      });
+    });
+
     await page.route("**/api/proxy/farmer/products**", async (route) => {
       await route.fulfill({
         status: 200,
@@ -511,7 +588,7 @@ async function captureAll() {
   await page.screenshot({ path: path.join(WEB_DIR, "20_web_farmer_pickups.png"), fullPage: true });
 
   console.log("📸 [21/34] Capturing Farmer On-Site Verification Modal...");
-  const verifyBtn = page.getByRole("button", { name: /Verify On-Site/i }).first();
+  const verifyBtn = page.getByRole("button", { name: /Arrived & Weigh In|Verify On-Site/i }).first();
   if (await verifyBtn.isVisible()) {
     await verifyBtn.click();
     await page.waitForTimeout(500);

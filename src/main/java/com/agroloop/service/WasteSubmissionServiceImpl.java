@@ -51,13 +51,15 @@ public class WasteSubmissionServiceImpl implements WasteSubmissionService {
         // Store photo if present; returns null if file is missing or empty
         String imagePath = fileStorageService.storeFile(request.getPhoto(), "waste");
 
-        // Domain method on Household creates WasteSubmission with address inheritance
+        // Domain method on Household creates WasteSubmission with address and coordinates
         WasteSubmission submission = household.submitWaste(
                 request.getCategory(),
                 request.getEstimatedWeight(),
                 request.getPickupAddress(),
                 imagePath,
-                request.getNotes()
+                request.getNotes(),
+                request.getLatitude(),
+                request.getLongitude()
         );
 
         WasteSubmission savedSubmission = wasteSubmissionRepository.save(submission);

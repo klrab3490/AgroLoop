@@ -110,8 +110,8 @@ export default function FarmerHubPage() {
               🚚
             </div>
             <div>
-              <h4 className="font-bold text-sm text-slate-900">Pickups & Verification</h4>
-              <p className="text-2xs text-slate-500">Claim batches & verify QR codes</p>
+              <h4 className="font-bold text-sm text-slate-900">Collection Routes &amp; Pickups</h4>
+              <p className="text-2xs text-slate-500">Plan route, navigate GPS stops &amp; weigh in</p>
             </div>
           </Link>
 

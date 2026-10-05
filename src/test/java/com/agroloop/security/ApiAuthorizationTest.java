@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -132,6 +133,10 @@ class ApiAuthorizationTest {
 
         mockMvc.perform(get("/api/v1/marketplace/categories"))
                 .andExpect(status().isOk());
+
+        // Direct binary PUT upload endpoint is accessible without Authorization header (returns 404 for nonexistent id, not 401)
+        mockMvc.perform(put("/api/v1/media/upload/non-existent-media-id"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

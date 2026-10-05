@@ -26,5 +26,13 @@ auditConfig:
   ignoreGhsas:
     - GHSA-86w9-cpqp-85rv
     - GHSA-vfj7-8cjw-p6xm
+peerDependencyRules:
+  allowedVersions:
+    '@react-native/metro-config': '*'
+    'react-native-worklets': '*'
+  ignoreMissing:
+    - '@react-native/metro-config'
+    - 'react-native-worklets'
+
 
 

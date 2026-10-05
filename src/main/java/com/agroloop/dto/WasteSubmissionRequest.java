@@ -30,6 +30,10 @@ public class WasteSubmissionRequest {
 
     private MultipartFile photo;
 
+    private Double latitude;
+
+    private Double longitude;
+
     public WasteSubmissionRequest() {
     }
 
@@ -40,11 +44,25 @@ public class WasteSubmissionRequest {
             String notes,
             MultipartFile photo
     ) {
+        this(category, estimatedWeight, pickupAddress, notes, photo, null, null);
+    }
+
+    public WasteSubmissionRequest(
+            WasteCategory category,
+            BigDecimal estimatedWeight,
+            String pickupAddress,
+            String notes,
+            MultipartFile photo,
+            Double latitude,
+            Double longitude
+    ) {
         this.category = category;
         this.estimatedWeight = estimatedWeight;
         this.pickupAddress = pickupAddress;
         this.notes = notes;
         this.photo = photo;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public WasteCategory getCategory() {
@@ -86,4 +104,21 @@ public class WasteSubmissionRequest {
     public void setPhoto(MultipartFile photo) {
         this.photo = photo;
     }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
 }
+

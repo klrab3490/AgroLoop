@@ -233,4 +233,65 @@ describe("AgroLoopApiClient & Universal Client Architecture", () => {
     const res = await client.get<{ ok: boolean }>("/test");
     expect(res.ok).toBe(true);
   });
+
+  it("media.directUpload: attaches Authorization header on internal/proxy URLs but omits on external URLs", async () => {
+    const capturedHeaders: Headers[] = [];
+    const mockFetch = vi.fn().mockImplementation((_url, init) => {
+      capturedHeaders.push(new Headers(init.headers));
+      return Promise.resolve(new Response(null, { status: 200 }));
+    });
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockFetch;
+
+    try {
+      const storage = new MemoryTokenStorage();
+      await storage.setAccessToken("test-bearer-token");
+
+      const client = createAgroLoopClient({
+        baseUrl: "https://api.agroloop.com",
+        tokenStorage: storage,
+      });
+
+      // Internal proxy direct upload
+      await client.media.directUpload(
+        "/api/proxy/media/upload/med_123",
+        new Uint8Array([1, 2, 3]),
+        "image/png"
+      );
+
+      expect(capturedHeaders[0].get("Authorization")).toBe("Bearer test-bearer-token");
+      expect(capturedHeaders[0].get("Content-Type")).toBe("image/png");
+
+      // External storage direct upload (e.g. S3 presigned PUT)
+      await client.media.directUpload(
+        "https://s3.amazonaws.com/agroloop-bucket/med_123",
+        new Uint8Array([1, 2, 3]),
+        "image/png"
+      );
+
+      expect(capturedHeaders[1].get("Authorization")).toBeNull();
+      expect(capturedHeaders[1].get("Content-Type")).toBe("image/png");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("media.directUpload: throws descriptive error on non-2xx status", async () => {
+    const mockFetch = vi.fn().mockResolvedValue(new Response("Unauthorized", { status: 401 }));
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mockFetch;
+
+    try {
+      const client = createAgroLoopClient({
+        baseUrl: "https://api.agroloop.com",
+      });
+
+      await expect(
+        client.media.directUpload("/api/proxy/media/upload/med_123", new Uint8Array([]), "image/png")
+      ).rejects.toThrow("Media direct upload failed with status 401");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });

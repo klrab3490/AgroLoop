@@ -14,7 +14,9 @@ public record RouteStopApiResponse(
         String notes,
         String category,
         String pickupAddress,
-        Double estimatedWeight
+        Double estimatedWeight,
+        Double latitude,
+        Double longitude
 ) {
     public static RouteStopApiResponse from(RouteStop stop) {
         if (stop == null) return null;
@@ -31,7 +33,9 @@ public record RouteStopApiResponse(
                 stop.getNotes(),
                 sub != null && sub.getCategory() != null ? sub.getCategory().name() : null,
                 sub != null ? sub.getPickupAddress() : null,
-                sub != null && sub.getEstimatedWeight() != null ? sub.getEstimatedWeight().doubleValue() : 0.0
+                sub != null && sub.getEstimatedWeight() != null ? sub.getEstimatedWeight().doubleValue() : 0.0,
+                sub != null ? sub.getLatitude() : null,
+                sub != null ? sub.getLongitude() : null
         );
     }
 }

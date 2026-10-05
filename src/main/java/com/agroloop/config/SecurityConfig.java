@@ -123,6 +123,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/marketplace/products", "/api/v1/marketplace/products/*", "/api/v1/marketplace/categories").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/reviews/users/*", "/api/v1/reviews/summary/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/media/download/*").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/media/upload/*").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/api/v1/farmer/**").hasAuthority("ROLE_FARMER")
                 .requestMatchers("/api/v1/household/**").hasAuthority("ROLE_HOUSEHOLD")
