@@ -3,11 +3,16 @@ secret:
   ignored_matches:
     - name: "Local dev postgres password (postgres/7200)"
       match: "bdd803e96b9fcb54cb45f48b20a627826681262b77f5569e83a43fd41a3f42a1"
+    - name: "Local dev postgres default fallback password (postgres)"
+      match: "a17d13c4e793c24f2d81ab3bf1a74dee0ae44ea9610d7f290b450f92fe12bb61"
     - name: "Seed farmer test credential (farmer@agroloop.com/farmer123)"
       match: "97b09d1a9e90ad12e4d445dac46b77584160232f77343ed723dbe3f29a120943"
     - name: "Integration test fixture password (Pass123!)"
       match: "920b1730b078976dd8c9567709f756ac0ed23dab376308483dc47f0eeb130ada"
+    - name: "Default admin provision password (ecoNexus2026!)"
+      match: "8ce5221492a76713798097b5b692fc2ea08091d3a86277c3544fd266432ae865"
   ignored_paths:
     - "src/test/**"
     - "**/test/**"
     - "clients/**/__tests__/**"
+
