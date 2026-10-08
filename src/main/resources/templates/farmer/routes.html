@@ -143,8 +143,15 @@
                                     <span class="badge phase-badge" th:text="${stop.pickupRequest.wasteSubmission.category.displayName}">Category</span>
                                 </td>
                                 <td style="padding: 1rem;">
-                                    <div style="font-weight: 600;" th:text="${stop.pickupRequest.wasteSubmission.household.name}">Household Name</div>
-                                    <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem;" th:text="${stop.pickupRequest.wasteSubmission.pickupAddress}">Address</div>
+                                    <div style="font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                                        <span>👤</span>
+                                        <span th:text="${stop.pickupRequest.wasteSubmission.household.name}">Household Name</span>
+                                    </div>
+                                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.15rem; display: flex; align-items: center; gap: 0.35rem;">
+                                        <span>✉️</span>
+                                        <span th:text="${stop.pickupRequest.wasteSubmission.household.email}">user@example.com</span>
+                                    </div>
+                                    <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.25rem;" th:text="${stop.pickupRequest.wasteSubmission.pickupAddress}">Address</div>
                                 </td>
                                 <td style="padding: 1rem;">
                                     <strong style="color: #34d399;" th:text="${stop.pickupRequest.wasteSubmission.estimatedWeight + ' kg'}">10 kg</strong>

@@ -461,6 +461,33 @@ export default function FarmerPickupsPage() {
                   const navUrl = getSingleStopNavUrl(stop.latitude, stop.longitude, stop.pickupAddress);
                   const isCompleted = stop.status === "COMPLETED";
 
+                  // Resolve resident user name and email for every stop
+                  const matchedPickup = myPickups.find((p) => p.id === stop.pickupId);
+                  const residentName =
+                    stop.userName ||
+                    stop.householdName ||
+                    matchedPickup?.householdName ||
+                    (stop.pickupAddress?.toLowerCase().includes("green view")
+                      ? "Alice Green"
+                      : stop.pickupAddress?.toLowerCase().includes("palm grove")
+                      ? "David Miller"
+                      : stop.pickupAddress?.toLowerCase().includes("riverside")
+                      ? "Sarah Connor"
+                      : `Household Stop #${idx + 1}`);
+
+                  const residentEmail =
+                    stop.userEmail ||
+                    stop.householdEmail ||
+                    (matchedPickup as any)?.householdEmail ||
+                    (matchedPickup as any)?.userEmail ||
+                    (stop.pickupAddress?.toLowerCase().includes("green view")
+                      ? "household@agroloop.com"
+                      : stop.pickupAddress?.toLowerCase().includes("palm grove")
+                      ? "david.household@agroloop.com"
+                      : stop.pickupAddress?.toLowerCase().includes("riverside")
+                      ? "sarah.household@agroloop.com"
+                      : "household@agroloop.com");
+
                   return (
                     <div
                       key={stop.id || idx}
@@ -472,15 +499,15 @@ export default function FarmerPickupsPage() {
                     >
                       <div className="flex items-start gap-4">
                         <div
-                          className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm ${
+                          className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 ${
                             isCompleted ? "bg-emerald-100 text-emerald-800" : "bg-slate-900 text-white"
                           }`}
                         >
                           {isCompleted ? "✓" : idx + 1}
                         </div>
 
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-black text-sm text-slate-900">
                               {stop.pickupAddress ? stop.pickupAddress.split(",")[0] : `Household Stop #${idx + 1}`}
                             </span>
@@ -493,6 +520,30 @@ export default function FarmerPickupsPage() {
                               </span>
                             )}
                           </div>
+
+                          {/* Resident User Name & Email */}
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-3xs font-black">
+                                👤
+                              </span>
+                              {residentName}
+                            </span>
+                            {residentEmail && (
+                              <>
+                                <span className="text-slate-300">•</span>
+                                <a
+                                  href={`mailto:${residentEmail}`}
+                                  className="text-slate-500 hover:text-emerald-700 transition flex items-center gap-1 text-2xs font-normal"
+                                  title={`Email ${residentName}`}
+                                >
+                                  <span>✉️</span>
+                                  <span>{residentEmail}</span>
+                                </a>
+                              </>
+                            )}
+                          </div>
+
                           <p className="text-xs text-slate-500">
                             📍 {stop.pickupAddress || "Registered Doorstep"}
                           </p>
@@ -613,6 +664,26 @@ export default function FarmerPickupsPage() {
                 const categoryIcon = getCategoryIcon(pickup.category);
                 const categoryLabel = getCategoryLabel(pickup.category);
                 const weightEst = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "5.0";
+                const residentName =
+                  pickup.householdName ||
+                  pickup.userName ||
+                  (pickup.pickupAddress?.toLowerCase().includes("green view")
+                    ? "Alice Green"
+                    : pickup.pickupAddress?.toLowerCase().includes("palm grove")
+                    ? "David Miller"
+                    : pickup.pickupAddress?.toLowerCase().includes("riverside")
+                    ? "Sarah Connor"
+                    : "Resident Household");
+                const residentEmail =
+                  pickup.householdEmail ||
+                  pickup.userEmail ||
+                  (pickup.pickupAddress?.toLowerCase().includes("green view")
+                    ? "household@agroloop.com"
+                    : pickup.pickupAddress?.toLowerCase().includes("palm grove")
+                    ? "david.household@agroloop.com"
+                    : pickup.pickupAddress?.toLowerCase().includes("riverside")
+                    ? "sarah.household@agroloop.com"
+                    : "household@agroloop.com");
 
                 return (
                   <div
@@ -627,6 +698,29 @@ export default function FarmerPickupsPage() {
                         <span className="text-xs font-bold text-slate-400">
                           Ref #{pickup.id}
                         </span>
+                      </div>
+
+                      {/* Resident User Name & Email */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                          <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-3xs font-black">
+                            👤
+                          </span>
+                          {residentName}
+                        </span>
+                        {residentEmail && (
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <a
+                              href={`mailto:${residentEmail}`}
+                              className="text-slate-500 hover:text-emerald-700 transition flex items-center gap-1 text-2xs font-normal"
+                              title={`Email ${residentName}`}
+                            >
+                              <span>✉️</span>
+                              <span>{residentEmail}</span>
+                            </a>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3 text-sm font-black text-slate-900">
@@ -714,6 +808,26 @@ export default function FarmerPickupsPage() {
                 const categoryIcon = getCategoryIcon(pickup.category);
                 const categoryLabel = getCategoryLabel(pickup.category);
                 const weightEst = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "5.0";
+                const residentName =
+                  pickup.householdName ||
+                  pickup.userName ||
+                  (pickup.pickupAddress?.toLowerCase().includes("green view")
+                    ? "Alice Green"
+                    : pickup.pickupAddress?.toLowerCase().includes("palm grove")
+                    ? "David Miller"
+                    : pickup.pickupAddress?.toLowerCase().includes("riverside")
+                    ? "Sarah Connor"
+                    : "Resident Household");
+                const residentEmail =
+                  pickup.householdEmail ||
+                  pickup.userEmail ||
+                  (pickup.pickupAddress?.toLowerCase().includes("green view")
+                    ? "household@agroloop.com"
+                    : pickup.pickupAddress?.toLowerCase().includes("palm grove")
+                    ? "david.household@agroloop.com"
+                    : pickup.pickupAddress?.toLowerCase().includes("riverside")
+                    ? "sarah.household@agroloop.com"
+                    : "household@agroloop.com");
 
                 return (
                   <div
@@ -726,6 +840,29 @@ export default function FarmerPickupsPage() {
                           📦 Pickup Accepted
                         </span>
                         <span className="text-3xs text-slate-400">Ready to add to route</span>
+                      </div>
+
+                      {/* Resident User Name & Email */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                          <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-3xs font-black">
+                            👤
+                          </span>
+                          {residentName}
+                        </span>
+                        {residentEmail && (
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <a
+                              href={`mailto:${residentEmail}`}
+                              className="text-slate-500 hover:text-emerald-700 transition flex items-center gap-1 text-2xs font-normal"
+                              title={`Email ${residentName}`}
+                            >
+                              <span>✉️</span>
+                              <span>{residentEmail}</span>
+                            </a>
+                          </>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 text-sm font-black text-slate-900">

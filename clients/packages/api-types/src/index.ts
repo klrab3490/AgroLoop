@@ -109,6 +109,9 @@ export type PickupRequestApiResponse = Schemas["PickupRequestApiResponse"] & {
   latitude?: number | null;
   longitude?: number | null;
   notes?: string | null;
+  householdEmail?: string | null;
+  userName?: string | null;
+  userEmail?: string | null;
 };
 export type VerificationApiResponse = Schemas["VerificationApiResponse"];
 export type SchedulePickupApiRequest = Schemas["SchedulePickupApiRequest"];
@@ -128,6 +131,10 @@ export interface RouteStopApiResponse {
   estimatedWeight?: number | null;
   latitude?: number | null;
   longitude?: number | null;
+  userName?: string | null;
+  userEmail?: string | null;
+  householdName?: string | null;
+  householdEmail?: string | null;
 }
 
 export interface CollectionRouteApiResponse {

@@ -25,8 +25,41 @@ public record PickupRequestApiResponse(
     Double estimatedWeight,
     Double latitude,
     Double longitude,
-    String notes
+    String notes,
+    String householdEmail,
+    String userName,
+    String userEmail
 ) {
+    public PickupRequestApiResponse(
+            Long id,
+            Long wasteSubmissionId,
+            Long householdId,
+            String householdName,
+            Long assignedFarmerId,
+            String assignedFarmerName,
+            String status,
+            String pickupAddress,
+            LocalDateTime scheduledTime,
+            LocalDateTime collectedAt,
+            LocalDateTime cancelledAt,
+            String cancellationReason,
+            VerificationApiResponse verification,
+            Boolean handshakeVerified,
+            Long latestHandshakeId,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            String category,
+            Double estimatedWeight,
+            Double latitude,
+            Double longitude,
+            String notes
+    ) {
+        this(id, wasteSubmissionId, householdId, householdName, assignedFarmerId, assignedFarmerName, status,
+                pickupAddress, scheduledTime, collectedAt, cancelledAt, cancellationReason, verification,
+                handshakeVerified, latestHandshakeId, createdAt, updatedAt, category, estimatedWeight,
+                latitude, longitude, notes, null, null, null);
+    }
+
     public static PickupRequestApiResponse from(PickupRequest pickup) {
         return from(pickup, null);
     }
@@ -41,6 +74,8 @@ public record PickupRequestApiResponse(
                 ? sub.getHousehold().getId() : null;
         String hName = (sub != null && sub.getHousehold() != null)
                 ? sub.getHousehold().getName() : null;
+        String hEmail = (sub != null && sub.getHousehold() != null)
+                ? sub.getHousehold().getEmail() : null;
         String address = sub != null ? sub.getPickupAddress() : null;
         String category = (sub != null && sub.getCategory() != null) ? sub.getCategory().name() : null;
         Double estWeight = (sub != null && sub.getEstimatedWeight() != null) ? sub.getEstimatedWeight().doubleValue() : null;
@@ -80,7 +115,10 @@ public record PickupRequestApiResponse(
                 estWeight,
                 lat,
                 lng,
-                notes
+                notes,
+                hEmail,
+                hName,
+                hEmail
         );
     }
 }

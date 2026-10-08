@@ -216,11 +216,12 @@ export const UserGovernance: React.FC<UserGovernanceProps> = ({ currentUserId })
       setAdjustResult(res);
       setAdjustReason("");
       // Update local user tokenBalance
+      const updatedBalance = res.availableBalance ?? (res as any).balance;
       setUsers((prev) =>
-        prev.map((u) => (u.id === adjustTargetUser.id ? { ...u, tokenBalance: res.balance } : u))
+        prev.map((u) => (u.id === adjustTargetUser.id ? { ...u, tokenBalance: updatedBalance } : u))
       );
       if (inspectedUser?.id === adjustTargetUser.id) {
-        setInspectedUser((prev) => (prev ? { ...prev, tokenBalance: res.balance } : null));
+        setInspectedUser((prev) => (prev ? { ...prev, tokenBalance: updatedBalance } : null));
       }
     } catch (err: unknown) {
       setAdjustError(err instanceof Error ? err.message : "Token adjustment failed. Pessimistic lock conflict.");
@@ -937,7 +938,7 @@ export const UserGovernance: React.FC<UserGovernanceProps> = ({ currentUserId })
                 <h4 style={{ fontSize: "16px", fontWeight: "700", marginTop: "8px" }}>Balance Updated</h4>
                 <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "4px" }}>
                   New Settled Balance:{" "}
-                  <strong style={{ color: "var(--accent-emerald)" }}>{adjustResult.balance} EcoTokens</strong>
+                  <strong style={{ color: "var(--accent-emerald)" }}>{adjustResult.availableBalance ?? (adjustResult as any).balance} EcoTokens</strong>
                 </p>
                 <button
                   onClick={() => setAdjustTargetUser(null)}

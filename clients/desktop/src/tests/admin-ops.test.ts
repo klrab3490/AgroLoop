@@ -67,7 +67,7 @@ describe("Desktop Admin Operations & Solvency Invariants", () => {
 
     // Self-demotion guard
     const targetUserId = 1;
-    const targetRole = "ROLE_HOUSEHOLD";
+    const targetRole: string = "ROLE_HOUSEHOLD";
     const isSelfDemotion = targetUserId === currentUserId && targetRole !== "ROLE_ADMIN";
     expect(isSelfDemotion).toBe(true);
 
