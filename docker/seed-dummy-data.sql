@@ -11,15 +11,16 @@
 -- 1. SEED USERS, HOUSEHOLDS, FARMERS, ADMINS
 INSERT INTO users (name, email, password_hash, role, enabled, created_at, updated_at)
 VALUES
-    ('System Administrator', 'admin@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_ADMIN', true, NOW() - INTERVAL '30 days', NOW()),
-    ('Alice Green', 'household@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_HOUSEHOLD', true, NOW() - INTERVAL '25 days', NOW()),
-    ('David Miller', 'david.household@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_HOUSEHOLD', true, NOW() - INTERVAL '20 days', NOW()),
-    ('Sarah Connor', 'sarah.household@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_HOUSEHOLD', true, NOW() - INTERVAL '15 days', NOW()),
-    ('Bob Farmer', 'farmer@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_FARMER', true, NOW() - INTERVAL '30 days', NOW()),
-    ('Priya Nair', 'priya.farmer@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_FARMER', true, NOW() - INTERVAL '25 days', NOW()),
-    ('Carlos Rivera', 'carlos.farmer@agroloop.com', '$2a$10$7vIqK0G98j5i2W0R4E3/neZkVv24wNqg1hVlh3t6O3q6m78Xb7qCy', 'ROLE_FARMER', true, NOW() - INTERVAL '20 days', NOW())
+    ('System Administrator', 'admin@agroloop.com', '$2a$10$5Fo7jMqrcJhoPwVy8CYCMugyhqrHCJ6OhZNGK9E9Fdb/3Ag1sJ7fC', 'ROLE_ADMIN', true, NOW() - INTERVAL '30 days', NOW()),
+    ('Alice Green', 'household@agroloop.com', '$2a$10$LsTR0BgqzSgeKG0JNIuhCeDHot2V44V18IQK4BmU0mERt2YAtP2RW', 'ROLE_HOUSEHOLD', true, NOW() - INTERVAL '25 days', NOW()),
+    ('David Miller', 'david.household@agroloop.com', '$2a$10$LsTR0BgqzSgeKG0JNIuhCeDHot2V44V18IQK4BmU0mERt2YAtP2RW', 'ROLE_HOUSEHOLD', true, NOW() - INTERVAL '20 days', NOW()),
+    ('Sarah Connor', 'sarah.household@agroloop.com', '$2a$10$LsTR0BgqzSgeKG0JNIuhCeDHot2V44V18IQK4BmU0mERt2YAtP2RW', 'ROLE_HOUSEHOLD', true, NOW() - INTERVAL '15 days', NOW()),
+    ('Bob Farmer', 'farmer@agroloop.com', '$2a$10$0guwt2REbDTntCKV/os7xOwK4/AAUswO6lJZmVvMIaWqiFddgv1sy', 'ROLE_FARMER', true, NOW() - INTERVAL '30 days', NOW()),
+    ('Priya Nair', 'priya.farmer@agroloop.com', '$2a$10$0guwt2REbDTntCKV/os7xOwK4/AAUswO6lJZmVvMIaWqiFddgv1sy', 'ROLE_FARMER', true, NOW() - INTERVAL '25 days', NOW()),
+    ('Carlos Rivera', 'carlos.farmer@agroloop.com', '$2a$10$0guwt2REbDTntCKV/os7xOwK4/AAUswO6lJZmVvMIaWqiFddgv1sy', 'ROLE_FARMER', true, NOW() - INTERVAL '20 days', NOW())
 ON CONFLICT (email) DO UPDATE SET
     name = EXCLUDED.name,
+    password_hash = EXCLUDED.password_hash,
     role = EXCLUDED.role,
     enabled = EXCLUDED.enabled,
     updated_at = NOW();
