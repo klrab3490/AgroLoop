@@ -47,7 +47,7 @@ export default function HouseholdHubPage() {
         <h2 className="text-2xl font-black text-slate-900">Household Composter Portal</h2>
         <p className="text-xs text-slate-500">Sign in with a Household account to manage compost collections.</p>
         <Link
-          href="/auth/login"
+          href="/auth/login?redirect=/household"
           className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition"
         >
           Sign In

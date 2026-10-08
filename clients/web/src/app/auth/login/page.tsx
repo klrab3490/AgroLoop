@@ -1,18 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
-export default function LoginPage() {
+function getRoleDashboard(role?: string): string {
+  switch (role) {
+    case "ROLE_ADMIN":
+      return "/admin";
+    case "ROLE_FARMER":
+      return "/farmer";
+    case "ROLE_HOUSEHOLD":
+      return "/household";
+    default:
+      return "/";
+  }
+}
+
+function LoginForm() {
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get("redirect");
+
+  const { login, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // If already authenticated, redirect to destination or role dashboard
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      const target = redirectParam || getRoleDashboard(user.role);
+      router.replace(target);
+    }
+  }, [authLoading, isAuthenticated, user, redirectParam, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,8 +44,9 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login(email, password);
-      router.push("/");
+      const loggedUser = await login(email, password);
+      const target = redirectParam || getRoleDashboard(loggedUser?.role);
+      router.push(target);
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Invalid credentials. Please check your email and password.");
     } finally {
@@ -44,11 +69,11 @@ export default function LoginPage() {
             />
           </div>
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sign In to AgroLoop</h2>
-          <p className="text-xs text-slate-500">Access your household wallet, farmer routes, or orders</p>
+          <p className="text-xs text-slate-500">Access your household wallet, farmer routes, or admin portal</p>
         </div>
 
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium animate-in fade-in duration-200">
             {errorMsg}
           </div>
         )}
@@ -81,7 +106,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 transition shadow-sm"
+            className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 transition shadow-sm cursor-pointer"
           >
             {isSubmitting ? "Authenticating..." : "Sign In"}
           </button>
@@ -95,5 +120,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -563,7 +563,7 @@ export default function AdminHubPage() {
           Sign in with an authenticated System Administrator account to access operational metrics and platform governance.
         </p>
         <Link
-          href="/auth/login"
+          href="/auth/login?redirect=/admin"
           className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition"
         >
           Sign In as Admin

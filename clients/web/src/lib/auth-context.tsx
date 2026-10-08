@@ -10,8 +10,8 @@ export interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (fullName: string, email: string, password: string, address?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<UserApiResponse>;
+  register: (fullName: string, email: string, password: string, address?: string) => Promise<UserApiResponse>;
   logout: (redirectTo?: string) => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [updateAccessToken]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<UserApiResponse> => {
     setIsLoading(true);
     try {
       const res = (await webApiClient.auth.login({
@@ -81,13 +81,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.user && res.accessToken) {
         setUser(res.user);
         await updateAccessToken(res.accessToken);
+        return res.user;
       }
+      throw new Error("Invalid authentication response");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (fullName: string, email: string, password: string, address?: string) => {
+  const register = async (fullName: string, email: string, password: string, address?: string): Promise<UserApiResponse> => {
     setIsLoading(true);
     try {
       const res = (await webApiClient.auth.register({
@@ -101,7 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.user && res.accessToken) {
         setUser(res.user);
         await updateAccessToken(res.accessToken);
+        return res.user;
       }
+      throw new Error("Invalid registration response");
     } finally {
       setIsLoading(false);
     }

@@ -46,7 +46,7 @@ export default function FarmerHubPage() {
         <p className="text-4xl">🚜</p>
         <h2 className="text-2xl font-black text-slate-900">Farmer Operations Portal</h2>
         <p className="text-xs text-slate-500">Sign in with an approved Farmer account to access collection routes.</p>
-        <Link href="/auth/login" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs">
+        <Link href="/auth/login?redirect=/farmer" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition">
           Sign In
         </Link>
       </div>
