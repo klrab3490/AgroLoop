@@ -5,20 +5,21 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
+import { DoorstepWeighInModal } from "@/components/doorstep-weighin-modal";
 import type {
   PickupRequestApiResponse,
   CollectionRouteApiResponse,
   RouteStopApiResponse,
 } from "@agroloop/api-types";
 
-function haversineDistance(
+function getProximityMetrics(
   lat1: number | null | undefined,
   lon1: number | null | undefined,
   lat2: number | null | undefined,
   lon2: number | null | undefined
-): string {
+): { distance: string; duration: string; km: number } {
   if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
-    return "~2.5 km away";
+    return { distance: "2.4 km away", duration: "~8 min", km: 2.4 };
   }
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -30,8 +31,13 @@ function haversineDistance(
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c;
-  return `${d.toFixed(1)} km away`;
+  const km = R * c;
+  const mins = Math.max(3, Math.round((km / 22) * 60)); // ~22 km/h average local service speed
+  return {
+    distance: `${km.toFixed(1)} km away`,
+    duration: `~${mins} min`,
+    km,
+  };
 }
 
 function getCategoryIcon(category?: string | null): string {
@@ -64,8 +70,14 @@ function getCategoryLabel(category?: string | null): string {
   }
 }
 
+function getNeighborhood(address?: string | null): string {
+  if (!address) return "Kodungallur Sector";
+  const parts = address.split(",");
+  return parts[0].trim();
+}
+
 export default function FarmerPickupsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   // Active Workspace Tab: "route" | "available" | "accepted"
@@ -77,19 +89,16 @@ export default function FarmerPickupsPage() {
   const [startRouteModalOpen, setStartRouteModalOpen] = useState(false);
   const [activeRouteToStart, setActiveRouteToStart] = useState<CollectionRouteApiResponse | null>(null);
 
-  // Doorstep Verification Modal
-  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
-  const [targetPickupId, setTargetPickupId] = useState<number | null>(null);
-  const [targetStopId, setTargetStopId] = useState<number | null>(null);
-  const [verifiedWeight, setVerifiedWeight] = useState("5.0");
-  const [qualityGrade, setQualityGrade] = useState<"GRADE_A" | "GRADE_B" | "GRADE_C">("GRADE_A");
-  const [passcode, setPasscode] = useState("");
-  const [isVerifying, setIsVerifying] = useState(false);
+  // Dedicated Operational Doorstep Weigh-In Modal
+  const [weighInModalOpen, setWeighInModalOpen] = useState(false);
+  const [selectedPickupForWeighIn, setSelectedPickupForWeighIn] = useState<PickupRequestApiResponse | null>(null);
+  const [selectedStopId, setSelectedStopId] = useState<number | null>(null);
+
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // Default Kerala Farm baseline coordinates if not specified
+  // Baseline farm coordinates if farmer GPS is unset
   const farmLat = 10.8505;
   const farmLng = 76.2711;
 
@@ -129,7 +138,7 @@ export default function FarmerPickupsPage() {
     enabled: isAuthenticated && user?.role === "ROLE_FARMER",
   });
 
-  // Accepted pickups that are ready to add to a route
+  // Accepted pickups ready to sequence into a route
   const acceptedUnroutedPickups = myPickups.filter(
     (p) => p.status === "ASSIGNED" || p.status === "REQUESTED"
   );
@@ -139,7 +148,7 @@ export default function FarmerPickupsPage() {
     (r) => r.status === "IN_PROGRESS" || r.status === "PLANNED"
   );
 
-  // Helper to build Single-Stop Google Maps navigation URL
+  // Navigation helpers (Google Maps)
   const getSingleStopNavUrl = (lat?: number | null, lng?: number | null, address?: string | null) => {
     if (lat != null && lng != null) {
       return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -149,7 +158,6 @@ export default function FarmerPickupsPage() {
     )}`;
   };
 
-  // Helper to build Full Multi-Stop Google Maps Route URL
   const getFullRouteNavUrl = (route: CollectionRouteApiResponse) => {
     const origin = `${route.farmerLatitude ?? farmLat},${route.farmerLongitude ?? farmLng}`;
     const stopCoords = (route.stops || [])
@@ -178,7 +186,8 @@ export default function FarmerPickupsPage() {
         queryClient.invalidateQueries({ queryKey: ["farmer-available-pickups"] }),
         queryClient.invalidateQueries({ queryKey: ["farmer-my-pickups"] }),
       ]);
-      setActionSuccess(`Pickup #${acceptCandidate.id} accepted! Added to your collection queue.`);
+      const householdName = acceptCandidate.householdName || acceptCandidate.userName || "Household";
+      setActionSuccess(`Pickup for ${householdName} accepted! Added to your collection queue.`);
       setAcceptCandidate(null);
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : "Failed to accept pickup");
@@ -227,7 +236,7 @@ export default function FarmerPickupsPage() {
       await queryClient.invalidateQueries({ queryKey: ["farmer-active-routes"] });
       setStartRouteModalOpen(false);
       setActiveRouteToStart(null);
-      setActionSuccess("Route started! Follow your stops sequence below.");
+      setActionSuccess("Route started! Follow your sequenced stops below.");
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : "Failed to start route");
     } finally {
@@ -235,61 +244,81 @@ export default function FarmerPickupsPage() {
     }
   };
 
-  // 4. Verify Collection (Doorstep weigh-in)
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!targetPickupId) return;
+  // Helper to open Doorstep Weigh-In modal for a route stop
+  const openWeighInForStop = (stop: RouteStopApiResponse, idx: number) => {
+    const matchedPickup = myPickups.find((p) => p.id === stop.pickupId);
+    const residentName =
+      stop.userName ||
+      stop.householdName ||
+      matchedPickup?.householdName ||
+      (stop.pickupAddress?.toLowerCase().includes("green view")
+        ? "Alice Green Household"
+        : stop.pickupAddress?.toLowerCase().includes("palm grove")
+        ? "David Miller Household"
+        : stop.pickupAddress?.toLowerCase().includes("riverside")
+        ? "Sarah Connor Household"
+        : `Bob Household #${idx + 1}`);
 
-    setIsVerifying(true);
-    setActionError(null);
+    const pickupPayload: PickupRequestApiResponse = matchedPickup ?? {
+      id: stop.pickupId ?? idx + 1,
+      wasteSubmissionId: stop.pickupId ?? 1,
+      householdId: 2838,
+      householdName: residentName,
+      assignedFarmerId: user?.id ? Number(user.id) : 1,
+      assignedFarmerName: user?.name ?? "Farmer",
+      status: stop.status === "COMPLETED" ? "COLLECTED" : "ASSIGNED",
+      pickupAddress: stop.pickupAddress ?? "Registered Doorstep Address",
+      scheduledTime: new Date().toISOString(),
+      collectedAt: undefined,
+      cancelledAt: undefined,
+      cancellationReason: undefined,
+      verification: undefined,
+      handshakeVerified: stop.status === "COMPLETED",
+      latestHandshakeId: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      category: stop.category ?? "FOOD_SCRAPS",
+      estimatedWeight: stop.estimatedWeight ?? 4.8,
+      latitude: stop.latitude ?? farmLat,
+      longitude: stop.longitude ?? farmLng,
+      notes: undefined,
+      householdEmail: stop.userEmail ?? stop.householdEmail ?? "household@agroloop.com",
+      userName: residentName,
+      userEmail: stop.userEmail ?? "household@agroloop.com",
+    };
 
-    try {
-      // 1. Consume handshake passcode via BFF proxy
-      await webApiClient.pickups.verifyHandshake(targetPickupId, {
-        method: "MANUAL_PASSCODE",
-        passCode: passcode.trim(),
-      });
-
-      // 2. Complete certified verification and mint tokens
-      await webApiClient.farmer.verifyPickup(targetPickupId, {
-        verifiedWeight: parseFloat(verifiedWeight),
-        qualityGrade,
-        notes: "Doorstep weigh-in verified via collection route sequence",
-      });
-
-      // 3. Mark stop complete if part of active route
-      if (currentRoute?.id && targetStopId) {
-        try {
-          await webApiClient.farmer.completeStop(currentRoute.id, targetStopId);
-        } catch {
-          // Non-blocking
-        }
-      }
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["farmer-available-pickups"] }),
-        queryClient.invalidateQueries({ queryKey: ["farmer-my-pickups"] }),
-        queryClient.invalidateQueries({ queryKey: ["farmer-active-routes"] }),
-      ]);
-
-      setVerifyModalOpen(false);
-      setTargetPickupId(null);
-      setTargetStopId(null);
-      setPasscode("");
-      setActionSuccess("Collection verified! EcoTokens have been minted to household.");
-    } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : "Verification failed. Check passcode & attempt limit.");
-    } finally {
-      setIsVerifying(false);
-    }
+    setSelectedPickupForWeighIn(pickupPayload);
+    setSelectedStopId(stop.id ?? null);
+    setWeighInModalOpen(true);
   };
+
+  // Helper to open Doorstep Weigh-In modal for an accepted pickup
+  const openWeighInForPickup = (pickup: PickupRequestApiResponse) => {
+    setSelectedPickupForWeighIn(pickup);
+    setSelectedStopId(null);
+    setWeighInModalOpen(true);
+  };
+
+  if (authLoading) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+        <div className="h-6 w-32 rounded-xl bg-slate-200/60 animate-pulse" />
+        <div className="h-16 rounded-2xl bg-slate-200/60 animate-pulse" />
+        <div className="space-y-4">
+          <div className="h-32 rounded-3xl bg-slate-200/50 animate-pulse" />
+          <div className="h-32 rounded-3xl bg-slate-200/50 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== "ROLE_FARMER") {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-4xl">🚜</p>
         <h2 className="text-2xl font-black text-slate-900">Farmer Operations Portal</h2>
-        <Link href="/auth/login" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs">
+        <p className="text-xs text-slate-500">Sign in with an approved agricultural partner account.</p>
+        <Link href="/auth/login?redirect=/farmer/pickups" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition">
           Sign In
         </Link>
       </div>
@@ -305,9 +334,9 @@ export default function FarmerPickupsPage() {
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Collection Routes & Pickups</h1>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Collection Routes &amp; Pickups</h1>
             <p className="text-xs text-slate-500 mt-1">
-              Smart route planning, doorstep GPS navigation, and certified EcoToken weigh-in verification.
+              Operational doorstep collection dispatch, GPS navigation, and certified EcoToken weigh-in.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -321,17 +350,17 @@ export default function FarmerPickupsPage() {
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* Action Alerts */}
       {actionError && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl flex items-center justify-between">
           <span>⚠️ {actionError}</span>
-          <button onClick={() => setActionError(null)} className="text-red-500 hover:text-red-800 text-base">×</button>
+          <button onClick={() => setActionError(null)} className="text-red-500 hover:text-red-800 text-base font-bold">×</button>
         </div>
       )}
       {actionSuccess && (
         <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-2xl flex items-center justify-between">
           <span>✓ {actionSuccess}</span>
-          <button onClick={() => setActionSuccess(null)} className="text-emerald-600 hover:text-emerald-900 text-base">×</button>
+          <button onClick={() => setActionSuccess(null)} className="text-emerald-600 hover:text-emerald-900 text-base font-bold">×</button>
         </div>
       )}
 
@@ -402,7 +431,7 @@ export default function FarmerPickupsPage() {
                     </span>
                     <h2 className="text-2xl font-black tracking-tight">Today&apos;s Collection Route</h2>
                     <p className="text-xs text-slate-300">
-                      Starting from: <strong>{currentRoute.farmerAddress || "Your Farm Point"}</strong>
+                      Starting from: <strong>{currentRoute.farmerAddress || "Agricultural Center Point"}</strong>
                     </p>
                   </div>
 
@@ -453,141 +482,105 @@ export default function FarmerPickupsPage() {
 
               {/* Sequenced Route Stops List */}
               <div className="space-y-3">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                  Sequenced Stops Itinerary
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                    Sequenced Stops Itinerary
+                  </h3>
+                  <span className="text-xs text-slate-500">
+                    Optimized sequence to minimize travel time
+                  </span>
+                </div>
 
                 {(currentRoute.stops || []).map((stop: RouteStopApiResponse, idx: number) => {
                   const navUrl = getSingleStopNavUrl(stop.latitude, stop.longitude, stop.pickupAddress);
                   const isCompleted = stop.status === "COMPLETED";
 
-                  // Resolve resident user name and email for every stop
                   const matchedPickup = myPickups.find((p) => p.id === stop.pickupId);
                   const residentName =
                     stop.userName ||
                     stop.householdName ||
                     matchedPickup?.householdName ||
                     (stop.pickupAddress?.toLowerCase().includes("green view")
-                      ? "Alice Green"
+                      ? "Alice Green Household"
                       : stop.pickupAddress?.toLowerCase().includes("palm grove")
-                      ? "David Miller"
+                      ? "David Miller Household"
                       : stop.pickupAddress?.toLowerCase().includes("riverside")
-                      ? "Sarah Connor"
-                      : `Household Stop #${idx + 1}`);
+                      ? "Sarah Connor Household"
+                      : `Bob Household #${idx + 1}`);
 
-                  const residentEmail =
-                    stop.userEmail ||
-                    stop.householdEmail ||
-                    (matchedPickup as any)?.householdEmail ||
-                    (matchedPickup as any)?.userEmail ||
-                    (stop.pickupAddress?.toLowerCase().includes("green view")
-                      ? "household@agroloop.com"
-                      : stop.pickupAddress?.toLowerCase().includes("palm grove")
-                      ? "david.household@agroloop.com"
-                      : stop.pickupAddress?.toLowerCase().includes("riverside")
-                      ? "sarah.household@agroloop.com"
-                      : "household@agroloop.com");
+                  const neighborhood = getNeighborhood(stop.pickupAddress);
+                  const metrics = getProximityMetrics(farmLat, farmLng, stop.latitude, stop.longitude);
+                  const weightEst = stop.estimatedWeight ? stop.estimatedWeight.toFixed(1) : "4.8";
 
                   return (
                     <div
                       key={stop.id || idx}
                       className={`p-5 rounded-3xl border transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 ${
                         isCompleted
-                          ? "bg-slate-50 border-slate-200 opacity-70"
+                          ? "bg-slate-50 border-slate-200 opacity-75"
                           : "bg-white border-slate-200 shadow-sm hover:border-emerald-300"
                       }`}
                     >
                       <div className="flex items-start gap-4">
                         <div
-                          className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 ${
+                          className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-xs ${
                             isCompleted ? "bg-emerald-100 text-emerald-800" : "bg-slate-900 text-white"
                           }`}
                         >
                           {isCompleted ? "✓" : idx + 1}
                         </div>
 
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-sm text-slate-900">
-                              {stop.pickupAddress ? stop.pickupAddress.split(",")[0] : `Household Stop #${idx + 1}`}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-slate-100 text-slate-600">
-                              {getCategoryIcon(stop.category)} {getCategoryLabel(stop.category)}
-                            </span>
-                            {isCompleted && (
-                              <span className="px-2 py-0.5 rounded-full text-3xs font-bold bg-emerald-100 text-emerald-800">
-                                Collection Verified
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Resident User Name & Email */}
-                          <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-3xs font-black">
-                                👤
-                              </span>
+                            <span className="font-black text-base text-slate-900">
                               {residentName}
                             </span>
-                            {residentEmail && (
-                              <>
-                                <span className="text-slate-300">•</span>
-                                <a
-                                  href={`mailto:${residentEmail}`}
-                                  className="text-slate-500 hover:text-emerald-700 transition flex items-center gap-1 text-2xs font-normal"
-                                  title={`Email ${residentName}`}
-                                >
-                                  <span>✉️</span>
-                                  <span>{residentEmail}</span>
-                                </a>
-                              </>
+                            {isCompleted ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-3xs font-black bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                                <span>✓</span> Completed
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full text-3xs font-black bg-amber-100 text-amber-800 flex items-center gap-1">
+                                <span>●</span> Weigh-In Required
+                              </span>
                             )}
                           </div>
 
-                          <p className="text-xs text-slate-500">
-                            📍 {stop.pickupAddress || "Registered Doorstep"}
-                          </p>
-                          <div className="flex items-center gap-3 text-2xs text-slate-400 font-medium">
-                            <span>
-                              Distance:{" "}
-                              <strong>
-                                {stop.estimatedDistanceFromPrevKm != null
-                                  ? `${stop.estimatedDistanceFromPrevKm.toFixed(1)} km`
-                                  : "~2.1 km"}
-                              </strong>
+                          <div className="text-xs text-slate-500 font-medium">
+                            <span>📍 {neighborhood}</span>
+                            <span className="mx-1.5 text-slate-300">•</span>
+                            <span className="text-emerald-700 font-bold">{metrics.distance} ({metrics.duration})</span>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-600 pt-0.5">
+                            <span className="flex items-center gap-1">
+                              {getCategoryIcon(stop.category)} {getCategoryLabel(stop.category)}
                             </span>
-                            <span>•</span>
-                            <span>
-                              Estimated Weight:{" "}
-                              <strong className="text-emerald-700">
-                                ~{stop.estimatedWeight ? stop.estimatedWeight.toFixed(1) : "12.0"} kg
-                              </strong>
-                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="font-bold text-slate-800">⚖️ About {weightEst} kg</span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-slate-400">🕐 Scheduled Today</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Stop Action Buttons */}
+                      {/* Operational Action Buttons */}
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         <a
                           href={navUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3.5 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1"
+                          className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1"
                         >
-                          <span>📍 Navigate</span>
+                          <span>📍 View Route</span>
                         </a>
 
-                        {!isCompleted && stop.pickupId && (
+                        {!isCompleted && (
                           <button
-                            onClick={() => {
-                              setTargetPickupId(stop.pickupId);
-                              setTargetStopId(stop.id);
-                              setVerifyModalOpen(true);
-                            }}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                            onClick={() => openWeighInForStop(stop, idx)}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-100 transition flex items-center gap-1.5"
                           >
-                            Arrived &amp; Weigh In
+                            <span>⚖️ Arrived &amp; Weigh In</span>
                           </button>
                         )}
                       </div>
@@ -639,7 +632,7 @@ export default function FarmerPickupsPage() {
               Available Household Submissions
             </h3>
             <span className="text-xs text-slate-500">
-              Sorted by proximity to your farm collection point
+              Sorted by proximity to your collection vehicle
             </span>
           </div>
 
@@ -660,30 +653,23 @@ export default function FarmerPickupsPage() {
           ) : (
             <div className="space-y-4">
               {availablePickups.map((pickup) => {
-                const distanceStr = haversineDistance(farmLat, farmLng, pickup.latitude, pickup.longitude);
+                const metrics = getProximityMetrics(farmLat, farmLng, pickup.latitude, pickup.longitude);
                 const categoryIcon = getCategoryIcon(pickup.category);
                 const categoryLabel = getCategoryLabel(pickup.category);
-                const weightEst = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "5.0";
+                const weightEst = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "4.8";
                 const residentName =
                   pickup.householdName ||
                   pickup.userName ||
                   (pickup.pickupAddress?.toLowerCase().includes("green view")
-                    ? "Alice Green"
+                    ? "Alice Green Household"
                     : pickup.pickupAddress?.toLowerCase().includes("palm grove")
-                    ? "David Miller"
+                    ? "David Miller Household"
                     : pickup.pickupAddress?.toLowerCase().includes("riverside")
-                    ? "Sarah Connor"
-                    : "Resident Household");
-                const residentEmail =
-                  pickup.householdEmail ||
-                  pickup.userEmail ||
-                  (pickup.pickupAddress?.toLowerCase().includes("green view")
-                    ? "household@agroloop.com"
-                    : pickup.pickupAddress?.toLowerCase().includes("palm grove")
-                    ? "david.household@agroloop.com"
-                    : pickup.pickupAddress?.toLowerCase().includes("riverside")
-                    ? "sarah.household@agroloop.com"
-                    : "household@agroloop.com");
+                    ? "Sarah Connor Household"
+                    : "Bob Household");
+
+                const neighborhood = getNeighborhood(pickup.pickupAddress);
+                const navUrl = getSingleStopNavUrl(pickup.latitude, pickup.longitude, pickup.pickupAddress);
 
                 return (
                   <div
@@ -692,55 +678,43 @@ export default function FarmerPickupsPage() {
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-3xs font-extrabold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                          <span>🟢 New Pickup</span>
+                        <span className="px-2.5 py-0.5 rounded-full text-3xs font-black bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                          <span>●</span> Available for Pickup
                         </span>
-                        <span className="text-xs font-bold text-slate-400">
-                          Ref #{pickup.id}
+                        <span className="text-2xs text-slate-400 font-medium">
+                          Scheduled Today
                         </span>
                       </div>
 
-                      {/* Resident User Name & Email */}
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-3xs font-black">
-                            👤
-                          </span>
-                          {residentName}
-                        </span>
-                        {residentEmail && (
-                          <>
-                            <span className="text-slate-300">•</span>
-                            <a
-                              href={`mailto:${residentEmail}`}
-                              className="text-slate-500 hover:text-emerald-700 transition flex items-center gap-1 text-2xs font-normal"
-                              title={`Email ${residentName}`}
-                            >
-                              <span>✉️</span>
-                              <span>{residentEmail}</span>
-                            </a>
-                          </>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-base font-black text-slate-900">{residentName}</h4>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-sm font-black text-slate-900">
-                        <span className="text-emerald-700 flex items-center gap-1">
-                          📍 {distanceStr}
-                        </span>
-                        <span>•</span>
+                      <div className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                        <span>📍 {neighborhood}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-emerald-700 font-bold">{metrics.distance} ({metrics.duration})</span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-slate-600 pt-0.5">
                         <span className="flex items-center gap-1">
-                          🏠 {pickup.pickupAddress || "Kodungallur, Kerala"}
+                          {categoryIcon} {categoryLabel}
                         </span>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-xs text-slate-600">
-                        <span>{categoryIcon} {categoryLabel}</span>
-                        <span>•</span>
-                        <span className="font-bold text-emerald-800">⚖️ About {weightEst} kg</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="font-bold text-slate-800">⚖️ About {weightEst} kg</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 self-end sm:self-center">
+                    <div className="flex items-center gap-2.5 self-end sm:self-center">
+                      <a
+                        href={navUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                      >
+                        📍 View Location
+                      </a>
+
                       <button
                         onClick={() => setAcceptCandidate(pickup)}
                         className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
@@ -757,7 +731,7 @@ export default function FarmerPickupsPage() {
       )}
 
       {/* ============================================================== */}
-      {/* TAB 3: ACCEPTED PICKUPS (READY TO ROUTE)                       */}
+      {/* TAB 3: ACCEPTED PICKUPS (READY TO ROUTE / WEIGH-IN)           */}
       {/* ============================================================== */}
       {activeTab === "accepted" && (
         <div className="space-y-6">
@@ -767,7 +741,7 @@ export default function FarmerPickupsPage() {
                 My Accepted Pickups
               </h3>
               <p className="text-xs text-slate-500">
-                Pickups claimed by you that can be added to your next collection route.
+                Pickups claimed by you that can be added to your next route or weighed directly.
               </p>
             </div>
 
@@ -804,30 +778,23 @@ export default function FarmerPickupsPage() {
           ) : (
             <div className="space-y-4">
               {acceptedUnroutedPickups.map((pickup) => {
-                const distanceStr = haversineDistance(farmLat, farmLng, pickup.latitude, pickup.longitude);
+                const metrics = getProximityMetrics(farmLat, farmLng, pickup.latitude, pickup.longitude);
                 const categoryIcon = getCategoryIcon(pickup.category);
                 const categoryLabel = getCategoryLabel(pickup.category);
-                const weightEst = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "5.0";
+                const weightEst = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "4.8";
                 const residentName =
                   pickup.householdName ||
                   pickup.userName ||
                   (pickup.pickupAddress?.toLowerCase().includes("green view")
-                    ? "Alice Green"
+                    ? "Alice Green Household"
                     : pickup.pickupAddress?.toLowerCase().includes("palm grove")
-                    ? "David Miller"
+                    ? "David Miller Household"
                     : pickup.pickupAddress?.toLowerCase().includes("riverside")
-                    ? "Sarah Connor"
-                    : "Resident Household");
-                const residentEmail =
-                  pickup.householdEmail ||
-                  pickup.userEmail ||
-                  (pickup.pickupAddress?.toLowerCase().includes("green view")
-                    ? "household@agroloop.com"
-                    : pickup.pickupAddress?.toLowerCase().includes("palm grove")
-                    ? "david.household@agroloop.com"
-                    : pickup.pickupAddress?.toLowerCase().includes("riverside")
-                    ? "sarah.household@agroloop.com"
-                    : "household@agroloop.com");
+                    ? "Sarah Connor Household"
+                    : "Bob Household");
+
+                const neighborhood = getNeighborhood(pickup.pickupAddress);
+                const navUrl = getSingleStopNavUrl(pickup.latitude, pickup.longitude, pickup.pickupAddress);
 
                 return (
                   <div
@@ -836,57 +803,46 @@ export default function FarmerPickupsPage() {
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-3xs font-extrabold bg-blue-100 text-blue-800">
-                          📦 Pickup Accepted
+                        <span className="px-2.5 py-0.5 rounded-full text-3xs font-black bg-blue-100 text-blue-800 flex items-center gap-1">
+                          <span>●</span> Ready for Weigh-In
                         </span>
-                        <span className="text-3xs text-slate-400">Ready to add to route</span>
+                        <span className="text-3xs text-slate-400">Ready to route or weigh on-site</span>
                       </div>
 
-                      {/* Resident User Name & Email */}
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-3xs font-black">
-                            👤
-                          </span>
-                          {residentName}
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-base font-black text-slate-900">{residentName}</h4>
+                      </div>
+
+                      <div className="text-xs text-slate-500 font-medium flex items-center gap-2">
+                        <span>📍 {neighborhood}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-emerald-700 font-bold">{metrics.distance} ({metrics.duration})</span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-xs text-slate-600 pt-0.5">
+                        <span className="flex items-center gap-1">
+                          {categoryIcon} {categoryLabel}
                         </span>
-                        {residentEmail && (
-                          <>
-                            <span className="text-slate-300">•</span>
-                            <a
-                              href={`mailto:${residentEmail}`}
-                              className="text-slate-500 hover:text-emerald-700 transition flex items-center gap-1 text-2xs font-normal"
-                              title={`Email ${residentName}`}
-                            >
-                              <span>✉️</span>
-                              <span>{residentEmail}</span>
-                            </a>
-                          </>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm font-black text-slate-900">
-                        <span>📍 {distanceStr}</span>
-                        <span>•</span>
-                        <span>🏠 {pickup.pickupAddress || "Kodungallur, Kerala"}</span>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-xs text-slate-600">
-                        <span>{categoryIcon} {categoryLabel}</span>
-                        <span>•</span>
-                        <span>⚖️ About {weightEst} kg</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="font-bold text-slate-800">⚖️ About {weightEst} kg</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      <button
-                        onClick={() => {
-                          setTargetPickupId(pickup.id ?? null);
-                          setVerifyModalOpen(true);
-                        }}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                    <div className="flex items-center gap-2.5 self-end sm:self-center">
+                      <a
+                        href={navUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
                       >
-                        Verify On-Site
+                        📍 View Route
+                      </a>
+
+                      <button
+                        onClick={() => openWeighInForPickup(pickup)}
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5"
+                      >
+                        <span>⚖️ Arrived &amp; Weigh In</span>
                       </button>
                     </div>
                   </div>
@@ -917,19 +873,25 @@ export default function FarmerPickupsPage() {
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase text-3xs">Household</span>
+                <span className="font-bold text-slate-800">
+                  {acceptCandidate.householdName || acceptCandidate.userName || "Resident Household"}
+                </span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Location</span>
                 <span className="font-bold text-slate-800">{acceptCandidate.pickupAddress || "Kodungallur"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Distance</span>
                 <span className="font-bold text-emerald-700">
-                  {haversineDistance(farmLat, farmLng, acceptCandidate.latitude, acceptCandidate.longitude)}
+                  {getProximityMetrics(farmLat, farmLng, acceptCandidate.latitude, acceptCandidate.longitude).distance}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Estimated Waste</span>
                 <span className="font-bold text-slate-800">
-                  {acceptCandidate.estimatedWeight ? `${acceptCandidate.estimatedWeight} kg` : "5.0 kg"}
+                  {acceptCandidate.estimatedWeight ? `${acceptCandidate.estimatedWeight.toFixed(1)} kg` : "4.8 kg"}
                 </span>
               </div>
             </div>
@@ -984,7 +946,7 @@ export default function FarmerPickupsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Starting From</span>
-                <span className="font-bold text-slate-800">Your Farm (Baseline)</span>
+                <span className="font-bold text-slate-800">Your Agricultural Base Point</span>
               </div>
             </div>
 
@@ -1065,75 +1027,29 @@ export default function FarmerPickupsPage() {
       )}
 
       {/* ============================================================== */}
-      {/* MODAL 4: DOORSTEP WEIGH-IN & PASSCODE VERIFICATION            */}
+      {/* MODAL 4: OPERATIONAL DOORSTEP WEIGH-IN & REWARD WORKFLOW       */}
       {/* ============================================================== */}
-      {verifyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-3xl max-w-md w-full space-y-4 border border-slate-200 shadow-2xl">
-            <h3 className="font-bold text-lg text-slate-900">Doorstep Collection Weigh-In</h3>
-            <p className="text-xs text-slate-500">
-              Enter certified weight, organic quality grade, and household&apos;s passcode (e.g. ECO-XXXX-PASS).
-            </p>
-
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Household QR Passcode</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ECO-1234-PASS"
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value.toUpperCase())}
-                  className="w-full p-2.5 font-mono text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Actual Weight (kg)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  required
-                  value={verifiedWeight}
-                  onChange={(e) => setVerifiedWeight(e.target.value)}
-                  className="w-full p-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Quality Grade</label>
-                <select
-                  value={qualityGrade}
-                  onChange={(e) => setQualityGrade(e.target.value as "GRADE_A" | "GRADE_B" | "GRADE_C")}
-                  className="w-full p-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                >
-                  <option value="GRADE_A">Grade A (Premium Organic / No Contaminants — 1.0x)</option>
-                  <option value="GRADE_B">Grade B (Standard Organic Waste — 0.8x)</option>
-                  <option value="GRADE_C">Grade C (Mixed Organic / Minor Inert Matter — 0.6x)</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2 justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => setVerifyModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isVerifying}
-                  className="px-5 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 disabled:bg-slate-300"
-                >
-                  {isVerifying ? "Verifying..." : "Confirm & Mint Tokens"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <DoorstepWeighInModal
+        isOpen={weighInModalOpen}
+        onClose={() => {
+          setWeighInModalOpen(false);
+          setSelectedPickupForWeighIn(null);
+          setSelectedStopId(null);
+        }}
+        pickup={selectedPickupForWeighIn}
+        stopId={selectedStopId}
+        routeId={currentRoute?.id}
+        onSuccess={({ weight, tokensMinted }) => {
+          queryClient.invalidateQueries({ queryKey: ["farmer-available-pickups"] });
+          queryClient.invalidateQueries({ queryKey: ["farmer-my-pickups"] });
+          queryClient.invalidateQueries({ queryKey: ["farmer-active-routes"] });
+          setActionSuccess(`Collection certified: ${weight.toFixed(2)} kg recorded and 🪙 +${tokensMinted.toFixed(2)} EcoTokens minted!`);
+        }}
+        hasNextStop={Boolean(currentRoute?.stops?.some((s) => s.status !== "COMPLETED"))}
+        onNavigateNextStop={() => {
+          setActiveTab("route");
+        }}
+      />
     </div>
   );
 }

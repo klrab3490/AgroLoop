@@ -8,7 +8,7 @@ import { webApiClient } from "@/lib/api";
 import type { ProductApiResponse } from "@agroloop/api-types";
 
 export default function FarmerProductsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -53,12 +53,26 @@ export default function FarmerProductsPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+        <div className="h-6 w-32 rounded-xl bg-slate-200/60 animate-pulse" />
+        <div className="h-16 rounded-2xl bg-slate-200/60 animate-pulse" />
+        <div className="space-y-4">
+          <div className="h-28 rounded-3xl bg-slate-200/50 animate-pulse" />
+          <div className="h-28 rounded-3xl bg-slate-200/50 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated || user?.role !== "ROLE_FARMER") {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-4xl">🔒</p>
         <h2 className="text-2xl font-black text-slate-900">Farmer Authentication Required</h2>
-        <Link href="/auth/login" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs">
+        <p className="text-xs text-slate-500">Sign in with an approved Farmer account to manage product listings.</p>
+        <Link href="/auth/login?redirect=/farmer/products" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition">
           Sign In
         </Link>
       </div>

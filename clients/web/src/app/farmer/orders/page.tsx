@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
 export default function FarmerOrdersPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: orders, isLoading, error } = useQuery({
     queryKey: ["farmer-orders"],
@@ -15,12 +15,27 @@ export default function FarmerOrdersPage() {
     enabled: isAuthenticated && user?.role === "ROLE_FARMER",
   });
 
+  if (authLoading) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+        <div className="h-6 w-32 rounded-xl bg-slate-200/60 animate-pulse" />
+        <div className="h-16 rounded-2xl bg-slate-200/60 animate-pulse" />
+        <div className="space-y-4">
+          <div className="h-32 rounded-3xl bg-slate-200/50 animate-pulse" />
+          <div className="h-32 rounded-3xl bg-slate-200/50 animate-pulse" />
+          <div className="h-32 rounded-3xl bg-slate-200/50 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated || user?.role !== "ROLE_FARMER") {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-4xl">🔒</p>
         <h2 className="text-2xl font-black text-slate-900">Farmer Authentication Required</h2>
-        <Link href="/auth/login" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs">
+        <p className="text-xs text-slate-500">Sign in with an approved Farmer account to fulfill customer produce orders.</p>
+        <Link href="/auth/login?redirect=/farmer/orders" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition">
           Sign In
         </Link>
       </div>
@@ -81,37 +96,72 @@ export default function FarmerOrdersPage() {
             return (
               <div
                 key={order.id}
-                className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-emerald-200 transition"
+                className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between gap-4 hover:border-emerald-200 transition"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-slate-900">Order #{order.id}</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-3xs font-bold bg-emerald-100 text-emerald-800">
-                      {order.status === "PLACED" ? "Ready for Delivery" : order.status}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm text-slate-900">Order #{order.id}</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-3xs font-bold bg-emerald-100 text-emerald-800">
+                        {order.status === "PLACED" ? "Ready for Delivery" : order.status}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600">
+                      {order.householdName && (
+                        <span>👤 Customer: <strong>{order.householdName}</strong></span>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <span>🏠 Destination: <strong>{order.deliveryAddress || "Address on file"}</strong></span>
+                        <a
+                          href={gmapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-3xs rounded-lg border border-slate-200 transition"
+                        >
+                          <span>📍 Navigate</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    <p className="text-2xs text-slate-400">
+                      Placed on: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "—"}
+                    </p>
+                  </div>
+
+                  <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto">
+                    <span className="text-3xs text-slate-400 uppercase font-bold block">Order Total</span>
+                    <span className="text-base font-black text-emerald-700">
+                      {order.totalTokens} Tokens
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <span>🏠 Destination: <strong>{order.deliveryAddress || "Address on file"}</strong></span>
-                    <a
-                      href={gmapUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-3xs rounded-lg border border-slate-200 transition"
-                    >
-                      <span>📍 Navigate</span>
-                    </a>
-                  </div>
-                  <p className="text-2xs text-slate-400">
-                    Placed on: {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "—"}
-                  </p>
                 </div>
 
-                <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto">
-                  <span className="text-3xs text-slate-400 uppercase font-bold block">Order Total</span>
-                  <span className="text-base font-black text-emerald-700">
-                    {order.totalTokens} Tokens
-                  </span>
-                </div>
+                {order.items && order.items.length > 0 && (
+                  <div className="pt-3 border-t border-slate-100">
+                    <span className="text-3xs uppercase font-extrabold tracking-wider text-slate-400 block mb-1.5">
+                      Items to fulfill:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {order.items.map((item) => (
+                        <span
+                          key={item.id}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-2xs font-semibold"
+                        >
+                          <span>📦 {item.productName || "Farm Produce"}</span>
+                          <span className="text-slate-400">×{item.quantity}</span>
+                          <span className="text-emerald-700 font-bold font-mono">({item.subtotal ?? (item.quantity ?? 1) * (item.unitPrice ?? 0)} T)</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {order.notes && (
+                  <p className="text-2xs text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                    📝 <strong>Delivery Note:</strong> &ldquo;{order.notes}&rdquo;
+                  </p>
+                )}
               </div>
             );
           })}
