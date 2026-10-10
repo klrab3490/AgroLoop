@@ -10,5 +10,7 @@ public record SystemMetaApiResponse(
     String service,
     @JsonProperty("api_version") String apiVersion,
     @JsonProperty("minimum_client_version") String minimumClientVersion,
-    @JsonProperty("server_version") String serverVersion
+    @JsonProperty("server_version") String serverVersion,
+    @JsonProperty("app_version") String appVersion,
+    @JsonProperty("github_repo") String githubRepo
 ) {}

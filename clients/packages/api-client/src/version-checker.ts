@@ -7,6 +7,22 @@ declare const process: { env?: Record<string, string | undefined> } | undefined;
  */
 export function resolveEnv(key: string, defaultValue: string): string {
   try {
+    if (key === "APP_VERSION") {
+      const literalVal =
+        typeof process !== "undefined" && process?.env
+          ? process.env.NEXT_PUBLIC_APP_VERSION || process.env.APP_VERSION || process.env.EXPO_PUBLIC_APP_VERSION
+          : undefined;
+      if (literalVal && typeof literalVal === "string") return literalVal.trim();
+    }
+
+    if (key === "GITHUB_REPO") {
+      const literalRepo =
+        typeof process !== "undefined" && process?.env
+          ? process.env.NEXT_PUBLIC_GITHUB_REPO || process.env.GITHUB_REPO || process.env.EXPO_PUBLIC_GITHUB_REPO
+          : undefined;
+      if (literalRepo && typeof literalRepo === "string") return literalRepo.trim();
+    }
+
     if (typeof process !== "undefined" && process?.env) {
       const val =
         process.env[key] ||
@@ -34,7 +50,7 @@ export function resolveEnv(key: string, defaultValue: string): string {
 }
 
 export const DEFAULT_GITHUB_REPO = resolveEnv("GITHUB_REPO", "AgnaMariya/AgroLoop");
-export const CURRENT_PLATFORM_VERSION = resolveEnv("APP_VERSION", "1.0.3");
+export const CURRENT_PLATFORM_VERSION = resolveEnv("APP_VERSION", "1.0.6");
 
 export interface GitHubReleaseAsset {
   name: string;

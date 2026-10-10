@@ -29,6 +29,8 @@ services:
       NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.6}
       EXPO_PUBLIC_APP_VERSION: ${EXPO_PUBLIC_APP_VERSION:-1.0.6}
       VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.6}
+      GITHUB_REPO: ${GITHUB_REPO:-AgnaMariya/AgroLoop}
+      NEXT_PUBLIC_GITHUB_REPO: ${NEXT_PUBLIC_GITHUB_REPO:-AgnaMariya/AgroLoop}
     volumes:
       - agroloop_local_uploads:/app/uploads
     networks:
@@ -47,6 +49,8 @@ services:
         NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.6}
         EXPO_PUBLIC_APP_VERSION: ${EXPO_PUBLIC_APP_VERSION:-1.0.6}
         VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.6}
+        GITHUB_REPO: ${GITHUB_REPO:-AgnaMariya/AgroLoop}
+        NEXT_PUBLIC_GITHUB_REPO: ${NEXT_PUBLIC_GITHUB_REPO:-AgnaMariya/AgroLoop}
     container_name: agroloop-web-local
     restart: unless-stopped
     ports:
@@ -60,6 +64,8 @@ services:
       NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.6}
       EXPO_PUBLIC_APP_VERSION: ${EXPO_PUBLIC_APP_VERSION:-1.0.6}
       VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.6}
+      GITHUB_REPO: ${GITHUB_REPO:-AgnaMariya/AgroLoop}
+      NEXT_PUBLIC_GITHUB_REPO: ${NEXT_PUBLIC_GITHUB_REPO:-AgnaMariya/AgroLoop}
     depends_on:
       - app
     networks:

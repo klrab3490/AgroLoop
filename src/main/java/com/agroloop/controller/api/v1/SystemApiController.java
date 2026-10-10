@@ -22,15 +22,21 @@ public class SystemApiController {
     private final String serverVersion;
     private final String apiVersion;
     private final String minimumClientVersion;
+    private final String appVersion;
+    private final String githubRepo;
 
     public SystemApiController(
             @Value("${agroloop.server.version:8.0.0}") String serverVersion,
             @Value("${agroloop.api.version:v1}") String apiVersion,
-            @Value("${agroloop.api.minimum-client-version:1.0.0}") String minimumClientVersion
+            @Value("${agroloop.api.minimum-client-version:1.0.0}") String minimumClientVersion,
+            @Value("${agroloop.app.version:1.0.6}") String appVersion,
+            @Value("${agroloop.github.repo:AgnaMariya/AgroLoop}") String githubRepo
     ) {
         this.serverVersion = serverVersion;
         this.apiVersion = apiVersion;
         this.minimumClientVersion = minimumClientVersion;
+        this.appVersion = appVersion;
+        this.githubRepo = githubRepo;
     }
 
     @GetMapping("/health")
@@ -47,7 +53,9 @@ public class SystemApiController {
                 "agroloop",
                 apiVersion,
                 minimumClientVersion,
-                serverVersion
+                serverVersion,
+                appVersion,
+                githubRepo
         ));
     }
 }

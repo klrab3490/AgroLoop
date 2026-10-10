@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
 import { CartDrawer } from "./cart-drawer";
@@ -36,6 +37,33 @@ export function Navbar() {
 
   const backendOrigin = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   const adminDashboardUrl = `${backendOrigin.replace(/\/+$/, "")}/admin/dashboard`;
+
+  // Fetch authoritative system metadata (app_version & github_repo) from backend API
+  const { data: systemMeta } = useQuery({
+    queryKey: ["system-meta"],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`${backendOrigin}/api/v1/meta`);
+        if (res.ok) {
+          return (await res.json()) as {
+            app_version?: string;
+            server_version?: string;
+            github_repo?: string;
+          };
+        }
+      } catch {
+        // Fallback to static client version
+      }
+      return null;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const appVersion =
+    systemMeta?.app_version ||
+    process.env.NEXT_PUBLIC_APP_VERSION ||
+    CURRENT_PLATFORM_VERSION ||
+    "1.0.6";
 
   // Close user dropdown on outside click
   useEffect(() => {
@@ -102,7 +130,7 @@ export function Navbar() {
                       Eco<span className="text-emerald-600">Nexus</span>
                     </span>
                     <span className="hidden xl:inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-none">
-                      v{CURRENT_PLATFORM_VERSION}
+                      v{appVersion}
                     </span>
                   </div>
                   <span className="hidden sm:inline-block text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-0.5">
@@ -119,7 +147,7 @@ export function Navbar() {
                 title="Check for software updates on GitHub"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>v{CURRENT_PLATFORM_VERSION}</span>
+                <span>v{appVersion}</span>
                 <svg
                   className="w-3 h-3 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all"
                   fill="none"

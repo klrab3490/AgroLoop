@@ -4,6 +4,8 @@ export interface ServerMeta {
   api_version: string;
   minimum_client_version: string;
   server_version: string;
+  app_version?: string;
+  github_repo?: string;
 }
 
 export type ServerVerificationReason =
