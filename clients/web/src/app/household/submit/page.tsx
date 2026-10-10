@@ -15,7 +15,7 @@ const WASTE_CATEGORIES = [
 
 export default function SubmitWastePage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [category, setCategory] = useState<string>("FOOD_SCRAPS");
   const [weight, setWeight] = useState("5.0");
@@ -89,6 +89,16 @@ export default function SubmitWastePage() {
       setPreviewUrl(null);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-8 animate-pulse">
+        <div className="h-6 w-32 rounded-xl bg-slate-200/60" />
+        <div className="h-16 rounded-2xl bg-slate-200/60" />
+        <div className="h-96 rounded-3xl bg-slate-200/50" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== "ROLE_HOUSEHOLD") {
     return (

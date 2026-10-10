@@ -75,7 +75,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4" data-testid="register-form">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4" data-testid="register-form">
           <div>
             <label htmlFor="fullName" className="block text-xs font-bold text-slate-700 mb-1">
               Full Name

@@ -1,7 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useId } from "react";
-import type { PickupRequestApiResponse } from "@agroloop/api-types";
+import React, { useState, useEffect, useRef } from "react";
+import type {
+  PickupRequestApiResponse,
+  VerifyPickupHandshakeApiRequest,
+  CompactQrPayload,
+} from "@agroloop/api-types";
 import { webApiClient } from "../lib/api";
 
 export interface QualityGradeOption {
@@ -64,6 +68,16 @@ export function getCategoryDisplayName(category?: string | null): string {
   }
 }
 
+export function formatTokenAmount(amount: number): string {
+  if (Number.isInteger(amount)) {
+    return amount.toString();
+  }
+  if (Math.abs(amount - Math.round(amount)) < 0.001) {
+    return Math.round(amount).toString();
+  }
+  return amount.toFixed(2);
+}
+
 export function calculateEstimatedTokens(
   weightKg: number,
   gradeValue: "GRADE_A" | "GRADE_B" | "GRADE_C",
@@ -85,6 +99,32 @@ export function calculateEstimatedTokens(
     gradeMultiplier: gradeMult,
     categoryMultiplier: catMult,
     rawReward: raw,
+  };
+}
+
+/**
+ * Parses raw verification input into a VerifyPickupHandshakeApiRequest.
+ * Supports compact QR JSON payload (with nonce and signature or passcode)
+ * as well as manual passcode strings (e.g. ECO-1234-5678).
+ */
+export function buildVerificationRequest(rawInput: string): VerifyPickupHandshakeApiRequest {
+  const trimmed = rawInput.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed.n && (parsed.sig || parsed.c)) {
+        return {
+          method: "QR_SCAN",
+          payload: parsed as CompactQrPayload,
+        };
+      }
+    } catch {
+      // Fallback to manual passcode
+    }
+  }
+  return {
+    method: "MANUAL_PASSCODE",
+    passCode: trimmed.toUpperCase(),
   };
 }
 
@@ -119,42 +159,73 @@ export function DoorstepWeighInModal({
   const [currentStep, setCurrentStep] = useState<ModalStep>("form");
   const [weightInput, setWeightInput] = useState<string>("4.8");
   const [qualityGrade, setQualityGrade] = useState<"GRADE_A" | "GRADE_B" | "GRADE_C">("GRADE_A");
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [passcode, setPasscode] = useState<string>("");
   const [scannerOpen, setScannerOpen] = useState<boolean>(false);
+  const [showDetailedReceipt, setShowDetailedReceipt] = useState<boolean>(false);
+  const [isHandshakeVerifiedLocally, setIsHandshakeVerifiedLocally] = useState<boolean>(false);
+  const [isVerifyingHandshake, setIsVerifyingHandshake] = useState<boolean>(false);
 
   // Validation & Error States
   const [weightError, setWeightError] = useState<string | null>(null);
   const [passcodeError, setPasscodeError] = useState<string | null>(null);
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
   const [isAlreadyProcessed, setIsAlreadyProcessed] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submittedData, setSubmittedData] = useState<{
     weight: number;
     grade: "GRADE_A" | "GRADE_B" | "GRADE_C";
     tokens: number;
   } | null>(null);
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const parsedWeight = parseFloat(weightInput);
-  const isHandshakeAlreadyVerified = Boolean(pickup?.handshakeVerified);
+  const isHandshakeAlreadyVerified = Boolean(pickup?.handshakeVerified || isHandshakeVerifiedLocally);
 
-  // Initialize form when pickup changes
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
+  // Reset form when pickup changes
   useEffect(() => {
     if (pickup) {
       const initialWeight = pickup.estimatedWeight ? pickup.estimatedWeight.toFixed(1) : "4.8";
       setWeightInput(initialWeight);
       setQualityGrade("GRADE_A");
+      setDropdownOpen(false);
       setPasscode("");
       setWeightError(null);
       setPasscodeError(null);
       setApiErrorMessage(null);
-      setIsAlreadyProcessed(false);
-      setCurrentStep("form");
+      setIsHandshakeVerifiedLocally(Boolean(pickup.handshakeVerified));
+      setIsSubmitting(false);
       setScannerOpen(false);
+      setShowDetailedReceipt(false);
+
+      if (pickup.status === "VERIFIED") {
+        setIsAlreadyProcessed(true);
+        setCurrentStep("error");
+      } else {
+        setIsAlreadyProcessed(false);
+        setCurrentStep("form");
+      }
     }
   }, [pickup]);
 
   if (!isOpen || !pickup) return null;
 
-  // Resolve household display name and standard reference code
+  // Resolve household name and readable reference code (never expose raw DB IDs)
   const householdName =
     pickup.householdName ||
     pickup.userName ||
@@ -167,6 +238,7 @@ export function DoorstepWeighInModal({
       : "Bob Household");
 
   const householdRefCode = `ECO-${(pickup.id ?? 2126).toString().padStart(4, "0")}-${((pickup.householdId ?? 2838) % 9000 + 1000)}`;
+  const neighborhood = pickup.pickupAddress ? pickup.pickupAddress.split(",")[0].trim() : "Local Sector";
 
   const selectedGradeObj =
     QUALITY_GRADES.find((g) => g.value === qualityGrade) ?? QUALITY_GRADES[0];
@@ -179,95 +251,158 @@ export function DoorstepWeighInModal({
     pickup.category
   );
 
-  // Validate weight input
+  // Strict numeric measurement validation
   const validateWeightField = (val: string): boolean => {
-    const num = parseFloat(val);
     if (!val || val.trim() === "") {
       setWeightError("Weight is required.");
       return false;
     }
+    const num = parseFloat(val);
     if (isNaN(num)) {
-      setWeightError("Please enter a valid numeric weight.");
+      setWeightError("Enter a valid numeric weight.");
       return false;
     }
     if (num <= 0) {
       setWeightError("Weight must be greater than 0 kg.");
       return false;
     }
-    if (num < 0.05) {
-      setWeightError("Minimum weigh-in threshold is 0.05 kg.");
+    if (num < 0.1) {
+      setWeightError("Minimum weigh-in threshold is 0.1 kg.");
       return false;
     }
     if (num > 500) {
-      setWeightError("Weight exceeds maximum batch limit of 500 kg.");
+      setWeightError("Weight exceeds maximum batch capacity of 500 kg.");
       return false;
     }
+    // Check decimal precision (at most 2 decimal places)
+    const decimalParts = val.split(".");
+    if (decimalParts.length > 1 && decimalParts[1].length > 2) {
+      setWeightError("Measurement precision is limited to 2 decimal places.");
+      return false;
+    }
+
     setWeightError(null);
     return true;
   };
 
-  // Validate verification passcode if not yet verified
   const validatePasscodeField = (): boolean => {
     if (isHandshakeAlreadyVerified) return true;
     if (!passcode || passcode.trim().length < 4) {
-      setPasscodeError("Household verification passcode is required.");
+      setPasscodeError("Household verification passcode or QR pass is required.");
       return false;
     }
     setPasscodeError(null);
     return true;
   };
 
-  const handleProceedToReview = () => {
-    const isWeightValid = validateWeightField(weightInput);
-    const isPasscodeValid = validatePasscodeField();
-    if (isWeightValid && isPasscodeValid) {
-      setCurrentStep("review");
+  // Instant on-site household verification action
+  const handleVerifyHouseholdPasscode = async () => {
+    if (!pickup.id || isVerifyingHandshake) return;
+    const trimmed = passcode.trim();
+    if (!trimmed) {
+      setPasscodeError("Please enter or scan a household QR passcode.");
+      return;
+    }
+
+    setIsVerifyingHandshake(true);
+    setPasscodeError(null);
+
+    try {
+      const reqPayload = buildVerificationRequest(trimmed);
+
+      // Verify payload match if QR scan with pickup ID
+      if (reqPayload.method === "QR_SCAN" && reqPayload.payload.p && reqPayload.payload.p !== pickup.id) {
+        setPasscodeError(`Scanned QR pass is for Pickup #${reqPayload.payload.p}, but this record is Pickup #${pickup.id}.`);
+        setIsVerifyingHandshake(false);
+        return;
+      }
+
+      // Ensure pickup is claimed if currently in REQUESTED status
+      if (pickup.status === "REQUESTED") {
+        try {
+          await webApiClient.farmer.claimPickup(pickup.id);
+        } catch {
+          // Non-blocking if already claimed
+        }
+      }
+
+      await webApiClient.pickups.verifyHandshake(pickup.id, reqPayload);
+      setIsHandshakeVerifiedLocally(true);
+      setPasscodeError(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Handshake verification failed";
+      if (msg.toLowerCase().includes("already consumed")) {
+        setIsHandshakeVerifiedLocally(true);
+        setPasscodeError(null);
+      } else {
+        setPasscodeError(msg);
+      }
+    } finally {
+      setIsVerifyingHandshake(false);
     }
   };
 
-  // Execute collection submission
-  const handleExecuteSubmission = async () => {
-    if (!pickup.id) return;
+  const handleProceedToReview = async () => {
+    const isWeightValid = validateWeightField(weightInput);
+    if (!isWeightValid) return;
 
+    if (!isHandshakeAlreadyVerified) {
+      const isPasscodeValid = validatePasscodeField();
+      if (!isPasscodeValid) return;
+
+      // Attempt to verify pass if provided
+      if (passcode.trim()) {
+        try {
+          await handleVerifyHouseholdPasscode();
+        } catch {
+          // Error is set in handleVerifyHouseholdPasscode
+          return;
+        }
+      }
+    }
+
+    setCurrentStep("review");
+  };
+
+  const handleExecuteSubmission = async () => {
+    if (!pickup.id || isSubmitting) return;
+
+    setIsSubmitting(true);
     setCurrentStep("loading");
     setApiErrorMessage(null);
     setIsAlreadyProcessed(false);
 
     try {
-      // 1. Consume handshake passcode if not yet verified
+      // 1. Verify household handshake passcode if not yet verified
       if (!isHandshakeAlreadyVerified && passcode.trim()) {
         try {
-          await webApiClient.pickups.verifyHandshake(pickup.id, {
-            method: "MANUAL_PASSCODE",
-            passCode: passcode.trim(),
-          });
+          const reqPayload = buildVerificationRequest(passcode);
+          await webApiClient.pickups.verifyHandshake(pickup.id, reqPayload);
+          setIsHandshakeVerifiedLocally(true);
         } catch (handshakeErr: unknown) {
           const msg = handshakeErr instanceof Error ? handshakeErr.message : "Handshake error";
-          // If already consumed, safely proceed to weigh-in verification
           if (!msg.toLowerCase().includes("already consumed")) {
             throw handshakeErr;
           }
         }
       }
 
-      // Ensure pickup is in COLLECTED status before physical weigh-in verification
-      // Backend domain lifecycle: REQUESTED -> ASSIGNED -> SCHEDULED -> COLLECTED -> VERIFIED
+      // 2. Lifecycle synchronization: ensure collected before verified
       if (pickup.status !== "COLLECTED" && pickup.status !== "VERIFIED") {
         if (pickup.status === "REQUESTED") {
           try {
             await webApiClient.farmer.claimPickup(pickup.id);
           } catch {
-            // Already claimed or owned
+            // Already claimed
           }
         }
 
-        // Must be SCHEDULED before it can be marked as COLLECTED
         if (pickup.status === "REQUESTED" || pickup.status === "ASSIGNED") {
           try {
             const futureDate = new Date(Date.now() + 60 * 60 * 1000).toISOString();
             await webApiClient.farmer.schedulePickup(pickup.id, { scheduledTime: futureDate });
           } catch {
-            // Might already be scheduled
+            // Already scheduled
           }
         }
 
@@ -275,33 +410,32 @@ export function DoorstepWeighInModal({
           await webApiClient.farmer.collectPickup(pickup.id);
         } catch (collectErr: unknown) {
           const msg = collectErr instanceof Error ? collectErr.message : "";
-          // If collect failed because it needed scheduling first, schedule then retry collect
           if (!msg.toLowerCase().includes("collected") && !msg.toLowerCase().includes("already")) {
             try {
               const futureDate = new Date(Date.now() + 60 * 60 * 1000).toISOString();
               await webApiClient.farmer.schedulePickup(pickup.id, { scheduledTime: futureDate });
               await webApiClient.farmer.collectPickup(pickup.id);
             } catch {
-              // Proceed to verification which will assert final state
+              // Non-blocking fallback
             }
           }
         }
       }
 
-      // 2. Submit certified waste weight & quality grade to mint EcoTokens
+      // 3. Submit certified waste weight & quality grade to mint EcoTokens
       const finalWeight = parseFloat(weightInput);
       await webApiClient.farmer.verifyPickup(pickup.id, {
         verifiedWeight: finalWeight,
         qualityGrade,
-        notes: `Doorstep weigh-in verified for ${householdName} (${householdRefCode})`,
+        notes: `Certified doorstep collection for ${householdName} (${householdRefCode})`,
       });
 
-      // 3. Mark stop completed if part of route
+      // 4. Complete route stop if running an active route
       if (routeId && stopId) {
         try {
           await webApiClient.farmer.completeStop(routeId, stopId);
         } catch {
-          // Non-blocking route stop completion
+          // Non-blocking
         }
       }
 
@@ -322,7 +456,6 @@ export function DoorstepWeighInModal({
       const errorMsg = err instanceof Error ? err.message : "Failed to record collection.";
       setApiErrorMessage(errorMsg);
 
-      // Detect if the pickup was already processed/completed
       if (
         errorMsg.toLowerCase().includes("already") ||
         errorMsg.toLowerCase().includes("completed") ||
@@ -331,6 +464,8 @@ export function DoorstepWeighInModal({
         setIsAlreadyProcessed(true);
       }
       setCurrentStep("error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -339,43 +474,37 @@ export function DoorstepWeighInModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-200"
     >
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-[560px] max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+      {/* Modal Container: Target 520–600px width on desktop, responsive for tablet & mobile */}
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-[560px] max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+        
         {/* ========================================================== */}
-        {/* MODAL HEADER                                              */}
+        {/* 1. MODAL HEADER                                            */}
         {/* ========================================================== */}
-        <div className="px-6 py-4 sm:py-5 border-b border-slate-100 flex items-start justify-between bg-white shrink-0">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between bg-white shrink-0">
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
+            <div className="flex items-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-3xs uppercase font-extrabold tracking-widest text-emerald-700">
+              <h2 id="modal-title" className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                 Doorstep Collection
-              </span>
+              </h2>
             </div>
-            <h2 id="modal-title" className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-              {currentStep === "form" && "Weigh-In & Verification"}
-              {currentStep === "review" && "Review Collection"}
-              {currentStep === "confirm_dialog" && "Confirm Collection"}
-              {currentStep === "loading" && "Recording Collection..."}
-              {currentStep === "success" && "Collection Completed"}
-              {currentStep === "error" && "Collection Status"}
-            </h2>
-            <p className="text-xs text-slate-500">
-              {currentStep === "form" && "Verify household and record certified scale measurement."}
-              {currentStep === "review" && "Check the collection summary before minting tokens."}
-              {currentStep === "confirm_dialog" && "Final confirmation before permanent ledger entry."}
-              {currentStep === "loading" && "Processing verified weigh-in and minting tokens."}
-              {currentStep === "success" && "Waste certified and EcoTokens minted to household wallet."}
-              {currentStep === "error" && "Unable to record collection. Review details below."}
+            <p className="text-xs text-slate-500 font-medium">
+              {currentStep === "form" && "Verify and record collected waste"}
+              {currentStep === "review" && "Review collection details before submitting"}
+              {currentStep === "confirm_dialog" && "Final confirmation before permanent ledger entry"}
+              {currentStep === "loading" && "Processing verified weigh-in and minting tokens"}
+              {currentStep === "success" && "Waste certified and EcoTokens minted"}
+              {currentStep === "error" && "Unable to record collection. Review details below"}
             </p>
           </div>
 
           {currentStep !== "loading" && (
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-lg font-bold"
-              aria-label="Close weigh-in modal"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-xl font-bold leading-none"
+              aria-label="Close modal"
             >
               ×
             </button>
@@ -383,65 +512,65 @@ export function DoorstepWeighInModal({
         </div>
 
         {/* ========================================================== */}
-        {/* MODAL BODY (STEP-BY-STEP WORKFLOW)                        */}
+        {/* 2. MODAL BODY: OPERATIONAL WORKFLOW                        */}
         {/* ========================================================== */}
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
+
           {/* -------------------------------------------------------- */}
-          {/* STEP 1: FORM WORKFLOW                                    */}
+          {/* STEP 1: OPERATIONAL WEIGH-IN FORM                        */}
           {/* -------------------------------------------------------- */}
           {currentStep === "form" && (
             <div className="space-y-5">
-              {/* 1. HOUSEHOLD SECTION */}
+              
+              {/* SECTION 1: HOUSEHOLD */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-3xs font-black uppercase tracking-wider text-slate-400">
+                  <span className="text-3xs font-black uppercase tracking-wider text-slate-400">
                     HOUSEHOLD
-                  </label>
-                  {isHandshakeAlreadyVerified ? (
+                  </span>
+                  {isHandshakeAlreadyVerified && (
                     <span className="text-3xs font-extrabold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                      <span>✓</span> Verified On-Site
-                    </span>
-                  ) : (
-                    <span className="text-3xs font-extrabold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
-                      <span>●</span> Verification Required
+                      <span>✓</span> Household Verified
                     </span>
                   )}
                 </div>
 
                 {isHandshakeAlreadyVerified ? (
                   /* Verified Household Card */
-                  <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3">
+                  <div className="p-4 bg-emerald-50/70 border border-emerald-200/90 rounded-2xl flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-base shadow-xs shrink-0">
                         ✓
                       </div>
                       <div>
-                        <h4 className="text-sm font-black text-slate-900">{householdName}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-black text-slate-900">{householdName}</h4>
+                          <span className="text-3xs font-extrabold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                            Verified
+                          </span>
+                        </div>
                         <p className="text-2xs font-mono font-bold text-emerald-800 tracking-wider">
                           {householdRefCode}
                         </p>
                         <p className="text-2xs text-slate-500 mt-0.5">
-                          📍 {pickup.pickupAddress || "Registered Doorstep Address"}
+                          📍 {neighborhood} · Ready for Weigh-In
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  /* Unverified Household & Verification Input */
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5">
+                  /* Verification Required Card */
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
                         <h4 className="text-sm font-black text-slate-900">{householdName}</h4>
-                        <p className="text-2xs text-slate-500">
-                          📍 {pickup.pickupAddress || "Registered Doorstep Address"}
-                        </p>
+                        <p className="text-2xs text-slate-500">📍 {neighborhood}</p>
                       </div>
                       <span className="text-2xs font-mono font-bold text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded-lg">
                         {householdRefCode}
                       </span>
                     </div>
 
-                    {/* Scan QR Code button */}
                     <button
                       type="button"
                       onClick={() => setScannerOpen(true)}
@@ -473,23 +602,35 @@ export function DoorstepWeighInModal({
                           Auto-fill Demo Pass
                         </button>
                       </div>
-                      <input
-                        type="text"
-                        placeholder="e.g. ECO-2126-2838"
-                        value={passcode}
-                        onChange={(e) => {
-                          setPasscode(e.target.value.toUpperCase());
-                          if (passcodeError) setPasscodeError(null);
-                        }}
-                        className={`w-full px-3.5 py-2.5 font-mono text-xs uppercase tracking-wider bg-white border rounded-xl focus:outline-none transition ${
-                          passcodeError
-                            ? "border-red-400 ring-2 ring-red-100"
-                            : "border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-                        }`}
-                      />
+                      
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="e.g. ECO-2126-2838 or scan QR"
+                          value={passcode}
+                          onChange={(e) => {
+                            setPasscode(e.target.value.toUpperCase());
+                            if (passcodeError) setPasscodeError(null);
+                          }}
+                          className={`flex-1 px-3.5 py-2.5 font-mono text-xs uppercase tracking-wider bg-white border rounded-xl focus:outline-none transition ${
+                            passcodeError
+                              ? "border-red-400 ring-2 ring-red-100"
+                              : "border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyHouseholdPasscode}
+                          disabled={isVerifyingHandshake || !passcode.trim()}
+                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0"
+                        >
+                          {isVerifyingHandshake ? "Verifying..." : "Verify Pass"}
+                        </button>
+                      </div>
+
                       {passcodeError && (
-                        <p className="text-2xs text-red-600 font-semibold mt-1">
-                          ⚠️ {passcodeError}
+                        <p className="text-2xs text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                          <span>⚠️</span> {passcodeError}
                         </p>
                       )}
                     </div>
@@ -497,7 +638,7 @@ export function DoorstepWeighInModal({
                 )}
               </div>
 
-              {/* QR Scanner Simulation Modal */}
+              {/* Optical QR Scanner Viewfinder (Simulation) */}
               {scannerOpen && (
                 <div className="p-4 bg-slate-900 text-white rounded-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex items-center justify-between">
@@ -513,10 +654,9 @@ export function DoorstepWeighInModal({
                       Close ×
                     </button>
                   </div>
-                  <div className="h-32 border-2 border-dashed border-emerald-400/60 rounded-xl flex flex-col items-center justify-center p-3 bg-slate-950/40 text-center relative overflow-hidden">
+                  <div className="h-28 border-2 border-dashed border-emerald-400/60 rounded-xl flex flex-col items-center justify-center p-3 bg-slate-950/40 text-center relative overflow-hidden">
                     <div className="absolute inset-x-0 h-0.5 bg-emerald-400/80 animate-bounce" />
                     <p className="text-2xs text-slate-300">Align household QR pass inside viewfinder</p>
-                    <p className="text-3xs text-slate-500 mt-1">Ready to capture digital handshake token</p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -541,33 +681,37 @@ export function DoorstepWeighInModal({
                 </div>
               )}
 
-              {/* 2. ACTUAL WASTE WEIGHT SECTION */}
+              {/* Subtle Section Divider */}
+              <div className="border-t border-slate-100 pt-1" />
+
+              {/* SECTION 2: ACTUAL WASTE WEIGHT */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-3xs font-black uppercase tracking-wider text-slate-400">
+                  <label htmlFor="waste-weight-input" className="text-3xs font-black uppercase tracking-wider text-slate-400">
                     ACTUAL WASTE WEIGHT
                   </label>
                   {pickup.estimatedWeight && (
-                    <span className="text-2xs text-slate-500">
-                      Estimated by household:{" "}
-                      <strong className="text-slate-700">{pickup.estimatedWeight.toFixed(1)} kg</strong>
+                    <span className="text-2xs text-slate-400">
+                      Est. by household:{" "}
+                      <strong className="text-slate-600">{pickup.estimatedWeight.toFixed(1)} kg</strong>
                     </span>
                   )}
                 </div>
 
-                {/* Scale Measurement Styled Container */}
+                {/* Measurement Styled Input */}
                 <div
-                  className={`flex items-center bg-white border rounded-2xl transition shadow-2xs p-1 ${
+                  className={`flex items-center bg-white border rounded-2xl transition shadow-2xs px-3 py-1 ${
                     weightError
                       ? "border-red-400 ring-2 ring-red-100"
                       : "border-slate-300 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100"
                   }`}
                 >
-                  <div className="pl-3.5 pr-2 text-xl text-slate-400 select-none">⚖️</div>
+                  <span className="text-xl text-slate-400 select-none mr-2">⚖️</span>
                   <input
+                    id="waste-weight-input"
                     type="number"
                     step="0.1"
-                    min="0.05"
+                    min="0.1"
                     max="500"
                     placeholder="0.0"
                     value={weightInput}
@@ -575,13 +719,11 @@ export function DoorstepWeighInModal({
                       setWeightInput(e.target.value);
                       validateWeightField(e.target.value);
                     }}
-                    className="w-full py-2.5 px-1 text-2xl font-black text-slate-900 bg-transparent focus:outline-none placeholder:text-slate-300"
+                    className="w-full py-2 text-2xl sm:text-3xl font-black text-slate-900 bg-transparent focus:outline-none placeholder:text-slate-300 tracking-tight"
                   />
-                  <div className="pr-3 select-none">
-                    <span className="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-black rounded-xl border border-slate-200">
-                      kg
-                    </span>
-                  </div>
+                  <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-black rounded-xl border border-slate-200 select-none shrink-0">
+                    kg
+                  </span>
                 </div>
 
                 {weightError ? (
@@ -590,111 +732,138 @@ export function DoorstepWeighInModal({
                   </p>
                 ) : (
                   <p className="text-2xs text-slate-400">
-                    Enter the certified weight recorded on your portable scale at doorstep collection.
+                    Enter the certified weight recorded at collection.
                   </p>
                 )}
               </div>
 
-              {/* 3. QUALITY GRADE SECTION */}
-              <div className="space-y-2">
+              {/* Subtle Section Divider */}
+              <div className="border-t border-slate-100 pt-1" />
+
+              {/* SECTION 3: QUALITY GRADE (CUSTOM UNDERSTANDABLE DROPDOWN) */}
+              <div className="space-y-2 relative" ref={dropdownRef}>
                 <div className="flex items-center justify-between">
                   <label className="text-3xs font-black uppercase tracking-wider text-slate-400">
                     QUALITY GRADE
                   </label>
                   <span className="text-3xs font-bold text-slate-500">
-                    Category: <strong className="text-slate-800">{categoryName}</strong>
+                    Category: <strong className="text-slate-700">{categoryName}</strong>
                   </span>
                 </div>
 
-                {/* Grade Option Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {QUALITY_GRADES.map((grade) => {
-                    const isSelected = qualityGrade === grade.value;
-                    return (
-                      <button
-                        key={grade.value}
-                        type="button"
-                        onClick={() => setQualityGrade(grade.value)}
-                        className={`p-3 rounded-2xl border text-left transition relative flex flex-col justify-between ${
-                          isSelected
-                            ? "bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-100 shadow-xs"
-                            : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60"
-                        }`}
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-3xs font-black border ${grade.badgeClass}`}
-                            >
-                              {grade.label}
-                            </span>
-                            <span className="text-3xs font-extrabold text-emerald-700 bg-white/80 px-1.5 py-0.5 rounded-md border border-slate-200">
-                              {grade.multiplier.toFixed(1)}×
-                            </span>
-                          </div>
-                          <p className="text-xs font-black text-slate-900 leading-tight">
-                            {grade.title}
-                          </p>
-                          <p className="text-3xs text-slate-500 leading-snug line-clamp-2">
-                            {grade.description}
-                          </p>
-                        </div>
-
-                        {isSelected && (
-                          <div className="mt-2 pt-1 border-t border-emerald-200/60 flex items-center gap-1 text-3xs font-extrabold text-emerald-800">
-                            <span>✓</span>
-                            <span>Selected</span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-2xs text-slate-600 flex items-center justify-between">
-                  <span>
-                    <strong>{selectedGradeObj.label} ({selectedGradeObj.title})</strong>: {selectedGradeObj.description}
-                  </span>
-                  <span className="font-extrabold text-emerald-700 shrink-0 ml-2">
-                    {selectedGradeObj.multiplier.toFixed(2)}× reward multiplier
-                  </span>
-                </div>
-              </div>
-
-              {/* 4. ESTIMATED ECO-TOKENS REWARD PREVIEW */}
-              <div className="p-4 bg-gradient-to-br from-emerald-50 via-white to-teal-50 border border-emerald-200 rounded-2xl space-y-2.5 shadow-2xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-3xs uppercase font-black tracking-wider text-emerald-800 flex items-center gap-1">
-                    <span>🪙</span> ESTIMATED ECO-TOKENS
-                  </span>
-                  <span className="text-3xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    Formula Preview
-                  </span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 py-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl select-none">🪙</span>
-                    <span className="text-3xl font-black text-emerald-950 tracking-tight">
-                      {parsedWeight > 0 ? estimatedReward.tokens.toFixed(2) : "0.00"}
+                {/* Dropdown Trigger Box */}
+                <button
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={dropdownOpen}
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className={`w-full px-4 py-3 bg-white border rounded-2xl flex items-center justify-between transition shadow-2xs text-left ${
+                    dropdownOpen
+                      ? "border-emerald-500 ring-2 ring-emerald-100"
+                      : "border-slate-300 hover:border-slate-400"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base font-black text-slate-900">
+                      {selectedGradeObj.label}
                     </span>
-                    <span className="text-xs font-bold text-emerald-800">EcoTokens</span>
+                    <span className={`px-2 py-0.5 rounded-full text-3xs font-black border ${selectedGradeObj.badgeClass}`}>
+                      {selectedGradeObj.title}
+                    </span>
                   </div>
 
-                  <div className="text-left sm:text-right text-2xs text-emerald-800 font-medium">
-                    <p className="font-black text-slate-800">
-                      {parsedWeight > 0 ? parsedWeight.toFixed(1) : "0.0"} kg · {selectedGradeObj.label} ({selectedGradeObj.multiplier.toFixed(1)}×)
-                    </p>
-                    <p className="text-3xs text-slate-500">
-                      {categoryName} ({estimatedReward.categoryMultiplier.toFixed(1)}× stream)
-                    </p>
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      {selectedGradeObj.multiplier.toFixed(1)}×
+                    </span>
+                    <span className={`text-xs transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}>
+                      ▼
+                    </span>
+                  </div>
+                </button>
+
+                {/* Subtitle Below the Box */}
+                <p className="text-2xs text-slate-500 pl-1">
+                  <strong className="text-slate-800">{selectedGradeObj.title}</strong> · {selectedGradeObj.description} · {selectedGradeObj.multiplier.toFixed(1)}× reward
+                </p>
+
+                {/* Understandable Dropdown Options Menu */}
+                {dropdownOpen && (
+                  <div
+                    role="listbox"
+                    className="absolute z-30 left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    {QUALITY_GRADES.map((grade) => {
+                      const isSelected = qualityGrade === grade.value;
+                      return (
+                        <button
+                          key={grade.value}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setQualityGrade(grade.value);
+                            setDropdownOpen(false);
+                          }}
+                          className={`w-full px-4 py-3 text-left transition flex items-start justify-between gap-3 ${
+                            isSelected
+                              ? "bg-emerald-50/70 border-l-4 border-emerald-600"
+                              : "hover:bg-slate-50 border-l-4 border-transparent"
+                          }`}
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black text-slate-900">{grade.label}</span>
+                              <span className="text-2xs font-extrabold text-slate-700">{grade.title}</span>
+                              {isSelected && (
+                                <span className="text-3xs font-extrabold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+                                  ✓ Selected
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-2xs text-slate-500">
+                              {grade.description} · {grade.multiplier.toFixed(1)}×
+                            </p>
+                          </div>
+
+                          <span className={`text-3xs font-black px-2 py-0.5 rounded-full border shrink-0 ${grade.badgeClass}`}>
+                            {grade.multiplier.toFixed(1)}×
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Subtle Section Divider */}
+              <div className="border-t border-slate-100 pt-1" />
+
+              {/* SECTION 4: ESTIMATED ECO-TOKENS REWARD PREVIEW */}
+              <div className="p-5 bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/70 border border-emerald-200/90 rounded-2xl space-y-2.5 shadow-2xs text-center">
+                <span className="text-3xs uppercase font-black tracking-wider text-emerald-800 block">
+                  ESTIMATED ECO-TOKENS
+                </span>
+
+                <div className="py-1">
+                  <div className="inline-flex items-center justify-center gap-2">
+                    <span className="text-3xl select-none">🪙</span>
+                    <span className="text-4xl font-black text-emerald-950 tracking-tight">
+                      {parsedWeight > 0 ? formatTokenAmount(estimatedReward.tokens) : "0"}
+                    </span>
                   </div>
                 </div>
 
-                <p className="text-3xs text-emerald-700/90 border-t border-emerald-200/60 pt-2 font-medium">
-                  Reward is calculated automatically from certified scale weight, waste category, and organic quality grade.
-                </p>
+                <div className="border-t border-emerald-200/50 pt-2 text-2xs text-slate-500 font-medium space-y-0.5">
+                  <p>
+                    Based on weight and quality grade
+                  </p>
+                  <p className="text-3xs text-emerald-800 font-bold">
+                    {parsedWeight > 0 ? parsedWeight.toFixed(1) : "0.0"} kg · {selectedGradeObj.label} ({selectedGradeObj.multiplier.toFixed(1)}×) · {categoryName}
+                  </p>
+                </div>
               </div>
+
             </div>
           )}
 
@@ -703,9 +872,9 @@ export function DoorstepWeighInModal({
           {/* -------------------------------------------------------- */}
           {currentStep === "review" && (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5">
-                {/* Household Review */}
-                <div className="pb-3 border-b border-slate-200">
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+                {/* Household */}
+                <div className="pb-3 border-b border-slate-200/80">
                   <span className="text-3xs font-black uppercase tracking-wider text-slate-400 block mb-1">
                     HOUSEHOLD
                   </span>
@@ -713,9 +882,7 @@ export function DoorstepWeighInModal({
                     <div>
                       <h4 className="text-sm font-black text-slate-900">{householdName}</h4>
                       <p className="text-2xs font-mono font-bold text-slate-500">{householdRefCode}</p>
-                      <p className="text-2xs text-slate-500 mt-0.5">
-                        📍 {pickup.pickupAddress || "Registered Doorstep"}
-                      </p>
+                      <p className="text-2xs text-slate-500 mt-0.5">📍 {neighborhood}</p>
                     </div>
                     <span className="text-2xs font-extrabold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full flex items-center gap-1">
                       <span>✓</span> Verified
@@ -723,14 +890,16 @@ export function DoorstepWeighInModal({
                   </div>
                 </div>
 
-                {/* Waste Weight Review */}
-                <div className="pb-3 border-b border-slate-200">
+                {/* Waste Weight */}
+                <div className="pb-3 border-b border-slate-200/80">
                   <span className="text-3xs font-black uppercase tracking-wider text-slate-400 block mb-1">
-                    WASTE WEIGHT
+                    ACTUAL WASTE WEIGHT
                   </span>
                   <div className="flex items-baseline justify-between">
                     <div>
-                      <span className="text-2xl font-black text-slate-900">{parsedWeight.toFixed(2)} kg</span>
+                      <span className="text-2xl font-black text-slate-900">
+                        {parsedWeight.toFixed(2)} kg
+                      </span>
                       <p className="text-2xs text-slate-500">{categoryName}</p>
                     </div>
                     <span className="text-2xs font-bold text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded-lg">
@@ -739,38 +908,40 @@ export function DoorstepWeighInModal({
                   </div>
                 </div>
 
-                {/* Quality Grade Review */}
-                <div className="pb-3 border-b border-slate-200">
+                {/* Quality Grade */}
+                <div className="pb-3 border-b border-slate-200/80">
                   <span className="text-3xs font-black uppercase tracking-wider text-slate-400 block mb-1">
                     QUALITY GRADE
                   </span>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-black text-slate-900">
-                        {selectedGradeObj.label} — {selectedGradeObj.title}
+                        {selectedGradeObj.label}
                       </p>
-                      <p className="text-2xs text-slate-500">{selectedGradeObj.description}</p>
+                      <p className="text-2xs text-slate-500 font-medium">
+                        {selectedGradeObj.title} · {selectedGradeObj.description}
+                      </p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-3xs font-black border ${selectedGradeObj.badgeClass}`}>
-                      {selectedGradeObj.multiplier.toFixed(1)}× Multiplier
+                      {selectedGradeObj.multiplier.toFixed(1)}× reward
                     </span>
                   </div>
                 </div>
 
-                {/* Estimated Reward Review */}
+                {/* Estimated Reward */}
                 <div>
                   <span className="text-3xs font-black uppercase tracking-wider text-slate-400 block mb-1">
                     ESTIMATED REWARD
                   </span>
                   <div className="flex items-baseline justify-between">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl">🪙</span>
-                      <span className="text-2xl font-black text-emerald-900">
-                        {estimatedReward.tokens.toFixed(2)}
+                      <span className="text-2xl">🪙</span>
+                      <span className="text-3xl font-black text-emerald-900">
+                        {formatTokenAmount(estimatedReward.tokens)}
                       </span>
                       <span className="text-xs font-bold text-emerald-700">EcoTokens</span>
                     </div>
-                    <span className="text-3xs text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded-full">
+                    <span className="text-3xs text-emerald-700 font-bold bg-emerald-100 px-2.5 py-0.5 rounded-full">
                       Immediate Minting
                     </span>
                   </div>
@@ -780,48 +951,51 @@ export function DoorstepWeighInModal({
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-2xs text-amber-800 flex items-center gap-2">
                 <span>ℹ️</span>
                 <span>
-                  Please verify weight and quality grade before proceeding. Minted tokens are committed directly to the circular ledger.
+                  Please double-check the measured weight and quality grade. Submission will commit tokens to the household account.
                 </span>
               </div>
             </div>
           )}
 
           {/* -------------------------------------------------------- */}
-          {/* STEP 3: CONFIRM DIALOG STEP                              */}
+          {/* STEP 3: FINAL CONFIRMATION DIALOG                        */}
           {/* -------------------------------------------------------- */}
           {currentStep === "confirm_dialog" && (
             <div className="p-6 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 text-center">
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl mx-auto shadow-xs">
                 ⚖️
               </div>
+              
               <div className="space-y-1">
-                <h3 className="text-base font-black text-slate-900">Confirm Doorstep Collection?</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  You are about to record certified collection and mint rewards for this household.
+                <h3 className="text-base font-black text-slate-900">Confirm Collection?</h3>
+                <p className="text-xs text-slate-500">
+                  You are about to record:
                 </p>
               </div>
 
               <div className="p-4 bg-white rounded-xl border border-slate-200 text-left space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Household:</span>
-                  <span className="font-black text-slate-900">{householdName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Certified Weight:</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Waste Weight:</span>
                   <span className="font-black text-slate-900">{parsedWeight.toFixed(2)} kg</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-slate-500 font-medium">Quality Grade:</span>
                   <span className="font-black text-slate-900">{selectedGradeObj.label} ({selectedGradeObj.title})</span>
                 </div>
-                <div className="flex justify-between pt-1 border-t border-slate-100">
-                  <span className="text-emerald-700 font-bold">Token Reward:</span>
-                  <span className="font-black text-emerald-900">🪙 {estimatedReward.tokens.toFixed(2)} EcoTokens</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Household:</span>
+                  <span className="font-black text-slate-900">{householdName}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                  <span className="text-emerald-700 font-bold">Estimated Reward:</span>
+                  <span className="font-black text-emerald-900 text-sm">
+                    🪙 {formatTokenAmount(estimatedReward.tokens)} EcoTokens
+                  </span>
                 </div>
               </div>
 
               <p className="text-2xs text-slate-400">
-                This will complete the collection and close this doorstep pickup.
+                This will complete the collection.
               </p>
             </div>
           )}
@@ -834,12 +1008,13 @@ export function DoorstepWeighInModal({
               <div className="w-12 h-12 rounded-full border-4 border-emerald-200 border-t-emerald-600 animate-spin mx-auto" />
               <div className="space-y-1">
                 <h3 className="text-base font-black text-slate-900">Recording Collection...</h3>
-                <p className="text-xs text-slate-500">
-                  Please wait while the doorstep weigh-in is verified and tokens are minted.
+                <div className="flex items-center justify-center gap-2 text-xs text-emerald-700 font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>○ Processing</span>
+                </div>
+                <p className="text-xs text-slate-500 pt-1">
+                  Please wait while the collection is verified.
                 </p>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-2xs font-mono font-bold">
-                <span>○ Processing idempotency lock</span>
               </div>
             </div>
           )}
@@ -854,35 +1029,56 @@ export function DoorstepWeighInModal({
               </div>
 
               <div className="space-y-1">
-                <h3 className="text-xl font-black text-slate-900">Collection Completed!</h3>
+                <h3 className="text-xl font-black text-slate-900">Collection Completed</h3>
                 <p className="text-xs text-slate-500">
-                  The collection has been successfully recorded in the AgroLoop circular ledger.
+                  The collection has been successfully recorded.
                 </p>
               </div>
 
               <div className="p-5 bg-emerald-50/70 border border-emerald-200 rounded-2xl max-w-sm mx-auto text-left space-y-3">
                 <div className="flex justify-between items-center pb-2 border-b border-emerald-200/60">
-                  <span className="text-xs font-bold text-slate-600">{householdName}</span>
+                  <span className="text-xs font-bold text-slate-700">{householdName}</span>
                   <span className="text-2xs font-mono text-emerald-800 font-bold">{householdRefCode}</span>
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500">Recorded Weight</span>
-                  <strong className="text-slate-900 font-black">{submittedData?.weight.toFixed(2)} kg</strong>
+                  <strong className="text-slate-900 font-black">
+                    {submittedData?.weight.toFixed(2)} kg
+                  </strong>
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-500">Quality Grade</span>
-                  <strong className="text-slate-900 font-black">{selectedGradeObj.label} ({selectedGradeObj.title})</strong>
+                  <strong className="text-slate-900 font-black">
+                    {selectedGradeObj.label} ({selectedGradeObj.title})
+                  </strong>
                 </div>
 
                 <div className="pt-2 border-t border-emerald-200/60 flex justify-between items-center">
                   <span className="text-xs font-black text-emerald-900">EcoTokens Minted</span>
                   <span className="px-2.5 py-1 bg-emerald-600 text-white rounded-xl text-xs font-black shadow-xs">
-                    🪙 +{submittedData?.tokens.toFixed(2)}
+                    🪙 +{submittedData ? formatTokenAmount(submittedData.tokens) : "0"}
                   </span>
                 </div>
               </div>
+
+              {showDetailedReceipt && (
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-left text-2xs space-y-1.5 animate-in fade-in duration-150">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Waste Stream:</span>
+                    <span className="font-bold text-slate-800">{categoryName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Doorstep Location:</span>
+                    <span className="font-bold text-slate-800">{neighborhood}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Status:</span>
+                    <span className="font-bold text-emerald-700">Verified &amp; Minted</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -901,24 +1097,26 @@ export function DoorstepWeighInModal({
                 </h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   {isAlreadyProcessed
-                    ? "This pickup has already been processed and verified. No duplicate tokens were minted."
+                    ? "This pickup has already been processed."
                     : "The collection could not be recorded. No EcoTokens were minted."}
                 </p>
               </div>
 
-              {apiErrorMessage && (
+              {apiErrorMessage && !isAlreadyProcessed && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-2xs text-red-700 max-w-sm mx-auto font-mono text-left">
                   {apiErrorMessage}
                 </div>
               )}
             </div>
           )}
+
         </div>
 
         {/* ========================================================== */}
-        {/* MODAL FOOTER BUTTON CONTROLS                               */}
+        {/* 3. MODAL FOOTER BUTTON CONTROLS                            */}
         {/* ========================================================== */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between shrink-0">
+          
           {/* STEP 1: FORM FOOTER */}
           {currentStep === "form" && (
             <>
@@ -979,7 +1177,8 @@ export function DoorstepWeighInModal({
               <button
                 type="button"
                 onClick={handleExecuteSubmission}
-                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-200 transition"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-200 transition"
               >
                 Confirm &amp; Mint
               </button>
@@ -995,16 +1194,25 @@ export function DoorstepWeighInModal({
 
           {/* STEP 5: SUCCESS FOOTER */}
           {currentStep === "success" && (
-            <div className="w-full flex items-center justify-end gap-3">
-              {hasNextStop && onNavigateNextStop ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition"
-                  >
-                    Back to Pickups
-                  </button>
+            <div className="w-full flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDetailedReceipt(!showDetailedReceipt)}
+                className="px-3.5 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded-xl transition"
+              >
+                {showDetailedReceipt ? "Hide Receipt" : "View Collection"}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 rounded-xl transition"
+                >
+                  Back to Pickups
+                </button>
+
+                {hasNextStop && onNavigateNextStop && (
                   <button
                     type="button"
                     onClick={() => {
@@ -1016,16 +1224,8 @@ export function DoorstepWeighInModal({
                     <span>Next Stop on Route</span>
                     <span>→</span>
                   </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition"
-                >
-                  Back to Pickups
-                </button>
-              )}
+                )}
+              </div>
             </div>
           )}
 
@@ -1052,6 +1252,7 @@ export function DoorstepWeighInModal({
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

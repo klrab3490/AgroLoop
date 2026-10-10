@@ -152,7 +152,7 @@ export function Navbar() {
               {user?.role === "ROLE_HOUSEHOLD" && (
                 <>
                   <div className="h-4 w-px bg-slate-200 mx-1" />
-                  <Link href="/household" className={navLinkClass("/household")}>
+                  <Link href="/household" aria-label="Household Hub" className={navLinkClass("/household")}>
                     <span>Hub</span>
                   </Link>
                   <Link href="/household/submit" className={navLinkClass("/household/submit")}>
@@ -171,17 +171,17 @@ export function Navbar() {
               {user?.role === "ROLE_FARMER" && (
                 <>
                   <div className="h-4 w-px bg-slate-200 mx-1" />
-                  <Link href="/farmer" className={navLinkClass("/farmer")}>
+                  <Link href="/farmer" aria-label="Farmer Hub" className={navLinkClass("/farmer")}>
                     <span>Hub</span>
                   </Link>
-                  <Link href="/farmer/pickups" className={navLinkClass("/farmer/pickups")}>
+                  <Link href="/farmer/pickups" aria-label="Pickup Queue" className={navLinkClass("/farmer/pickups")}>
                     <span>Pickups</span>
                   </Link>
                   <Link href="/farmer/products" className={navLinkClass("/farmer/products")}>
                     <span>Products</span>
                   </Link>
                   <Link href="/farmer/orders" className={navLinkClass("/farmer/orders")}>
-                    <span>Sales</span>
+                    <span>Orders &amp; Requests</span>
                   </Link>
                 </>
               )}
@@ -504,7 +504,7 @@ export function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="block px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
-                      Sales Orders
+                      Orders &amp; Requests
                     </Link>
                   </div>
                 )}

@@ -4,6 +4,8 @@ import {
   QUALITY_GRADES,
   CATEGORY_MULTIPLIERS,
   getCategoryDisplayName,
+  formatTokenAmount,
+  buildVerificationRequest,
 } from "../components/doorstep-weighin-modal";
 
 describe("Doorstep Weigh-In Multipliers & Token Calculation", () => {
@@ -61,4 +63,66 @@ describe("Doorstep Weigh-In Multipliers & Token Calculation", () => {
     expect(getCategoryDisplayName("COFFEE_GROUNDS")).toBe("Coffee Grounds & Tea Residue");
     expect(getCategoryDisplayName(null)).toBe("Organic Kitchen Waste");
   });
+
+  it("formats token amount cleanly for integers and decimals", () => {
+    expect(formatTokenAmount(48)).toBe("48");
+    expect(formatTokenAmount(48.0)).toBe("48");
+    expect(formatTokenAmount(5.76)).toBe("5.76");
+    expect(formatTokenAmount(0)).toBe("0");
+  });
 });
+
+describe("Doorstep Verification Payload Parsing", () => {
+  it("correctly identifies and parses a compact QR JSON with HMAC signature", () => {
+    const compactPayload = JSON.stringify({
+      t: "PICKUP_HANDSHAKE",
+      p: 42,
+      h: 108,
+      n: "nonce-xyz-789",
+      sig: "test-hmac-sig-value",
+    });
+
+    const request = buildVerificationRequest(compactPayload);
+    expect(request.method).toBe("QR_SCAN");
+    if (request.method === "QR_SCAN") {
+      expect(request.payload.p).toBe(42);
+      expect(request.payload.h).toBe(108);
+      expect(request.payload.n).toBe("nonce-xyz-789");
+      expect(request.payload.sig).toBe("test-hmac-sig-value");
+    }
+  });
+
+  it("correctly identifies and parses a compact QR JSON with plaintext passcode", () => {
+    const compactPayload = JSON.stringify({
+      t: "PICKUP_HANDSHAKE",
+      p: 15,
+      h: 22,
+      n: "nonce-abc",
+      c: "ECO-1234-5678",
+    });
+
+    const request = buildVerificationRequest(compactPayload);
+    expect(request.method).toBe("QR_SCAN");
+    if (request.method === "QR_SCAN") {
+      expect(request.payload.p).toBe(15);
+      expect(request.payload.c).toBe("ECO-1234-5678");
+    }
+  });
+
+  it("correctly handles manual passcode string and normalizes to uppercase", () => {
+    const request = buildVerificationRequest("eco-2126-2838");
+    expect(request.method).toBe("MANUAL_PASSCODE");
+    if (request.method === "MANUAL_PASSCODE") {
+      expect(request.passCode).toBe("ECO-2126-2838");
+    }
+  });
+
+  it("falls back to manual passcode when string is not valid JSON", () => {
+    const request = buildVerificationRequest("{ not valid json");
+    expect(request.method).toBe("MANUAL_PASSCODE");
+    if (request.method === "MANUAL_PASSCODE") {
+      expect(request.passCode).toBe("{ NOT VALID JSON");
+    }
+  });
+});
+

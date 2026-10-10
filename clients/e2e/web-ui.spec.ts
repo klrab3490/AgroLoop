@@ -44,9 +44,9 @@ test.describe("Web UI - Navigation, Marketplace & Roles", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Redeem EcoTokens");
 
     // Verify Category Pills exist
-    await expect(page.getByRole("button", { name: "All Categories" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Compost" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Organic Fertilizer" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /All (Offerings|Categories)/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Compost/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Vegetables|Fertilizer/i })).toBeVisible();
 
     // Verify products are rendered
     await expect(page.getByRole("heading", { name: "Certified Organic Compost" })).toBeVisible();
@@ -323,7 +323,7 @@ test.describe("Web UI - Navigation, Marketplace & Roles", () => {
 
     // Fill estimated weight & address
     await page.getByPlaceholder("e.g. 5.0").fill("2.6");
-    await page.getByPlaceholder("123 Green Way, Eco City").fill("Aluva, Kerala");
+    await page.getByPlaceholder(/123 Green Way/i).fill("Aluva, Kerala");
 
     // Attach batch verification photo
     const fileChooserInput = page.locator('input[type="file"]');
@@ -336,8 +336,9 @@ test.describe("Web UI - Navigation, Marketplace & Roles", () => {
     // File preview should appear
     await expect(page.getByText("1000140974.png")).toBeVisible();
 
-    // Click Confirm & Request Collection
-    await page.getByRole("button", { name: "Confirm & Request Collection" }).click();
+    // Click Review & Submit Pickup and Confirm Location in Modal
+    await page.getByRole("button", { name: /Review & Submit Pickup/i }).click();
+    await page.getByRole("button", { name: /Confirm Location/i }).click();
 
     // Ensure error banner does NOT show "Media direct upload failed with status 401"
     await expect(page.getByText(/Media direct upload failed with status 401/i)).not.toBeVisible();

@@ -16,6 +16,10 @@ export default defineConfig({
   use: {
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    video: process.env.RECORD_VIDEO ? "on" : "off",
+    launchOptions: {
+      slowMo: process.env.SLOWMO ? parseInt(process.env.SLOWMO, 10) : 0,
+    },
   },
 
   projects: [

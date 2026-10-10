@@ -1,6 +1,8 @@
 node_modules
 .next
 dist
+build
+target
 .turbo
 *.log
 .expo

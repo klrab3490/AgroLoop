@@ -4,7 +4,7 @@
 
 FROM node:24-alpine AS base
 ENV PNPM_CONFIG_UPDATE_NOTIFIER=false
-RUN corepack enable && corepack prepare pnpm@12.6.0 --activate
+RUN corepack enable && corepack prepare pnpm@12.11.2 --activate
 WORKDIR /app
 
 # ------------------------------------------------------------------------------
@@ -13,21 +13,30 @@ WORKDIR /app
 FROM base AS builder
 WORKDIR /app
 
-# Copy monorepo workspace configuration, lockfile, and package sources
+# Copy only the files needed to build @agroloop/web
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
 COPY patches ./patches
 COPY openapi ./openapi
 COPY packages ./packages
 COPY web ./web
-COPY mobile ./mobile
-COPY desktop ./desktop
 
-# Install workspace dependencies with frozen lockfile
-RUN pnpm install --frozen-lockfile
+# Exclude non-web workspaces (mobile, desktop) so only web dependencies are resolved
+RUN node -e "const fs = require('fs'); const ws = fs.readFileSync('pnpm-workspace.yaml', 'utf8').replace(/\s*-\s*'mobile'/g, '').replace(/\s*-\s*'desktop'/g, ''); fs.writeFileSync('pnpm-workspace.yaml', ws);"
+
+# Install dependencies for web and its shared workspace packages
+RUN pnpm install --frozen-lockfile --filter=@agroloop/web...
 
 # Build-time environment variables
 ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+ARG APP_VERSION=1.0.6
+ARG NEXT_PUBLIC_APP_VERSION=1.0.6
+ARG EXPO_PUBLIC_APP_VERSION=1.0.6
+ARG VITE_APP_VERSION=1.0.6
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV APP_VERSION=${APP_VERSION}
+ENV NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
+ENV EXPO_PUBLIC_APP_VERSION=${EXPO_PUBLIC_APP_VERSION}
+ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 ENV NODE_ENV=production
 
 # Build @agroloop/web and its dependencies (@agroloop/api-client, @agroloop/api-types)

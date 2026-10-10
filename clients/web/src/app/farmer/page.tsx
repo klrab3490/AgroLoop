@@ -27,11 +27,22 @@ export default function FarmerHubPage() {
     enabled: isAuthenticated && user?.role === "ROLE_FARMER",
   });
 
+  const { data: allPickups } = useQuery({
+    queryKey: ["farmer-all-pickups"],
+    queryFn: () => webApiClient.pickups.listPickups(),
+    enabled: isAuthenticated && user?.role === "ROLE_FARMER",
+  });
+
+  const pendingHouseholdRequests = (allPickups ?? []).filter(
+    (p) => p.status === "REQUESTED" || p.status === "ASSIGNED" || p.status === "SCHEDULED"
+  ).length;
+
   if (authLoading) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
@@ -65,36 +76,54 @@ export default function FarmerHubPage() {
             Farmer Dashboard — {user.name ?? user.email}
           </h1>
           <p className="text-xs text-emerald-100 max-w-lg">
-            Manage regional organic collection claims, verify doorstep waste with QR authentication, and market your farm compost.
+            Manage regional organic collection requests, verify doorstep waste with QR authentication, schedule pickup routes, and market your farm compost.
           </p>
         </div>
 
-        <Link
-          href="/farmer/pickups"
-          className="px-6 py-3 bg-white text-emerald-900 font-black text-xs rounded-xl shadow-md hover:bg-emerald-50 transition"
-        >
-          View Collection Queue ➔
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/farmer/pickups"
+            className="px-5 py-2.5 bg-white text-emerald-900 font-black text-xs rounded-xl shadow-md hover:bg-emerald-50 transition"
+          >
+            Collection Routes ➔
+          </Link>
+          <Link
+            href="/farmer/orders"
+            className="px-5 py-2.5 bg-emerald-900/60 backdrop-blur-sm border border-white/20 text-white font-bold text-xs rounded-xl hover:bg-emerald-900/80 transition"
+          >
+            Orders &amp; Requests
+          </Link>
+        </div>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
           <span className="text-2xl">📦</span>
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Available Pickups to Claim</h3>
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Available in Pool</h3>
           <p className="text-3xl font-black text-slate-900">{availablePickups?.length ?? 0}</p>
+          <p className="text-[11px] text-slate-400">Ready to claim</p>
         </div>
 
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
-          <span className="text-2xl">🌱</span>
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Listed Products</h3>
-          <p className="text-3xl font-black text-slate-900">{farmerProducts?.length ?? 0}</p>
+          <span className="text-2xl">🚛</span>
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Pickups</h3>
+          <p className="text-3xl font-black text-emerald-600">{pendingHouseholdRequests}</p>
+          <p className="text-[11px] text-slate-400">Assigned &amp; scheduled</p>
         </div>
 
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
           <span className="text-2xl">🛍️</span>
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Incoming Sales Orders</h3>
-          <p className="text-3xl font-black text-slate-900">{farmerOrders?.length ?? 0}</p>
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Produce Sales</h3>
+          <p className="text-3xl font-black text-blue-600">{farmerOrders?.length ?? 0}</p>
+          <p className="text-[11px] text-slate-400">Customer orders</p>
+        </div>
+
+        <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <span className="text-2xl">🌱</span>
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Listed Products</h3>
+          <p className="text-3xl font-black text-slate-900">{farmerProducts?.length ?? 0}</p>
+          <p className="text-[11px] text-slate-400">In marketplace</p>
         </div>
       </div>
 
@@ -110,8 +139,21 @@ export default function FarmerHubPage() {
               🚚
             </div>
             <div>
-              <h4 className="font-bold text-sm text-slate-900">Collection Routes &amp; Pickups</h4>
-              <p className="text-2xs text-slate-500">Plan route, navigate GPS stops &amp; weigh in</p>
+              <h4 className="font-bold text-sm text-slate-900">Pickup Queue &amp; Weigh-In</h4>
+              <p className="text-2xs text-slate-500">Plan schedule, scan QR passcodes &amp; weigh waste</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/farmer/orders"
+            className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 transition shadow-sm flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+              📑
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Orders &amp; Household Requests</h4>
+              <p className="text-2xs text-slate-500">Review waste submissions &amp; marketplace sales</p>
             </div>
           </Link>
 
@@ -124,20 +166,7 @@ export default function FarmerHubPage() {
             </div>
             <div>
               <h4 className="font-bold text-sm text-slate-900">Product Management</h4>
-              <p className="text-2xs text-slate-500">List compost & update inventory</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/farmer/orders"
-            className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 transition shadow-sm flex items-center gap-4 group"
-          >
-            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-              📑
-            </div>
-            <div>
-              <h4 className="font-bold text-sm text-slate-900">Customer Orders</h4>
-              <p className="text-2xs text-slate-500">Fulfill marketplace sales</p>
+              <p className="text-2xs text-slate-500">List compost &amp; update inventory</p>
             </div>
           </Link>
         </div>

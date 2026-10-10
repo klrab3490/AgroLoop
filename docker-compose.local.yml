@@ -25,6 +25,10 @@ services:
       PORT: 8080
       UPLOAD_DIR: /app/uploads
       SERVER_VERSION: ${SERVER_VERSION:-8.0.0}
+      APP_VERSION: ${APP_VERSION:-1.0.6}
+      NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.6}
+      EXPO_PUBLIC_APP_VERSION: ${EXPO_PUBLIC_APP_VERSION:-1.0.6}
+      VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.6}
     volumes:
       - agroloop_local_uploads:/app/uploads
     networks:
@@ -39,6 +43,10 @@ services:
       dockerfile: web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+        APP_VERSION: ${APP_VERSION:-1.0.6}
+        NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.6}
+        EXPO_PUBLIC_APP_VERSION: ${EXPO_PUBLIC_APP_VERSION:-1.0.6}
+        VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.6}
     container_name: agroloop-web-local
     restart: unless-stopped
     ports:
@@ -48,6 +56,10 @@ services:
       NODE_ENV: production
       BACKEND_API_URL: ${BACKEND_API_URL:-http://app:8080}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      APP_VERSION: ${APP_VERSION:-1.0.6}
+      NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.6}
+      EXPO_PUBLIC_APP_VERSION: ${EXPO_PUBLIC_APP_VERSION:-1.0.6}
+      VITE_APP_VERSION: ${VITE_APP_VERSION:-1.0.6}
     depends_on:
       - app
     networks:
