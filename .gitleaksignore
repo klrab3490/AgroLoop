@@ -1,3 +1,5 @@
 # Gitleaks ignore file
 # False positive in test mock idempotency key
 29bff239f5df41d5f7198ebb68b471cdbb6245e9:clients/packages/api-client/src/client.test.ts:generic-api-key:96
+6dee671568f4407b0a303bdebc3651c7fc9c9436:clients/web/src/app/orders/[id]/page.tsx:curl-auth-header:1088
+95a9352ef84d1d5120814c281c901ef0e33a3883:src/test/java/com/agroloop/security/WebhookSignatureVerifierTest.java:generic-api-key:15
