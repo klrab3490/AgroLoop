@@ -142,6 +142,11 @@ public class UserServiceImpl implements UserService {
                     .executeUpdate();
         }
 
+        // 3. Remove entry from households table if user was converted from Household role
+        entityManager.createNativeQuery("DELETE FROM households WHERE id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+
         // Flush and clear 1st-level cache so subsequent queries fetch the updated entity
         entityManager.flush();
         entityManager.clear();
@@ -209,7 +214,12 @@ public class UserServiceImpl implements UserService {
                     .executeUpdate();
         }
 
-        // 3. If there are any pending applications for this user, approve them
+        // 3. Remove entry from households table if user was converted from Household role
+        entityManager.createNativeQuery("DELETE FROM households WHERE id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+
+        // 4. If there are any pending applications for this user, approve them
         farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(userId).ifPresent(app -> {
             if (app.getStatus() == FarmerApplicationStatus.PENDING) {
                 app.approve();

@@ -93,17 +93,8 @@ class MarketplaceOrderLifecycleSecurityTest {
         orderRepository.deleteAll();
         productRepository.deleteAll();
 
-        householdRepository.findAll().stream()
-                .filter(h -> !"household@agroloop.com".equals(h.getEmail()))
-                .forEach(householdRepository::delete);
-
-        farmerRepository.findAll().stream()
-                .filter(f -> !"farmer@agroloop.com".equals(f.getEmail()))
-                .forEach(farmerRepository::delete);
-
-        adminRepository.findAll().stream()
-                .filter(a -> !"admin@agroloop.com".equals(a.getEmail()))
-                .forEach(adminRepository::delete);
+        householdRepository.findByEmail("buyer@example.com").ifPresent(householdRepository::delete);
+        farmerRepository.findByEmail("vendor@example.com").ifPresent(farmerRepository::delete);
     }
 
     @Test
