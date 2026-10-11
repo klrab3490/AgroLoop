@@ -196,6 +196,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["updateOrderStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders/{id}/dispute": {
         parameters: {
             query?: never;
@@ -206,6 +222,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["disputeOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeOrder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1338,6 +1370,17 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            category?: string;
+            /** Format: double */
+            estimatedWeight?: number;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            notes?: string;
+            householdEmail?: string;
+            userName?: string;
+            userEmail?: string;
         };
         VerificationApiResponse: {
             verifiedWeight?: number;
@@ -1367,7 +1410,7 @@ export interface components {
             householdId?: number;
             householdName?: string;
             /** @enum {string} */
-            status?: "PLACED" | "COMPLETED" | "DISPUTED" | "CANCELLED";
+            status?: "PLACED" | "PACKED" | "IN_TRANSIT" | "COMPLETED" | "DISPUTED" | "CANCELLED";
             totalTokens?: number;
             deliveryAddress?: string;
             notes?: string;
@@ -1399,6 +1442,9 @@ export interface components {
             quantity?: number;
             unitPrice?: number;
             subtotal?: number;
+        };
+        UpdateOrderStatusApiRequest: {
+            status?: string;
         };
         DisputeOrderApiRequest: {
             disputeReason: string;
@@ -1441,6 +1487,10 @@ export interface components {
             mediaId?: string;
             addressOverride?: string;
             notes?: string;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
         };
         WasteSubmissionApiResponse: {
             /** Format: int64 */
@@ -1498,6 +1548,11 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            /** Format: double */
+            farmerLatitude?: number;
+            /** Format: double */
+            farmerLongitude?: number;
+            farmerAddress?: string;
         };
         RouteStopApiResponse: {
             /** Format: int64 */
@@ -1516,6 +1571,14 @@ export interface components {
             pickupAddress?: string;
             /** Format: double */
             estimatedWeight?: number;
+            /** Format: double */
+            latitude?: number;
+            /** Format: double */
+            longitude?: number;
+            userName?: string;
+            userEmail?: string;
+            householdName?: string;
+            householdEmail?: string;
         };
         CreateRouteApiRequest: {
             pickupIds: number[];
@@ -1606,12 +1669,12 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
             last?: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["ReviewApiResponse"][];
@@ -1678,12 +1741,12 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
             last?: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["NotificationApiResponse"][];
@@ -1697,6 +1760,8 @@ export interface components {
             api_version?: string;
             minimum_client_version?: string;
             server_version?: string;
+            app_version?: string;
+            github_repo?: string;
         };
         PageApiResponseProductApiResponse: {
             content?: components["schemas"]["ProductApiResponse"][];
@@ -2120,6 +2185,32 @@ export interface operations {
             };
         };
     };
+    updateOrderStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrderStatusApiRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderApiResponse"];
+                };
+            };
+        };
+    };
     disputeOrder: {
         parameters: {
             query?: never;
@@ -2136,6 +2227,28 @@ export interface operations {
                 "application/json": components["schemas"]["DisputeOrderApiRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrderApiResponse"];
+                };
+            };
+        };
+    };
+    completeOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
