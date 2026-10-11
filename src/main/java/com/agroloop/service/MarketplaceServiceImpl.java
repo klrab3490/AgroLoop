@@ -201,7 +201,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Override
     @Transactional
     public void cancelHouseholdOrder(Long orderId, String householdEmail, String reason) {
-        Household callerHousehold = householdRepository.findByEmail(householdEmail)
+        householdRepository.findByEmail(householdEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Household not found with email: " + householdEmail));
         User callerUser = userRepository.findByEmail(householdEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + householdEmail));

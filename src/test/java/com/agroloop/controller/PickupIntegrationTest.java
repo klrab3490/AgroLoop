@@ -11,7 +11,6 @@ import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.PickupRequestRepository;
 import com.agroloop.repository.WasteSubmissionRepository;
-import com.agroloop.repository.WasteVerificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,9 +56,6 @@ class PickupIntegrationTest {
 
     @Autowired
     private PickupRequestRepository pickupRequestRepository;
-
-    @Autowired
-    private WasteVerificationRepository wasteVerificationRepository;
 
     private Household testHousehold;
     private Farmer testFarmer;

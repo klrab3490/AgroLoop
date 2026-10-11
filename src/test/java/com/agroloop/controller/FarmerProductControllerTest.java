@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,8 +19,6 @@ import java.math.BigDecimal;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,7 +43,6 @@ class FarmerProductControllerTest {
     private ProductRepository productRepository;
 
     private Farmer farmerBob;
-    private Farmer farmerCharlie;
     private Product bobsProduct;
 
     @BeforeEach
@@ -54,7 +50,7 @@ class FarmerProductControllerTest {
         tearDown();
 
         farmerBob = farmerRepository.save(new Farmer("Bob Farmer", "bob.farmer@example.com", "hash", "Bob Farm", "Wayanad", "Bio"));
-        farmerCharlie = farmerRepository.save(new Farmer("Charlie Farmer", "charlie.farmer@example.com", "hash", "Charlie Farm", "Idukki", "Agro"));
+        farmerRepository.save(new Farmer("Charlie Farmer", "charlie.farmer@example.com", "hash", "Charlie Farm", "Idukki", "Agro"));
 
         bobsProduct = productRepository.save(new Product(
                 farmerBob, "Farm Carrots", "Crisp organic carrots", ProductCategory.ORGANIC_VEGETABLES, "kg", new BigDecimal("4.00"), 30, null

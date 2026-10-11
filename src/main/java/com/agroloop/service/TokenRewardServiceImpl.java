@@ -3,7 +3,6 @@ package com.agroloop.service;
 import com.agroloop.model.EcoTokenTransaction;
 import com.agroloop.model.Household;
 import com.agroloop.model.QualityGrade;
-import com.agroloop.model.TransactionType;
 import com.agroloop.model.WasteVerification;
 import com.agroloop.repository.EcoTokenTransactionRepository;
 import com.agroloop.repository.HouseholdRepository;
@@ -76,25 +75,11 @@ public class TokenRewardServiceImpl implements TokenRewardService {
 
 
         // 5. Update household wallet balance if reward > 0
-        String description;
-        if (verification.getQualityGrade() == QualityGrade.REJECTED
-                || !verification.isAcceptable()
-                || reward.compareTo(BigDecimal.ZERO) <= 0) {
-            description = "Waste rejected during verification — 0 tokens minted";
-        } else {
+        if (verification.getQualityGrade() != QualityGrade.REJECTED
+                && verification.isAcceptable()
+                && reward.compareTo(BigDecimal.ZERO) > 0) {
             lockedHousehold.addTokens(reward);
             householdRepository.save(lockedHousehold);
-
-            String categoryName = (verification.getPickupRequest() != null
-                    && verification.getPickupRequest().getWasteSubmission() != null
-                    && verification.getPickupRequest().getWasteSubmission().getCategory() != null)
-                    ? verification.getPickupRequest().getWasteSubmission().getCategory().getDisplayName()
-                    : "Organic Waste";
-
-            description = String.format("Verified waste reward: %s kg (%s) - Category: %s",
-                    verification.getVerifiedWeight(),
-                    verification.getQualityGrade().getDisplayName(),
-                    categoryName);
         }
 
         // 6. Record immutable transaction in ledger via factory

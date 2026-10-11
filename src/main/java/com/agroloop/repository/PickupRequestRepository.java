@@ -3,12 +3,10 @@ package com.agroloop.repository;
 import com.agroloop.model.PickupRequest;
 import com.agroloop.model.PickupStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface PickupRequestRepository extends JpaRepository<PickupRequest, Long> {
 
     /**

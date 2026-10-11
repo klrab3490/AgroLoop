@@ -15,7 +15,6 @@ import com.agroloop.repository.OrderRepository;
 import com.agroloop.repository.PickupRequestRepository;
 import com.agroloop.repository.ProductRepository;
 import com.agroloop.repository.ReviewRepository;
-import com.agroloop.repository.UserRepository;
 import com.agroloop.repository.WasteSubmissionRepository;
 import com.agroloop.security.TokenService;
 import org.junit.jupiter.api.AfterEach;
@@ -49,9 +48,6 @@ class ReviewApiControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private HouseholdRepository householdRepository;
 
     @Autowired
@@ -80,7 +76,6 @@ class ReviewApiControllerTest {
     private PickupRequest pickup;
     private Order order;
     private String householdToken;
-    private String farmerToken;
 
     @BeforeEach
     void setUp() {
@@ -119,7 +114,7 @@ class ReviewApiControllerTest {
         order = orderRepository.save(order);
 
         householdToken = tokenService.createInitialSession(household, "Household Device", ClientType.WEB).accessToken();
-        farmerToken = tokenService.createInitialSession(farmer, "Farmer Device", ClientType.WEB).accessToken();
+        tokenService.createInitialSession(farmer, "Farmer Device", ClientType.WEB);
     }
 
     @AfterEach

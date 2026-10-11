@@ -2,7 +2,6 @@ package com.agroloop.service;
 
 import com.agroloop.model.Admin;
 import com.agroloop.model.Role;
-import com.agroloop.model.User;
 import com.agroloop.repository.AdminRepository;
 import com.agroloop.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;

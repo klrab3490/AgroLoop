@@ -1,7 +1,6 @@
 package com.agroloop.controller;
 
 import com.agroloop.model.Admin;
-import com.agroloop.model.DisputeResolution;
 import com.agroloop.model.Farmer;
 import com.agroloop.model.Household;
 import com.agroloop.model.Order;

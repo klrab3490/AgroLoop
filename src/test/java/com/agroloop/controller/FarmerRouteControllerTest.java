@@ -86,8 +86,14 @@ class FarmerRouteControllerTest {
         collectionRouteRepository.deleteAll();
         pickupRequestRepository.deleteAll();
         wasteSubmissionRepository.deleteAll();
-        householdRepository.deleteAll();
-        farmerRepository.deleteAll();
+        if (testHousehold != null && testHousehold.getId() != null) {
+            householdRepository.deleteById(testHousehold.getId());
+            testHousehold = null;
+        }
+        if (testFarmer != null && testFarmer.getId() != null) {
+            farmerRepository.deleteById(testFarmer.getId());
+            testFarmer = null;
+        }
     }
 
     @Test

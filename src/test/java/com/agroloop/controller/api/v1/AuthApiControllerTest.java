@@ -5,7 +5,6 @@ import com.agroloop.dto.api.v1.request.RefreshTokenApiRequest;
 import com.agroloop.dto.api.v1.request.RegisterApiRequest;
 import com.agroloop.model.ClientType;
 import com.agroloop.model.Household;
-import com.agroloop.model.Role;
 import com.agroloop.model.User;
 import com.agroloop.repository.AuthSessionRepository;
 import com.agroloop.repository.HouseholdRepository;

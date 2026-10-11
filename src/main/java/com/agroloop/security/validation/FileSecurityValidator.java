@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -21,18 +20,12 @@ import java.util.regex.Pattern;
 @Component
 public class FileSecurityValidator {
 
-    private static final long DEFAULT_MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-
     // Magic Byte Signatures
     private static final byte[] JPEG_MAGIC = new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
     private static final byte[] PNG_MAGIC = new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     private static final byte[] RIFF_MAGIC = new byte[]{0x52, 0x49, 0x46, 0x46}; // 'RIFF'
     private static final byte[] WEBP_MAGIC = new byte[]{0x57, 0x45, 0x42, 0x50}; // 'WEBP' at offset 8
     private static final byte[] PDF_MAGIC = new byte[]{0x25, 0x50, 0x44, 0x46};  // '%PDF'
-
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-            "jpg", "jpeg", "png", "webp", "pdf"
-    );
 
     private static final Set<String> DANGEROUS_EXTENSIONS = Set.of(
             "exe", "bat", "cmd", "sh", "php", "phtml", "jsp", "asp", "aspx",

@@ -5,7 +5,6 @@ import com.agroloop.dto.WasteSubmissionRequest;
 import com.agroloop.model.*;
 import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
-import com.agroloop.repository.UserRepository;
 import com.agroloop.service.UserService;
 import com.agroloop.service.WasteSubmissionService;
 import jakarta.validation.Valid;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 @Controller
 public class DashboardController {
 
-    private final UserRepository userRepository;
     private final HouseholdRepository householdRepository;
     private final FarmerRepository farmerRepository;
     private final UserService userService;
@@ -40,7 +38,6 @@ public class DashboardController {
     private final TokenRewardService tokenRewardService;
 
     public DashboardController(
-            UserRepository userRepository,
             HouseholdRepository householdRepository,
             FarmerRepository farmerRepository,
             UserService userService,
@@ -48,7 +45,6 @@ public class DashboardController {
             PickupService pickupService,
             TokenRewardService tokenRewardService
     ) {
-        this.userRepository = userRepository;
         this.householdRepository = householdRepository;
         this.farmerRepository = farmerRepository;
         this.userService = userService;

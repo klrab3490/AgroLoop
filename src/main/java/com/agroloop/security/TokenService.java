@@ -7,7 +7,6 @@ import com.agroloop.model.AuthSession;
 import com.agroloop.model.ClientType;
 import com.agroloop.model.User;
 import com.agroloop.repository.AuthSessionRepository;
-import com.agroloop.repository.UserRepository;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -38,7 +37,6 @@ import java.util.UUID;
 public class TokenService {
 
     private final AuthSessionRepository authSessionRepository;
-    private final UserRepository userRepository;
     private final RSAPrivateKey privateKey;
     private final RSAPublicKey publicKey;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -48,12 +46,10 @@ public class TokenService {
 
     public TokenService(
             AuthSessionRepository authSessionRepository,
-            UserRepository userRepository,
             @Value("${agroloop.jwt.access-expiry-minutes:15}") long accessExpiryMinutes,
             @Value("${agroloop.jwt.refresh-expiry-days:30}") long refreshExpiryDays
     ) {
         this.authSessionRepository = authSessionRepository;
-        this.userRepository = userRepository;
         this.accessExpiryMinutes = accessExpiryMinutes;
         this.refreshExpiryDays = refreshExpiryDays;
 

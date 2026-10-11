@@ -5,7 +5,6 @@ import com.agroloop.dto.CartItemDto;
 import com.agroloop.dto.CheckoutRequest;
 import com.agroloop.model.Farmer;
 import com.agroloop.model.Household;
-import com.agroloop.model.Order;
 import com.agroloop.model.Product;
 import com.agroloop.model.ProductCategory;
 import com.agroloop.repository.EcoTokenTransactionRepository;
@@ -21,8 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,9 +59,6 @@ class MarketplaceDeadlockAndRollbackIntegrationTest {
 
     @Autowired
     private EcoTokenTransactionRepository ecoTokenTransactionRepository;
-
-    @Autowired
-    private PlatformTransactionManager transactionManager;
 
     private Farmer farmer;
     private Product productA;
@@ -123,7 +116,7 @@ class MarketplaceDeadlockAndRollbackIntegrationTest {
         List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
 
         // Thread 1: Cart ordered [A, B]
-        Future<?> f1 = executor.submit(() -> {
+        executor.submit(() -> {
             readyLatch.countDown();
             try {
                 startLatch.await();
@@ -139,7 +132,7 @@ class MarketplaceDeadlockAndRollbackIntegrationTest {
         });
 
         // Thread 2: Cart ordered [B, A] (inverted!)
-        Future<?> f2 = executor.submit(() -> {
+        executor.submit(() -> {
             readyLatch.countDown();
             try {
                 startLatch.await();
@@ -173,7 +166,6 @@ class MarketplaceDeadlockAndRollbackIntegrationTest {
     @DisplayName("Transaction rollback test: Exception during checkout reverts staged stock and token mutations")
     void testTransactionRollbackAtomicity() {
         int initialStockA = productA.getStock();
-        BigDecimal initialBalance = household1.getTokenBalance();
 
         // Pass invalid delivery address that fails at Order entity instantiation or validation
         CartItemDto itemA = new CartItemDto(productA.getId(), productA.getName(), productA.getPriceInTokens(), "kg", productA.getCategory(), farmer.getName(), null, 2);

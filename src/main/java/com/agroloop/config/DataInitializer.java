@@ -8,14 +8,12 @@ import com.agroloop.model.Household;
 import com.agroloop.model.Notification;
 import com.agroloop.model.NotificationType;
 import com.agroloop.model.Order;
-import com.agroloop.model.OrderItem;
 import com.agroloop.model.PickupRequest;
 import com.agroloop.model.Product;
 import com.agroloop.model.ProductCategory;
 import com.agroloop.model.QualityGrade;
 import com.agroloop.model.Review;
 import com.agroloop.model.ReviewType;
-import com.agroloop.model.RouteStop;
 import com.agroloop.model.TransactionDirection;
 import com.agroloop.model.WasteCategory;
 import com.agroloop.model.WasteSubmission;
@@ -26,13 +24,10 @@ import com.agroloop.repository.EcoTokenTransactionRepository;
 import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.NotificationRepository;
-import com.agroloop.repository.OrderItemRepository;
 import com.agroloop.repository.OrderRepository;
 import com.agroloop.repository.PickupRequestRepository;
 import com.agroloop.repository.ProductRepository;
 import com.agroloop.repository.ReviewRepository;
-import com.agroloop.repository.RouteStopRepository;
-import com.agroloop.repository.UserRepository;
 import com.agroloop.repository.WasteSubmissionRepository;
 import com.agroloop.repository.WasteVerificationRepository;
 import org.slf4j.Logger;
@@ -53,7 +48,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
-    private final UserRepository userRepository;
     private final AdminRepository adminRepository;
     private final HouseholdRepository householdRepository;
     private final FarmerRepository farmerRepository;
@@ -63,18 +57,15 @@ public class DataInitializer implements CommandLineRunner {
     private final WasteVerificationRepository wasteVerificationRepository;
     private final EcoTokenTransactionRepository ecoTokenTransactionRepository;
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final ReviewRepository reviewRepository;
     private final NotificationRepository notificationRepository;
     private final CollectionRouteRepository collectionRouteRepository;
-    private final RouteStopRepository routeStopRepository;
     private final PasswordEncoder passwordEncoder;
 
     @org.springframework.beans.factory.annotation.Value("${agroloop.seed.full-data:true}")
     private boolean seedFullData;
 
     public DataInitializer(
-            UserRepository userRepository,
             AdminRepository adminRepository,
             HouseholdRepository householdRepository,
             FarmerRepository farmerRepository,
@@ -84,14 +75,11 @@ public class DataInitializer implements CommandLineRunner {
             WasteVerificationRepository wasteVerificationRepository,
             EcoTokenTransactionRepository ecoTokenTransactionRepository,
             OrderRepository orderRepository,
-            OrderItemRepository orderItemRepository,
             ReviewRepository reviewRepository,
             NotificationRepository notificationRepository,
             CollectionRouteRepository collectionRouteRepository,
-            RouteStopRepository routeStopRepository,
             PasswordEncoder passwordEncoder
     ) {
-        this.userRepository = userRepository;
         this.adminRepository = adminRepository;
         this.householdRepository = householdRepository;
         this.farmerRepository = farmerRepository;
@@ -101,11 +89,9 @@ public class DataInitializer implements CommandLineRunner {
         this.wasteVerificationRepository = wasteVerificationRepository;
         this.ecoTokenTransactionRepository = ecoTokenTransactionRepository;
         this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
         this.reviewRepository = reviewRepository;
         this.notificationRepository = notificationRepository;
         this.collectionRouteRepository = collectionRouteRepository;
-        this.routeStopRepository = routeStopRepository;
         this.passwordEncoder = passwordEncoder;
     }
 

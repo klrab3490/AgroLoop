@@ -21,7 +21,6 @@ import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.OrderItemRepository;
 import com.agroloop.repository.OrderRepository;
 import com.agroloop.repository.ProductRepository;
-import com.agroloop.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,9 +54,6 @@ class OrderAtomicRefundTest {
 
     @Autowired
     private AdminRepository adminRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Autowired
     private ProductRepository productRepository;

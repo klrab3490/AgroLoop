@@ -34,7 +34,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")

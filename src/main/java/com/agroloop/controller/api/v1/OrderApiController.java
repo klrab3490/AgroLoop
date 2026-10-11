@@ -13,6 +13,7 @@ import com.agroloop.exception.ResourceNotFoundException;
 import com.agroloop.model.Order;
 import com.agroloop.model.Product;
 import com.agroloop.model.User;
+import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.OrderRepository;
 import com.agroloop.repository.UserRepository;
 import com.agroloop.security.authorization.OrderSecurityEvaluator;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -41,6 +43,7 @@ public class OrderApiController {
     private final MarketplaceService marketplaceService;
     private final ProductService productService;
     private final OrderRepository orderRepository;
+    private final HouseholdRepository householdRepository;
     private final UserRepository userRepository;
     private final IdempotencyService idempotencyService;
     private final OrderSecurityEvaluator orderSecurityEvaluator;
@@ -49,6 +52,7 @@ public class OrderApiController {
             MarketplaceService marketplaceService,
             ProductService productService,
             OrderRepository orderRepository,
+            HouseholdRepository householdRepository,
             UserRepository userRepository,
             IdempotencyService idempotencyService,
             OrderSecurityEvaluator orderSecurityEvaluator
@@ -56,6 +60,7 @@ public class OrderApiController {
         this.marketplaceService = marketplaceService;
         this.productService = productService;
         this.orderRepository = orderRepository;
+        this.householdRepository = householdRepository;
         this.userRepository = userRepository;
         this.idempotencyService = idempotencyService;
         this.orderSecurityEvaluator = orderSecurityEvaluator;
@@ -68,10 +73,10 @@ public class OrderApiController {
         List<Order> orders;
         if (hasRole(auth, "ROLE_ADMIN")) {
             orders = orderRepository.findAllByOrderByCreatedAtDesc();
-        } else if (hasRole(auth, "ROLE_FARMER")) {
-            orders = marketplaceService.getFarmerOrders(email);
         } else {
-            orders = marketplaceService.getHouseholdOrders(email);
+            orders = householdRepository.findByEmail(email)
+                    .map(orderRepository::findByHouseholdOrderByCreatedAtDesc)
+                    .orElse(Collections.emptyList());
         }
         return ResponseEntity.ok(orders.stream().map(OrderApiResponse::from).toList());
     }

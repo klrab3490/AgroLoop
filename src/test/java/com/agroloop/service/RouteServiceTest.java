@@ -5,8 +5,6 @@ import com.agroloop.model.Farmer;
 import com.agroloop.model.Household;
 import com.agroloop.model.PickupRequest;
 import com.agroloop.model.PickupStatus;
-import com.agroloop.model.RouteStatus;
-import com.agroloop.model.RouteStop;
 import com.agroloop.model.WasteCategory;
 import com.agroloop.model.WasteSubmission;
 import com.agroloop.repository.CollectionRouteRepository;

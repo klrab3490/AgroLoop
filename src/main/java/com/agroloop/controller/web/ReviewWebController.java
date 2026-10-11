@@ -7,11 +7,9 @@ import com.agroloop.exception.ResourceNotFoundException;
 import com.agroloop.model.Farmer;
 import com.agroloop.model.Order;
 import com.agroloop.model.PickupRequest;
-import com.agroloop.model.User;
 import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.OrderRepository;
 import com.agroloop.repository.PickupRequestRepository;
-import com.agroloop.repository.UserRepository;
 import com.agroloop.security.authorization.PickupSecurityEvaluator;
 import com.agroloop.service.ReviewService;
 import jakarta.validation.Valid;
@@ -34,7 +32,6 @@ public class ReviewWebController {
 
     private final ReviewService reviewService;
     private final FarmerRepository farmerRepository;
-    private final UserRepository userRepository;
     private final PickupRequestRepository pickupRequestRepository;
     private final OrderRepository orderRepository;
     private final PickupSecurityEvaluator pickupSecurityEvaluator;
@@ -42,14 +39,12 @@ public class ReviewWebController {
     public ReviewWebController(
             ReviewService reviewService,
             FarmerRepository farmerRepository,
-            UserRepository userRepository,
             PickupRequestRepository pickupRequestRepository,
             OrderRepository orderRepository,
             PickupSecurityEvaluator pickupSecurityEvaluator
     ) {
         this.reviewService = reviewService;
         this.farmerRepository = farmerRepository;
-        this.userRepository = userRepository;
         this.pickupRequestRepository = pickupRequestRepository;
         this.orderRepository = orderRepository;
         this.pickupSecurityEvaluator = pickupSecurityEvaluator;

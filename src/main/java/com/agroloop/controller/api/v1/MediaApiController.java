@@ -104,7 +104,7 @@ public class MediaApiController {
             InputStream inputStream
     ) {
         // Direct local/test upload endpoint
-        MediaAsset asset = mediaAssetRepository.findById(mediaId)
+        mediaAssetRepository.findById(mediaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + mediaId));
         return ResponseEntity.ok().build();
     }

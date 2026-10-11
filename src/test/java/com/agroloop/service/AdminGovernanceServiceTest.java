@@ -8,7 +8,6 @@ import com.agroloop.model.Order;
 import com.agroloop.model.OrderStatus;
 import com.agroloop.model.Role;
 import com.agroloop.model.TransactionDirection;
-import com.agroloop.model.User;
 import com.agroloop.repository.EcoTokenTransactionRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.OrderRepository;

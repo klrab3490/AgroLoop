@@ -1,13 +1,11 @@
 package com.agroloop.controller;
 
-import com.agroloop.model.Admin;
 import com.agroloop.model.Farmer;
 import com.agroloop.model.Household;
 import com.agroloop.model.Order;
 import com.agroloop.model.OrderStatus;
 import com.agroloop.model.Product;
 import com.agroloop.model.ProductCategory;
-import com.agroloop.repository.AdminRepository;
 import com.agroloop.repository.EcoTokenTransactionRepository;
 import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.HouseholdRepository;
@@ -46,9 +44,6 @@ class MarketplaceOrderLifecycleSecurityTest {
 
     @Autowired
     private FarmerRepository farmerRepository;
-
-    @Autowired
-    private AdminRepository adminRepository;
 
     @Autowired
     private ProductRepository productRepository;

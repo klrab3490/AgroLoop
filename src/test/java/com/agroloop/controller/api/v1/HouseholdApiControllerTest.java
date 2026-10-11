@@ -1,7 +1,6 @@
 package com.agroloop.controller.api.v1;
 
 import com.agroloop.model.ClientType;
-import com.agroloop.model.FarmerApplication;
 import com.agroloop.model.Household;
 import com.agroloop.model.User;
 import com.agroloop.repository.FarmerApplicationRepository;
