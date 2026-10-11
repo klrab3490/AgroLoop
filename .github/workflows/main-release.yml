@@ -286,7 +286,7 @@ jobs:
         run: |
           mkdir -p dist-release
           TAG_NAME="${{ github.ref_name }}"
-          VERSION="${TAG_NAME:-v1.0.4}"
+          VERSION="${TAG_NAME:-v1.0.6}"
           # Package Mobile Expo Web Bundle into Zip if present
           if [ -d "release-assets/mobile-expo-bundle" ]; then
             (cd release-assets/mobile-expo-bundle && zip -r ../../dist-release/AgroLoop-Mobile-${VERSION}-expo-bundle.zip .)
