@@ -14,6 +14,8 @@ export interface OrderEndpoints {
   create(request: CreateOrderApiRequest, options?: MutationOptions): Promise<OrderApiResponse>;
   cancelOrder(id: number, request: CancelOrderApiRequest, options?: MutationOptions): Promise<OrderApiResponse>;
   disputeOrder(id: number, request: DisputeOrderApiRequest, options?: MutationOptions): Promise<OrderApiResponse>;
+  completeOrder(id: number): Promise<OrderApiResponse>;
+  updateStatus(id: number, status: string): Promise<OrderApiResponse>;
 }
 
 export function createOrderEndpoints(client: AgroLoopApiClient): OrderEndpoints {
@@ -48,6 +50,14 @@ export function createOrderEndpoints(client: AgroLoopApiClient): OrderEndpoints 
         idempotentMutation: true,
         idempotencyKey: options?.idempotencyKey,
       });
+    },
+
+    async completeOrder(id: number) {
+      return client.post<OrderApiResponse>(`/orders/${id}/complete`, {});
+    },
+
+    async updateStatus(id: number, status: string) {
+      return client.post<OrderApiResponse>(`/orders/${id}/status`, { status });
     },
   };
 }

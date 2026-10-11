@@ -6,6 +6,8 @@ package com.agroloop.model;
 public enum OrderStatus {
 
     PLACED("Placed", "Order has been confirmed and tokens have been debited."),
+    PACKED("Packed", "Order has been prepared, packed, and sealed by the farm partner."),
+    IN_TRANSIT("In Transit", "Order has been dispatched with local green courier."),
     COMPLETED("Completed", "Order produce has been delivered or fulfilled."),
     DISPUTED("Disputed", "Order is contested and pending administrative adjudication."),
     CANCELLED("Cancelled", "Order was cancelled and tokens refunded.");

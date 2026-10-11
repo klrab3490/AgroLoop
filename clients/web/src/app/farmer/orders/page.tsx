@@ -100,6 +100,23 @@ export default function FarmerOrdersPage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Order completion state
+  const [completingOrderId, setCompletingOrderId] = useState<number | null>(null);
+
+  const handleCompleteOrder = async (orderId: number) => {
+    setCompletingOrderId(orderId);
+    setActionError(null);
+    try {
+      await webApiClient.orders.completeOrder(orderId);
+      await queryClient.invalidateQueries({ queryKey: ["farmer-orders"] });
+      setActionSuccess(`Order #${orderId} marked as delivered successfully!`);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to mark order as delivered");
+    } finally {
+      setCompletingOrderId(null);
+    }
+  };
+
   // 1. Available unclaimed household requests
   const {
     data: availablePickups = [],
@@ -691,6 +708,49 @@ export default function FarmerOrdersPage() {
                         📝 <strong>Delivery Note:</strong> &ldquo;{order.notes}&rdquo;
                       </p>
                     )}
+
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        {order.status === "PLACED" && (
+                          <span className="text-3xs font-semibold text-slate-500">
+                            Status: <strong className="text-amber-600">Awaiting Delivery</strong>
+                          </span>
+                        )}
+                        {order.status === "COMPLETED" && (
+                          <span className="text-3xs font-semibold text-emerald-700 flex items-center gap-1">
+                            <span>✅</span> Delivered &amp; Fulfilled
+                          </span>
+                        )}
+                        {order.status === "DISPUTED" && (
+                          <span className="text-3xs font-semibold text-amber-700 flex items-center gap-1">
+                            <span>⚠️</span> Disputed (Under Review)
+                          </span>
+                        )}
+                        {order.status === "CANCELLED" && (
+                          <span className="text-3xs font-semibold text-red-600 flex items-center gap-1">
+                            <span>❌</span> Cancelled &amp; Refunded
+                          </span>
+                        )}
+                      </div>
+
+                      {order.status === "PLACED" && order.id && (
+                        <button
+                          type="button"
+                          onClick={() => order.id && handleCompleteOrder(order.id)}
+                          disabled={completingOrderId === order.id}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          {completingOrderId === order.id ? (
+                            <span>Updating...</span>
+                          ) : (
+                            <>
+                              <span>✓</span>
+                              <span>Mark as Delivered</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

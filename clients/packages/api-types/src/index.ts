@@ -87,7 +87,9 @@ export type FarmerProductApiRequest = Schemas["FarmerProductApiRequest"];
 export type PageApiResponseProductApiResponse = Schemas["PageApiResponseProductApiResponse"];
 
 // Orders & Lifecycle DTOs
-export type OrderApiResponse = Schemas["OrderApiResponse"];
+export type OrderApiResponse = Omit<Schemas["OrderApiResponse"], "status"> & {
+  status?: "PLACED" | "PACKED" | "IN_TRANSIT" | "COMPLETED" | "DISPUTED" | "CANCELLED" | string;
+};
 export type OrderItemApiResponse = Schemas["OrderItemApiResponse"];
 export type CreateOrderApiRequest = Schemas["CreateOrderApiRequest"];
 export type OrderItemRequest = Schemas["OrderItemRequest"];

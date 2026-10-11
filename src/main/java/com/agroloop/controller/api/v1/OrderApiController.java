@@ -218,6 +218,71 @@ public class OrderApiController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{id}/complete")
+    @Transactional
+    public ResponseEntity<OrderApiResponse> completeOrder(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        Order order = orderRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
+
+        boolean isAdmin = hasRole(auth, "ROLE_ADMIN");
+        Long userId = getUserId(auth);
+        boolean isFarmer = order.getItems().stream()
+                .anyMatch(item -> java.util.Objects.equals(item.getFarmerId(), userId));
+
+        if (!isAdmin && !isFarmer) {
+            throw new AccessDeniedException("Only participating farmers or administrators can mark this order as completed");
+        }
+
+        if (order.getStatus() == com.agroloop.model.OrderStatus.COMPLETED) {
+            return ResponseEntity.ok(OrderApiResponse.from(order));
+        }
+
+        order.complete();
+        Order saved = orderRepository.save(order);
+        return ResponseEntity.ok(OrderApiResponse.from(saved));
+    }
+
+    public record UpdateOrderStatusApiRequest(String status) {}
+
+    @PostMapping("/{id}/status")
+    @Transactional
+    public ResponseEntity<OrderApiResponse> updateOrderStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateOrderStatusApiRequest request,
+            Authentication auth
+    ) {
+        Order order = orderRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
+
+        boolean isAdmin = hasRole(auth, "ROLE_ADMIN");
+        Long userId = getUserId(auth);
+        boolean isFarmer = order.getItems().stream()
+                .anyMatch(item -> java.util.Objects.equals(item.getFarmerId(), userId));
+
+        if (!isAdmin && !isFarmer) {
+            throw new AccessDeniedException("Only participating farmers or administrators can update order status");
+        }
+
+        if (request == null || request.status() == null || request.status().isBlank()) {
+            throw new IllegalArgumentException("Status is required");
+        }
+
+        String target = request.status().toUpperCase().trim();
+        switch (target) {
+            case "PACKED" -> order.pack();
+            case "IN_TRANSIT" -> order.dispatch();
+            case "COMPLETED", "DELIVERED" -> order.complete();
+            default -> throw new IllegalArgumentException("Unsupported target status: " + target);
+        }
+
+        Order saved = orderRepository.save(order);
+        return ResponseEntity.ok(OrderApiResponse.from(saved));
+    }
+
+
     private Long getUserId(Authentication auth) {
         Long id = orderSecurityEvaluator.extractUserId(auth);
         if (id == null) {

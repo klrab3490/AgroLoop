@@ -22,6 +22,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [copiedOrderId, setCopiedOrderId] = useState(false);
   const [addedItemMessage, setAddedItemMessage] = useState<string | null>(null);
 
+  // Live status updater & carrier sync state
+  const [apiModalOpen, setApiModalOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
+  const [copiedTrackingId, setCopiedTrackingId] = useState(false);
+  const [copiedCurl, setCopiedCurl] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   const { data: order, isLoading, error } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => webApiClient.orders.getOrder(orderId),
@@ -32,6 +40,44 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     navigator.clipboard.writeText(`ECO-ORD-${orderId}`);
     setCopiedOrderId(true);
     setTimeout(() => setCopiedOrderId(false), 2000);
+  };
+
+  const handleUpdateStatus = async (targetStatus: string) => {
+    setIsUpdatingStatus(targetStatus);
+    setActionError(null);
+    try {
+      await webApiClient.orders.updateStatus(orderId, targetStatus);
+      await queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      setAddedItemMessage(`Status updated to ${targetStatus} via API!`);
+      setTimeout(() => setAddedItemMessage(null), 3000);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : `Failed to update status to ${targetStatus}`);
+    } finally {
+      setIsUpdatingStatus(null);
+    }
+  };
+
+  const handleRefreshStatus = async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      setAddedItemMessage("Live tracking refreshed from API!");
+      setTimeout(() => setAddedItemMessage(null), 2000);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
+  const handleCopyTracking = (trk: string) => {
+    navigator.clipboard.writeText(trk);
+    setCopiedTrackingId(true);
+    setTimeout(() => setCopiedTrackingId(false), 2000);
+  };
+
+  const handleCopyCurl = (cmd: string) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCurl(true);
+    setTimeout(() => setCopiedCurl(false), 2000);
   };
 
   const handleBuyAgain = (productId?: number, productName?: string) => {
@@ -123,14 +169,28 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const isCancelled = order.status === "CANCELLED";
   const isDisputed = order.status === "DISPUTED";
   const isDelivered = order.status === "COMPLETED";
+  const isInTransit = order.status === "IN_TRANSIT";
+  const isPacked = order.status === "PACKED";
   const isPlaced = order.status === "PLACED";
 
   // Step calculations (Amazon-style 4 stages)
-  // Stage 1: Order Confirmed
-  // Stage 2: Processed by Farmer
-  // Stage 3: Out for Delivery
-  // Stage 4: Delivered
-  const currentStepNumber: number = isDelivered ? 4 : isPlaced ? 2 : isCancelled ? 0 : 2;
+  // Stage 1: Ordered (Confirmed)
+  // Stage 2: Packed (Farm Ready)
+  // Stage 3: In Transit (Local Route)
+  // Stage 4: Delivered (Doorstep)
+  const currentStepNumber: number = isDelivered
+    ? 4
+    : isInTransit
+    ? 3
+    : isPacked
+    ? 2
+    : isPlaced
+    ? 1
+    : isCancelled
+    ? 0
+    : 1;
+
+  const trackingNumber = `ECO-TRK-${((order.id ?? orderId) * 1000 + 482)}`;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-6">
@@ -221,79 +281,134 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      {/* Amazon / Flipkart Style Delivery & Fulfillment Progress Stepper */}
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
-          <div>
-            <div className="flex items-center gap-2">
+      {/* Amazon / Flipkart Style Delivery & Fulfillment Progress Card */}
+      <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        {/* Top Header Row with Status & ETA */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-5 border-b border-slate-100 gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
               <span
-                className={`w-3 h-3 rounded-full ${
+                className={`w-3.5 h-3.5 rounded-full ring-4 ${
                   isDelivered
-                    ? "bg-emerald-500"
+                    ? "bg-emerald-500 ring-emerald-100"
+                    : isInTransit
+                    ? "bg-purple-500 ring-purple-100 animate-pulse"
+                    : isPacked
+                    ? "bg-amber-500 ring-amber-100 animate-pulse"
                     : isPlaced
-                    ? "bg-blue-500 animate-pulse"
+                    ? "bg-blue-500 ring-blue-100 animate-pulse"
                     : isCancelled
-                    ? "bg-slate-400"
-                    : "bg-amber-500"
+                    ? "bg-slate-400 ring-slate-100"
+                    : "bg-amber-500 ring-amber-100"
                 }`}
               />
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                 {isDelivered && "Delivered to Doorstep"}
-                {isPlaced && "Order Confirmed — Preparing for Shipment"}
+                {isInTransit && "Out for Delivery — On Local Route"}
+                {isPacked && "Order Packed & Sealed — Ready for Dispatch"}
+                {isPlaced && "Order Confirmed — Preparing for Harvest & Shipment"}
                 {isCancelled && "Order Cancelled"}
                 {isDisputed && "Order Under Dispute Review"}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-1 pl-5">
-              {isDelivered && "Package was handed directly to resident. Verified on-site."}
-              {isPlaced && "Your order has been placed with the local producer. Estimated delivery within 24–48 hours."}
+            <p className="text-xs text-slate-500 pl-6">
+              {isDelivered && "Package handed directly to resident. Verified on-site at doorstep."}
+              {isInTransit && "Your organic goods are out for delivery with local zero-emission cargo courier."}
+              {isPacked && "Farm producer has carefully harvested, sorted, and sealed items in 100% compostable packaging."}
+              {isPlaced && "Order confirmed and verified on EcoToken ledger. Producer preparing batch."}
               {isCancelled && (order.cancellationReason ? `Reason: ${order.cancellationReason}` : "Cancelled by user. Tokens refunded.")}
               {isDisputed && (order.disputeReason ? `Dispute reason: ${order.disputeReason}` : "Case opened with arbitration.")}
             </p>
           </div>
 
-          <span
-            className={`self-start sm:self-auto px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-              isDelivered
-                ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                : isPlaced
-                ? "bg-blue-100 text-blue-800 border border-blue-200"
-                : isCancelled
-                ? "bg-slate-100 text-slate-700 border border-slate-200"
-                : "bg-amber-100 text-amber-800 border border-amber-200"
-            }`}
-          >
-            {order.status}
-          </span>
+          <div className="flex items-center gap-2 self-start lg:self-auto shrink-0">
+            <span
+              className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${
+                isDelivered
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                  : isInTransit
+                  ? "bg-purple-100 text-purple-800 border border-purple-200"
+                  : isPacked
+                  ? "bg-amber-100 text-amber-800 border border-amber-200"
+                  : isPlaced
+                  ? "bg-blue-100 text-blue-800 border border-blue-200"
+                  : isCancelled
+                  ? "bg-slate-100 text-slate-700 border border-slate-200"
+                  : "bg-amber-100 text-amber-800 border border-amber-200"
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
+              <span>{order.status}</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={handleRefreshStatus}
+              disabled={isRefreshing}
+              title="Refresh live status from server"
+              className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl border border-slate-200 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+            >
+              <span className={`inline-block ${isRefreshing ? "animate-spin" : ""}`}>🔄</span>
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
         </div>
 
-        {/* 4-Stage Progress Stepper Bar (Amazon Delivery Bar) */}
+        {/* Carrier Info Strip */}
+        {!isCancelled && (
+          <div className="bg-slate-50/80 border border-slate-200/60 rounded-2xl p-3 sm:px-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="text-slate-600 flex items-center gap-1.5 font-medium">
+                <span>🌱</span>
+                <span>Carrier: <strong>EcoCourier Green Fleet</strong></span>
+              </span>
+              <span className="text-slate-400 hidden sm:inline">•</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500">Tracking:</span>
+                <span className="font-mono font-bold text-slate-800">{trackingNumber}</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyTracking(trackingNumber)}
+                  className="px-1.5 py-0.5 bg-white hover:bg-slate-100 text-slate-600 rounded border border-slate-200 text-[10px] font-semibold transition cursor-pointer"
+                >
+                  {copiedTrackingId ? "✓ Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-slate-500 text-[11px] font-medium flex items-center gap-2">
+              <span>Delivery Window: <strong>Tomorrow by 6:00 PM</strong></span>
+            </div>
+          </div>
+        )}
+
+        {/* 4-Stage Progress Stepper Bar (Amazon / Flipkart Delivery Stepper) */}
         {!isCancelled ? (
-          <div className="py-2">
-            <div className="relative">
+          <div className="py-4">
+            <div className="relative max-w-3xl mx-auto">
               {/* Background Connecting Bar */}
-              <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 h-1.5 bg-slate-100 rounded-full" />
-              {/* Progress Connecting Bar */}
+              <div className="absolute top-4.5 left-8 right-8 h-2 bg-slate-100 rounded-full" />
+              {/* Active Connecting Bar */}
               <div
-                className="absolute top-1/2 left-0 -translate-y-1/2 h-1.5 bg-emerald-500 rounded-full transition-all duration-500"
+                className="absolute top-4.5 left-8 h-2 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-500 rounded-full transition-all duration-700 ease-out shadow-2xs"
                 style={{
                   width:
                     currentStepNumber === 4
-                      ? "100%"
+                      ? "calc(100% - 4rem)"
                       : currentStepNumber === 3
-                      ? "66%"
+                      ? "calc(66.6% - 2.5rem)"
                       : currentStepNumber === 2
-                      ? "33%"
+                      ? "calc(33.3% - 1.5rem)"
                       : "0%",
                 }}
               />
 
               {/* Steps */}
               <div className="relative flex justify-between">
-                {/* Step 1: Placed */}
-                <div className="flex flex-col items-center text-center max-w-[80px]">
+                {/* Step 1: Ordered */}
+                <div className="flex flex-col items-center text-center max-w-[90px]">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-white ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs ring-4 ring-white shadow-xs transition ${
                       currentStepNumber >= 1
                         ? "bg-emerald-600 text-white"
                         : "bg-slate-200 text-slate-500"
@@ -301,52 +416,58 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   >
                     ✓
                   </div>
-                  <span className="text-[11px] font-bold text-slate-900 mt-2">Ordered</span>
-                  <span className="text-[10px] text-slate-400 leading-tight">Confirmed</span>
+                  <span className="text-xs font-bold text-slate-900 mt-2">Ordered</span>
+                  <span className="text-[10px] text-slate-400 leading-tight">{orderTimeFormatted || "Confirmed"}</span>
                 </div>
 
-                {/* Step 2: Processing */}
-                <div className="flex flex-col items-center text-center max-w-[80px]">
+                {/* Step 2: Packed */}
+                <div className="flex flex-col items-center text-center max-w-[90px]">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-white ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs ring-4 shadow-xs transition ${
                       currentStepNumber >= 2
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-200 text-slate-500"
+                        ? "bg-emerald-600 text-white ring-white"
+                        : currentStepNumber === 1
+                        ? "bg-blue-600 text-white ring-blue-100 animate-pulse border-2 border-white"
+                        : "bg-slate-100 text-slate-400 ring-white"
                     }`}
                   >
-                    {currentStepNumber > 2 ? "✓" : "2"}
+                    {currentStepNumber >= 2 ? "✓" : currentStepNumber === 1 ? "📦" : "2"}
                   </div>
-                  <span className="text-[11px] font-bold text-slate-900 mt-2">Packed</span>
+                  <span className="text-xs font-bold text-slate-900 mt-2">Packed</span>
                   <span className="text-[10px] text-slate-400 leading-tight">Farm Ready</span>
                 </div>
 
-                {/* Step 3: Out for Delivery */}
-                <div className="flex flex-col items-center text-center max-w-[80px]">
+                {/* Step 3: In Transit */}
+                <div className="flex flex-col items-center text-center max-w-[90px]">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-white ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs ring-4 shadow-xs transition ${
                       currentStepNumber >= 3
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-200 text-slate-500"
+                        ? "bg-emerald-600 text-white ring-white"
+                        : currentStepNumber === 2
+                        ? "bg-blue-600 text-white ring-blue-100 animate-pulse border-2 border-white"
+                        : "bg-slate-100 text-slate-400 ring-white"
                     }`}
                   >
-                    {currentStepNumber > 3 ? "✓" : "3"}
+                    {currentStepNumber >= 3 ? "✓" : currentStepNumber === 2 ? "🚚" : "3"}
                   </div>
-                  <span className="text-[11px] font-bold text-slate-900 mt-2">In Transit</span>
+                  <span className="text-xs font-bold text-slate-900 mt-2">In Transit</span>
                   <span className="text-[10px] text-slate-400 leading-tight">Local Route</span>
                 </div>
 
                 {/* Step 4: Delivered */}
-                <div className="flex flex-col items-center text-center max-w-[80px]">
+                <div className="flex flex-col items-center text-center max-w-[90px]">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-white ${
+                    className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs ring-4 shadow-xs transition ${
                       currentStepNumber >= 4
-                        ? "bg-emerald-600 text-white"
-                        : "bg-slate-200 text-slate-500"
+                        ? "bg-emerald-600 text-white ring-white"
+                        : currentStepNumber === 3
+                        ? "bg-blue-600 text-white ring-blue-100 animate-pulse border-2 border-white"
+                        : "bg-slate-100 text-slate-400 ring-white"
                     }`}
                   >
-                    {currentStepNumber >= 4 ? "✓" : "4"}
+                    {currentStepNumber >= 4 ? "✓" : currentStepNumber === 3 ? "🏠" : "4"}
                   </div>
-                  <span className="text-[11px] font-bold text-slate-900 mt-2">Delivered</span>
+                  <span className="text-xs font-bold text-slate-900 mt-2">Delivered</span>
                   <span className="text-[10px] text-slate-400 leading-tight">Doorstep</span>
                 </div>
               </div>
@@ -359,6 +480,166 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <p className="text-slate-500 mt-0.5">Inventory was atomically restocked and {order.totalTokens} EcoTokens returned to wallet.</p>
             </div>
             <span className="text-2xl">↩️</span>
+          </div>
+        )}
+
+        {/* Expandable Live Shipment Activity Feed */}
+        {!isCancelled && (
+          <div className="border border-slate-100 rounded-2xl bg-slate-50/50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span>📋</span>
+                <span>Live Shipment Timeline</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowTimeline(!showTimeline)}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 cursor-pointer"
+              >
+                {showTimeline ? "Hide Details ▲" : "Show Details ▼"}
+              </button>
+            </div>
+
+            {showTimeline && (
+              <div className="space-y-3 pt-2 text-xs border-t border-slate-200/50">
+                <div className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">✓</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900">Order Confirmed</span>
+                      <span className="text-[10px] text-slate-400">{orderTimeFormatted || "Just now"}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">EcoTokens debited under ACID transaction. Producer notified for harvest batch.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${
+                    currentStepNumber >= 2 ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-500"
+                  }`}>
+                    {currentStepNumber >= 2 ? "✓" : "○"}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${currentStepNumber >= 2 ? "text-slate-900" : "text-slate-400"}`}>
+                        Produce Harvested &amp; Packed
+                      </span>
+                      {currentStepNumber >= 2 && <span className="text-[10px] text-slate-400">Processed</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      {currentStepNumber >= 2
+                        ? "Items sealed in 100% biodegradable certified farm packaging."
+                        : "Awaiting local producer packaging confirmation."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${
+                    currentStepNumber >= 3 ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-500"
+                  }`}>
+                    {currentStepNumber >= 3 ? "✓" : "○"}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${currentStepNumber >= 3 ? "text-slate-900" : "text-slate-400"}`}>
+                        Dispatched with Green Courier
+                      </span>
+                      {currentStepNumber >= 3 && <span className="text-[10px] text-slate-400">In Transit</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      {currentStepNumber >= 3
+                        ? "Driver dispatched on optimized delivery route via electric cargo vehicle."
+                        : "Courier scheduled upon packaging completion."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${
+                    currentStepNumber >= 4 ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-500"
+                  }`}>
+                    {currentStepNumber >= 4 ? "✓" : "○"}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${currentStepNumber >= 4 ? "text-slate-900" : "text-slate-400"}`}>
+                        Delivered to Doorstep
+                      </span>
+                      {currentStepNumber >= 4 && <span className="text-[10px] text-slate-400">Completed</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      {currentStepNumber >= 4
+                        ? "Verified doorstep delivery complete. AgroLoop certified impact receipt generated."
+                        : "Package will be delivered directly to resident."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Live Status API Controller & External Webhook Bar */}
+        {!isCancelled && !isDisputed && (
+          <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+              <span className="text-amber-500">⚡</span>
+              <span className="font-bold text-slate-700">Update Order via API:</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("PACKED")}
+                disabled={isUpdatingStatus !== null || isPacked || isInTransit || isDelivered}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                  isPacked
+                    ? "bg-amber-100 text-amber-800 cursor-default"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40"
+                }`}
+              >
+                {isUpdatingStatus === "PACKED" ? "..." : "📦"}
+                <span>Set Packed</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("IN_TRANSIT")}
+                disabled={isUpdatingStatus !== null || isInTransit || isDelivered}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                  isInTransit
+                    ? "bg-purple-100 text-purple-800 cursor-default"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40"
+                }`}
+              >
+                {isUpdatingStatus === "IN_TRANSIT" ? "..." : "🚚"}
+                <span>Set In Transit</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleUpdateStatus("COMPLETED")}
+                disabled={isUpdatingStatus !== null || isDelivered}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                  isDelivered
+                    ? "bg-emerald-100 text-emerald-800 cursor-default"
+                    : "bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40"
+                }`}
+              >
+                {isUpdatingStatus === "COMPLETED" ? "..." : "✅"}
+                <span>Set Delivered</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setApiModalOpen(true)}
+                className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              >
+                <span>🔌</span>
+                <span>API Webhook</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -724,6 +1005,81 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <button
                 onClick={() => setInvoiceModalOpen(false)}
                 className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* External API Webhook Modal */}
+      {apiModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[10px] uppercase font-extrabold tracking-widest text-emerald-700">
+                  External Logistics &amp; Carrier Webhook
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mt-0.5">
+                  Update Order #{order.id} via API
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApiModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition text-lg font-bold cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              External logistics providers, IoT couriers, and warehouse scanners can update this order status directly via the REST API:
+            </p>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                cURL Webhook Request
+              </span>
+              <div className="relative">
+                <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
+{`curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer <TOKEN>" \\
+  -d '{"status": "IN_TRANSIT"}'`}
+                </pre>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCurl(`curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"status": "IN_TRANSIT"}'`)}
+                  className="absolute top-2 right-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold transition cursor-pointer"
+                >
+                  {copiedCurl ? "✓ Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5 text-slate-600">
+              <div className="flex justify-between">
+                <span>Supported Statuses:</span>
+                <span className="font-mono font-bold text-slate-800">PACKED, IN_TRANSIT, COMPLETED</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Endpoint Route:</span>
+                <span className="font-mono font-bold text-emerald-700">POST /api/v1/orders/{order.id}/status</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Authorization:</span>
+                <span className="text-slate-700 font-medium">JWT Bearer (Farmer, Carrier, Admin)</span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setApiModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
               >
                 Close
               </button>

@@ -139,11 +139,31 @@ public class Order {
     }
 
     /**
-     * Marks the order as completed/fulfilled.
+     * Marks the order as packed by the producer/farmer.
+     */
+    public void pack() {
+        if (this.status != OrderStatus.PLACED) {
+            throw new IllegalStateException("Only PLACED orders can be marked as PACKED. Current status: " + this.status);
+        }
+        this.status = OrderStatus.PACKED;
+    }
+
+    /**
+     * Marks the order as in-transit / dispatched with local courier.
+     */
+    public void dispatch() {
+        if (this.status != OrderStatus.PACKED && this.status != OrderStatus.PLACED) {
+            throw new IllegalStateException("Only PLACED or PACKED orders can be dispatched. Current status: " + this.status);
+        }
+        this.status = OrderStatus.IN_TRANSIT;
+    }
+
+    /**
+     * Marks the order as completed/fulfilled/delivered.
      */
     public void complete() {
-        if (this.status != OrderStatus.PLACED) {
-            throw new IllegalStateException("Only PLACED orders can be marked as COMPLETED");
+        if (this.status != OrderStatus.PLACED && this.status != OrderStatus.PACKED && this.status != OrderStatus.IN_TRANSIT) {
+            throw new IllegalStateException("Only active orders (PLACED, PACKED, IN_TRANSIT) can be marked as COMPLETED. Current status: " + this.status);
         }
         this.status = OrderStatus.COMPLETED;
     }
@@ -168,8 +188,8 @@ public class Order {
      * Raises a dispute on the order. Enforces single dispute lifecycle invariant.
      */
     public void dispute(String reason, User actor) {
-        if (this.status != OrderStatus.PLACED) {
-            throw new IllegalStateException("Only PLACED orders can be disputed. Current status: " + this.status);
+        if (this.status != OrderStatus.PLACED && this.status != OrderStatus.PACKED && this.status != OrderStatus.IN_TRANSIT) {
+            throw new IllegalStateException("Only active orders can be disputed. Current status: " + this.status);
         }
         if (this.resolvedAt != null) {
             throw new IllegalStateException("Order has already undergone dispute resolution and cannot be disputed again");
