@@ -5,12 +5,16 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
+import { useAuth } from "@/lib/auth-context";
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const orderId = parseInt(resolvedParams.id, 10);
   const queryClient = useQueryClient();
   const { addItem } = useCart();
+  const { user } = useAuth();
+
+  const canUpdateStatus = user?.role === "ROLE_ADMIN" || user?.role === "ROLE_FARMER";
 
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -44,6 +48,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   };
 
   const handleUpdateStatus = async (targetStatus: string) => {
+    if (!canUpdateStatus) {
+      setActionError("Only farmers and administrators are authorized to update order status.");
+      return;
+    }
     setIsUpdatingStatus(targetStatus);
     setActionError(null);
     try {
@@ -581,12 +589,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         )}
 
-        {/* Live Status API Controller & External Webhook Bar */}
-        {!isCancelled && !isDisputed && (
+        {/* Live Status API Controller & External Webhook Bar (Farmer & Admin only) */}
+        {!isCancelled && !isDisputed && canUpdateStatus && (
           <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+            <div className="flex items-center gap-2 text-xs text-slate-600">
               <span className="text-amber-500">⚡</span>
               <span className="font-bold text-slate-700">Update Order via API:</span>
+              <span className="text-[10px] bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                {user?.role === "ROLE_ADMIN" ? "Admin Controls" : "Farmer Fulfillment"}
+              </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -1014,8 +1025,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      {/* External API Webhook Modal */}
-      {apiModalOpen && (
+      {/* External API Webhook Modal (Farmer & Admin only) */}
+      {apiModalOpen && canUpdateStatus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in">
           <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-start justify-between">
