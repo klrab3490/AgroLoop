@@ -322,12 +322,24 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME="${{ github.ref_name }}"
+          shopt -s nullglob
+          ASSETS=(dist-release/*)
+          shopt -u nullglob
+
           gh release view "$TAG_NAME" >/dev/null 2>&1 && {
-            echo "Release $TAG_NAME already exists, uploading assets..."
-            gh release upload "$TAG_NAME" dist-release/* --clobber
+            echo "Release $TAG_NAME already exists"
+            if [ ${#ASSETS[@]} -gt 0 ]; then
+              gh release upload "$TAG_NAME" "${ASSETS[@]}" --clobber
+            fi
           } || {
             echo "Creating new release $TAG_NAME..."
-            gh release create "$TAG_NAME" dist-release/* \
-              --title "AgroLoop $TAG_NAME — Production Release" \
-              --notes "Production release packages for Linux (.deb, .AppImage), Windows (.msi, .exe), Android (.apk), and Mobile Expo Bundle."
+            if [ ${#ASSETS[@]} -gt 0 ]; then
+              gh release create "$TAG_NAME" "${ASSETS[@]}" \
+                --title "AgroLoop $TAG_NAME — Production Release" \
+                --notes "Production release packages for Linux (.deb, .AppImage), Windows (.msi, .exe), Android (.apk), and Mobile Expo Bundle."
+            else
+              gh release create "$TAG_NAME" \
+                --title "AgroLoop $TAG_NAME — Production Release" \
+                --notes "Production release packages for Linux (.deb, .AppImage), Windows (.msi, .exe), Android (.apk), and Mobile Expo Bundle."
+            fi
           }
