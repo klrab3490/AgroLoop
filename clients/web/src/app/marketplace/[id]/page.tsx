@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
+import { useAuth } from "@/lib/auth-context";
 
 interface CategoryMeta {
   label: string;
@@ -48,6 +49,7 @@ const CATEGORY_MAP: Record<string, CategoryMeta> = {
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const productId = parseInt(resolvedParams.id, 10);
+  const { user } = useAuth();
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [addedNotice, setAddedNotice] = useState(false);
@@ -222,50 +224,74 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 )}
               </div>
 
-              {/* Quantity Selector */}
-              {inStock && (
-                <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200/70">
-                  <label className="text-xs font-bold text-slate-700">Select Quantity:</label>
+              {/* Producer Self-Purchase Guard */}
+              {user?.role === "ROLE_FARMER" &&
+              ((user.id != null && product.farmerId != null && product.farmerId === user.id) ||
+                (user.name && product.farmerName?.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
+                (user.farmName && product.farmerName?.trim().toLowerCase() === user.farmName.trim().toLowerCase())) ? (
+                <div className="p-5 bg-emerald-50/90 border border-emerald-200/90 rounded-2xl text-xs text-emerald-950 space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-sm flex items-center justify-center transition shadow-2xs"
-                    >
-                      -
-                    </button>
-                    <span className="w-8 text-center text-xs font-black text-slate-900">{quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(Math.min(product.stock ?? 1, quantity + 1))}
-                      className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-sm flex items-center justify-center transition shadow-2xs"
-                    >
-                      +
-                    </button>
+                    <span className="text-xl">🧑‍🌾</span>
+                    <span className="font-black text-sm">Your Farm Catalog Product</span>
                   </div>
+                  <p className="text-2xs text-emerald-800 leading-relaxed">
+                    You are registered as the producer of this item. As a verified regional farmer, self-purchasing your own listed goods is disabled to protect marketplace integrity.
+                  </p>
+                  <Link
+                    href="/farmer/products"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-3xs rounded-xl transition shadow-xs"
+                  >
+                    <span>Manage in Farmer Products Portal ➔</span>
+                  </Link>
                 </div>
-              )}
+              ) : (
+                <>
+                  {/* Quantity Selector */}
+                  {inStock && (
+                    <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200/70">
+                      <label className="text-xs font-bold text-slate-700">Select Quantity:</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-sm flex items-center justify-center transition shadow-2xs"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center text-xs font-black text-slate-900">{quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(Math.min(product.stock ?? 1, quantity + 1))}
+                          className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 font-bold text-sm flex items-center justify-center transition shadow-2xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Success Notice */}
-              {addedNotice && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 animate-in fade-in duration-200">
-                  <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">✓</span>
-                  <span>Added {quantity} unit(s) to your cart!</span>
-                </div>
-              )}
+                  {/* Success Notice */}
+                  {addedNotice && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 animate-in fade-in duration-200">
+                      <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">✓</span>
+                      <span>Added {quantity} unit(s) to your cart!</span>
+                    </div>
+                  )}
 
-              {/* Add to Cart Button */}
-              <button
-                type="button"
-                disabled={!inStock}
-                onClick={handleAddToCart}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold text-sm rounded-2xl transition shadow-lg shadow-emerald-700/20 hover:shadow-xl hover:shadow-emerald-700/30 active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span>{inStock ? `Add to Cart • ${totalPrice} ECO` : "Currently Out of Stock"}</span>
-              </button>
+                  {/* Add to Cart Button */}
+                  <button
+                    type="button"
+                    disabled={!inStock}
+                    onClick={handleAddToCart}
+                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold text-sm rounded-2xl transition shadow-lg shadow-emerald-700/20 hover:shadow-xl hover:shadow-emerald-700/30 active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span>{inStock ? `Add to Cart • ${totalPrice} ECO` : "Currently Out of Stock"}</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

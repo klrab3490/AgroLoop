@@ -130,7 +130,7 @@ export default function FarmerHubPage() {
       {/* Quick Nav Grid */}
       <div className="space-y-4">
         <h2 className="text-lg font-black text-slate-900">Operations Hub</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/farmer/pickups"
             className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 transition shadow-sm flex items-center gap-4 group"
@@ -149,11 +149,11 @@ export default function FarmerHubPage() {
             className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 transition shadow-sm flex items-center gap-4 group"
           >
             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-              📑
+              🛍️
             </div>
             <div>
-              <h4 className="font-bold text-sm text-slate-900">Orders &amp; Household Requests</h4>
-              <p className="text-2xs text-slate-500">Review waste submissions &amp; marketplace sales</p>
+              <h4 className="font-bold text-sm text-slate-900">Orders &amp; Fulfillment</h4>
+              <p className="text-2xs text-slate-500">Fulfill marketplace sales &amp; update statuses</p>
             </div>
           </Link>
 
@@ -167,6 +167,19 @@ export default function FarmerHubPage() {
             <div>
               <h4 className="font-bold text-sm text-slate-900">Product Management</h4>
               <p className="text-2xs text-slate-500">List compost &amp; update inventory</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/farmer/audit"
+            className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-500 transition shadow-sm flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+              📊
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-slate-900">Operations Audit</h4>
+              <p className="text-2xs text-slate-500">Inspect escrow ledger &amp; audit trails</p>
             </div>
           </Link>
         </div>

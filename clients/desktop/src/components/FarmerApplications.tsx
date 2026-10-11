@@ -29,6 +29,7 @@ export const FarmerApplications: React.FC = () => {
   }, []);
 
   const handleApprove = async (id: number) => {
+    if (id == null) return;
     if (!confirm("Are you sure you want to approve this household for Farmer Partner status? Their role will transition to ROLE_FARMER.")) {
       return;
     }
@@ -45,7 +46,7 @@ export const FarmerApplications: React.FC = () => {
 
   const handleReject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rejectingApp) return;
+    if (!rejectingApp?.id) return;
 
     setActionLoadingId(rejectingApp.id);
     try {
@@ -267,7 +268,7 @@ export const FarmerApplications: React.FC = () => {
                       {isPending ? (
                         <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
                           <button
-                            onClick={() => handleApprove(app.id)}
+                            onClick={() => app.id && handleApprove(app.id)}
                             disabled={isActioning}
                             style={{
                               padding: "4px 10px",

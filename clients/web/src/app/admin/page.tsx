@@ -31,6 +31,22 @@ export default function AdminHubPage() {
   // User Details Inspection Modal State
   const [inspectedUser, setInspectedUser] = useState<UserApiResponse | null>(null);
 
+  // Expandable Accordion Rows under each User
+  const [expandedUserIds, setExpandedUserIds] = useState<Set<number>>(new Set());
+
+  const toggleExpandUser = (userId?: number) => {
+    if (userId == null) return;
+    setExpandedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
   // Add User Modal State
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [addName, setAddName] = useState("");
@@ -995,7 +1011,8 @@ export default function AdminHubPage() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-50/80 border-b border-slate-200 text-2xs font-bold uppercase tracking-wider text-slate-500">
-                      <th className="py-3.5 px-4">ID</th>
+                      <th className="py-3.5 pl-4 pr-1 w-10 text-center"></th>
+                      <th className="py-3.5 px-3">ID</th>
                       <th className="py-3.5 px-4">User Identity</th>
                       <th className="py-3.5 px-4">Role</th>
                       <th className="py-3.5 px-4">Account Status</th>
@@ -1010,161 +1027,392 @@ export default function AdminHubPage() {
                       const isHousehold = (u.role || "").includes("HOUSEHOLD");
                       const isFarmer = (u.role || "").includes("FARMER");
                       const isAdmin = (u.role || "").includes("ADMIN");
+                      const isExpanded = u.id != null && expandedUserIds.has(u.id);
 
                       return (
-                        <tr
-                          key={u.id}
-                          className={`hover:bg-slate-50/60 transition cursor-pointer ${
-                            isSelf ? "bg-emerald-50/30" : ""
-                          }`}
-                          onClick={() => setInspectedUser(u)}
-                        >
-                          <td className="py-3.5 px-4 font-mono text-slate-400">
-                            #{u.id}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-900">
-                                {u.name || "Nameless User"}
+                        <React.Fragment key={u.id}>
+                          <tr
+                            className={`transition cursor-pointer ${
+                              isExpanded
+                                ? "bg-slate-50/90 font-medium border-l-4 border-l-emerald-500"
+                                : isSelf
+                                ? "bg-emerald-50/30 hover:bg-emerald-50/50"
+                                : "hover:bg-slate-50/60"
+                            }`}
+                            onClick={() => toggleExpandUser(u.id)}
+                          >
+                            <td className="py-3.5 pl-4 pr-1 text-center" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={() => toggleExpandUser(u.id)}
+                                className={`p-1.5 rounded-lg hover:bg-slate-200/70 text-slate-400 transition-all duration-200 ${
+                                  isExpanded ? "rotate-90 text-emerald-600 bg-emerald-50" : ""
+                                }`}
+                                aria-label={isExpanded ? "Collapse user details" : "Expand user details"}
+                                title={isExpanded ? "Click to collapse" : "Click to expand details"}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                              </button>
+                            </td>
+                            <td className="py-3.5 px-3 font-mono text-slate-400">
+                              #{u.id}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-900">
+                                  {u.name || "Nameless User"}
+                                </span>
+                                {isSelf && (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-3xs">
+                                    You (Operator)
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-2xs text-slate-500 font-mono block">
+                                {u.email}
                               </span>
-                              {isSelf && (
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-3xs">
-                                  You (Operator)
+                              {u.createdAt && (
+                                <span className="text-3xs text-slate-400 mt-0.5 block">
+                                  Joined {new Date(u.createdAt).toLocaleDateString()}
                                 </span>
                               )}
-                            </div>
-                            <span className="text-2xs text-slate-500 font-mono block">
-                              {u.email}
-                            </span>
-                            {u.createdAt && (
-                              <span className="text-3xs text-slate-400 mt-0.5 block">
-                                Joined {new Date(u.createdAt).toLocaleDateString()}
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-2xs font-bold inline-flex items-center gap-1 ${
-                                isAdmin
-                                  ? "bg-purple-100 text-purple-800 border border-purple-200"
-                                  : isFarmer
-                                  ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                  : "bg-blue-100 text-blue-800 border border-blue-200"
-                              }`}
-                            >
-                              <span>{isAdmin ? "🛡️" : isFarmer ? "🌾" : "🏠"}</span>
-                              <span>{displayRole}</span>
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`inline-flex items-center gap-1.5 font-semibold text-2xs ${
-                                u.enabled ? "text-emerald-700" : "text-rose-600"
-                              }`}
-                            >
+                            </td>
+                            <td className="py-3.5 px-4">
                               <span
-                                className={`w-2 h-2 rounded-full ${
-                                  u.enabled ? "bg-emerald-500" : "bg-rose-500"
+                                className={`px-2.5 py-1 rounded-full text-2xs font-bold inline-flex items-center gap-1 ${
+                                  isAdmin
+                                    ? "bg-purple-100 text-purple-800 border border-purple-200"
+                                    : isFarmer
+                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                    : "bg-blue-100 text-blue-800 border border-blue-200"
                                 }`}
-                              />
-                              <span>{u.enabled ? "Active" : "Disabled"}</span>
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4 font-mono">
-                            {u.tokenBalance != null ? (
-                              <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                                {u.tokenBalance} 🪙
+                              >
+                                <span>{isAdmin ? "🛡️" : isFarmer ? "🌾" : "🏠"}</span>
+                                <span>{displayRole}</span>
                               </span>
-                            ) : (
-                              <span className="text-slate-400">—</span>
-                            )}
-                          </td>
-                          <td
-                            className="py-3.5 px-4 text-right"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                              {/* Inspect Details Button */}
-                              <button
-                                onClick={() => setInspectedUser(u)}
-                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-2xs font-bold transition flex items-center gap-1"
-                                title="Inspect User Identity & Platform Profile"
-                              >
-                                <span>👁️</span>
-                                <span>Details</span>
-                              </button>
-
-                              {/* Modify Role Button */}
-                              <button
-                                onClick={() => handleOpenModifyRole(u)}
-                                className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
-                                title="Change Platform Role"
-                              >
-                                <span>🔄</span>
-                                <span>Role</span>
-                              </button>
-
-                              {/* Convert to Farmer Action (Available for Households) */}
-                              {isHousehold && (
-                                <button
-                                  onClick={() => {
-                                    setConversionTargetUser(u);
-                                    setFarmName(`${u.name || "Community"}'s Farm`);
-                                    setFarmAddress(u.address || "");
-                                    setConversionNotes("");
-                                    setConversionError(null);
-                                    setConversionSuccess(null);
-                                  }}
-                                  className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
-                                  title="Promote Household to Verified Farmer"
-                                >
-                                  <span>🌾</span>
-                                  <span>Convert</span>
-                                </button>
-                              )}
-
-                              {/* Adjust Tokens Action (Available for Households) */}
-                              {isHousehold && (
-                                <button
-                                  onClick={() => {
-                                    setAdjustTargetUser(u);
-                                    setAdjustResult(null);
-                                    setAdjustError(null);
-                                    setAdjustAmount("10");
-                                    setAdjustReason("");
-                                  }}
-                                  className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
-                                  title="Adjust EcoToken Balance with Audit Trail"
-                                >
-                                  <span>🪙</span>
-                                  <span>Adjust</span>
-                                </button>
-                              )}
-
-                              {/* Enable / Disable Status Toggle */}
-                              <button
-                                onClick={() => handleToggleStatus(u)}
-                                disabled={isSelf}
-                                className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition border ${
-                                  isSelf
-                                    ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-                                    : u.enabled
-                                    ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
-                                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span
+                                className={`inline-flex items-center gap-1.5 font-semibold text-2xs ${
+                                  u.enabled ? "text-emerald-700" : "text-rose-600"
                                 }`}
-                                title={
-                                  isSelf
-                                    ? "Cannot disable your own active operator account"
-                                    : u.enabled
-                                    ? "Deactivate user access"
-                                    : "Re-enable user account"
-                                }
                               >
-                                {u.enabled ? "Disable" : "Enable"}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
+                                <span
+                                  className={`w-2 h-2 rounded-full ${
+                                    u.enabled ? "bg-emerald-500" : "bg-rose-500"
+                                  }`}
+                                />
+                                <span>{u.enabled ? "Active" : "Disabled"}</span>
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 font-mono">
+                              {u.tokenBalance != null ? (
+                                <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                  {u.tokenBalance} 🪙
+                                </span>
+                              ) : (
+                                <span className="text-slate-400">—</span>
+                              )}
+                            </td>
+                            <td
+                              className="py-3.5 px-4 text-right"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                {/* Toggle Details Accordion Button */}
+                                <button
+                                  onClick={() => toggleExpandUser(u.id)}
+                                  className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition flex items-center gap-1 ${
+                                    isExpanded
+                                      ? "bg-emerald-600 text-white shadow-2xs"
+                                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                  }`}
+                                  title={isExpanded ? "Collapse inline profile" : "Expand inline profile under user"}
+                                >
+                                  <span>{isExpanded ? "▲" : "▼"}</span>
+                                  <span>{isExpanded ? "Hide" : "Details"}</span>
+                                </button>
+
+                                {/* Modify Role Button */}
+                                <button
+                                  onClick={() => handleOpenModifyRole(u)}
+                                  className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
+                                  title="Change Platform Role"
+                                >
+                                  <span>🔄</span>
+                                  <span>Role</span>
+                                </button>
+
+                                {/* Convert to Farmer Action (Available for Households) */}
+                                {isHousehold && (
+                                  <button
+                                    onClick={() => {
+                                      setConversionTargetUser(u);
+                                      setFarmName(`${u.name || "Community"}'s Farm`);
+                                      setFarmAddress(u.address || "");
+                                      setConversionNotes("");
+                                      setConversionError(null);
+                                      setConversionSuccess(null);
+                                    }}
+                                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
+                                    title="Promote Household to Verified Farmer"
+                                  >
+                                    <span>🌾</span>
+                                    <span>Convert</span>
+                                  </button>
+                                )}
+
+                                {/* Adjust Tokens Action (Available for Households) */}
+                                {isHousehold && (
+                                  <button
+                                    onClick={() => {
+                                      setAdjustTargetUser(u);
+                                      setAdjustResult(null);
+                                      setAdjustError(null);
+                                      setAdjustAmount("10");
+                                      setAdjustReason("");
+                                    }}
+                                    className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-2xs font-bold transition flex items-center gap-1"
+                                    title="Adjust EcoToken Balance with Audit Trail"
+                                  >
+                                    <span>🪙</span>
+                                    <span>Adjust</span>
+                                  </button>
+                                )}
+
+                                {/* Enable / Disable Status Toggle */}
+                                <button
+                                  onClick={() => handleToggleStatus(u)}
+                                  disabled={isSelf}
+                                  className={`px-2.5 py-1 rounded-lg text-2xs font-bold transition border ${
+                                    isSelf
+                                      ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                      : u.enabled
+                                      ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
+                                      : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                                  }`}
+                                  title={
+                                    isSelf
+                                      ? "Cannot disable your own active operator account"
+                                      : u.enabled
+                                      ? "Deactivate user access"
+                                      : "Re-enable user account"
+                                  }
+                                >
+                                  {u.enabled ? "Disable" : "Enable"}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Accordion Row Rendered DIRECTLY UNDER EACH USER */}
+                          {isExpanded && (
+                            <tr className="bg-slate-50/70 border-b border-slate-200/90">
+                              <td colSpan={7} className="p-0">
+                                <div className="px-5 sm:px-8 py-5 border-l-4 border-l-emerald-500 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                                  {/* Identity Quick Bar */}
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
+                                    <div className="flex items-center gap-3">
+                                      <div
+                                        className={`w-11 h-11 rounded-2xl font-black flex items-center justify-center text-xl shadow-xs ${
+                                          isAdmin
+                                            ? "bg-purple-100 text-purple-700 ring-2 ring-purple-200/60"
+                                            : isFarmer
+                                            ? "bg-amber-100 text-amber-700 ring-2 ring-amber-200/60"
+                                            : "bg-blue-100 text-blue-700 ring-2 ring-blue-200/60"
+                                        }`}
+                                      >
+                                        {isAdmin ? "🛡️" : isFarmer ? "🌾" : "🏠"}
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="font-black text-sm text-slate-900">
+                                            {u.name || "Nameless User"}
+                                          </span>
+                                          <span className="text-3xs font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">
+                                            ID #{u.id}
+                                          </span>
+                                          <span
+                                            className={`px-2 py-0.5 rounded-full text-3xs font-bold ${
+                                              isAdmin
+                                                ? "bg-purple-100 text-purple-800"
+                                                : isFarmer
+                                                ? "bg-amber-100 text-amber-800"
+                                                : "bg-blue-100 text-blue-800"
+                                            }`}
+                                          >
+                                            {displayRole}
+                                          </span>
+                                          <span
+                                            className={`inline-flex items-center gap-1 text-3xs font-bold px-2 py-0.5 rounded-full ${
+                                              u.enabled
+                                                ? "bg-emerald-100 text-emerald-800"
+                                                : "bg-rose-100 text-rose-800"
+                                            }`}
+                                          >
+                                            <span
+                                              className={`w-1.5 h-1.5 rounded-full ${
+                                                u.enabled ? "bg-emerald-500" : "bg-rose-500"
+                                              }`}
+                                            />
+                                            {u.enabled ? "Active Account" : "Disabled Account"}
+                                          </span>
+                                        </div>
+                                        <div className="text-2xs text-slate-500 font-mono mt-0.5 flex items-center gap-3 flex-wrap">
+                                          <span>{u.email}</span>
+                                          {u.createdAt && (
+                                            <span className="text-slate-400">
+                                              • Registered on {new Date(u.createdAt).toLocaleDateString()}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <div className="px-3.5 py-1.5 bg-slate-50 rounded-xl border border-slate-200 text-left sm:text-right">
+                                        <span className="text-3xs uppercase font-bold text-slate-400 block">
+                                          Circulating EcoTokens
+                                        </span>
+                                        <span className="font-mono font-black text-xs text-blue-700">
+                                          {u.tokenBalance != null ? `${u.tokenBalance} 🪙` : "0.00 🪙"}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Detail Attributes Grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {/* Location Card */}
+                                    <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs space-y-1">
+                                      <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block flex items-center gap-1">
+                                        <span>📍</span> {isFarmer ? "Farm Physical Location" : "Resident Address"}
+                                      </span>
+                                      <p className="text-xs font-semibold text-slate-800">
+                                        {isFarmer
+                                          ? u.farmAddress || u.address || "No farm address registered"
+                                          : u.address || "Community Resident (Unspecified)"}
+                                      </p>
+                                      {isFarmer && u.farmName && (
+                                        <p className="text-2xs text-amber-800 font-medium">
+                                          Farm: <strong>{u.farmName}</strong>
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Performance & Quality Rating Card */}
+                                    <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs space-y-1">
+                                      <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block flex items-center gap-1">
+                                        <span>⭐</span> Trust & Performance Metrics
+                                      </span>
+                                      <p className="text-xs font-semibold text-slate-800">
+                                        {u.averageRating != null && u.averageRating > 0
+                                          ? `${u.averageRating.toFixed(1)} ★ Rating`
+                                          : "New System Participant"}
+                                      </p>
+                                      <p className="text-2xs text-slate-500">
+                                        {isFarmer
+                                          ? `${u.reviewCount ?? 0} reviews • ${u.serviceRadiusKm ?? 25}km radius • ${u.maxDailyCapacityKg ?? 200}kg capacity`
+                                          : `${u.reviewCount ?? 0} collection audits recorded`}
+                                      </p>
+                                    </div>
+
+                                    {/* Administrative Notes Card */}
+                                    <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs space-y-1">
+                                      <span className="text-3xs font-bold uppercase tracking-wider text-slate-400 block flex items-center gap-1">
+                                        <span>📝</span> Governance Notes
+                                      </span>
+                                      <p className="text-xs text-slate-600 line-clamp-2">
+                                        {u.notes ||
+                                          (isAdmin
+                                            ? "Primary operator account with system-level security access."
+                                            : "No custom operational notes recorded.")}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Direct Actions Toolbar under each user */}
+                                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 flex-wrap gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <button
+                                        onClick={() => handleOpenModifyRole(u)}
+                                        className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-2xs font-bold transition flex items-center gap-1 shadow-2xs"
+                                      >
+                                        <span>🔄</span>
+                                        <span>Modify Role</span>
+                                      </button>
+
+                                      {isHousehold && (
+                                        <>
+                                          <button
+                                            onClick={() => {
+                                              setConversionTargetUser(u);
+                                              setFarmName(`${u.name || "Community"}'s Farm`);
+                                              setFarmAddress(u.address || "");
+                                              setConversionNotes("");
+                                              setConversionError(null);
+                                              setConversionSuccess(null);
+                                            }}
+                                            className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-2xs font-bold transition flex items-center gap-1 shadow-2xs"
+                                          >
+                                            <span>🌾</span>
+                                            <span>Convert to Farmer</span>
+                                          </button>
+
+                                          <button
+                                            onClick={() => {
+                                              setAdjustTargetUser(u);
+                                              setAdjustResult(null);
+                                              setAdjustError(null);
+                                              setAdjustAmount("10");
+                                              setAdjustReason("");
+                                            }}
+                                            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-2xs font-bold transition flex items-center gap-1 shadow-2xs"
+                                          >
+                                            <span>🪙</span>
+                                            <span>Adjust Tokens</span>
+                                          </button>
+                                        </>
+                                      )}
+
+                                      <button
+                                        onClick={() => handleToggleStatus(u)}
+                                        disabled={isSelf}
+                                        className={`px-3 py-1.5 rounded-lg text-2xs font-bold transition border shadow-2xs ${
+                                          isSelf
+                                            ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                            : u.enabled
+                                            ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
+                                            : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                                        }`}
+                                      >
+                                        {u.enabled ? "Disable Account" : "Enable Account"}
+                                      </button>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => setInspectedUser(u)}
+                                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-2xs font-bold transition flex items-center gap-1"
+                                      >
+                                        <span>🔍</span>
+                                        <span>Modal View</span>
+                                      </button>
+                                      <button
+                                        onClick={() => toggleExpandUser(u.id)}
+                                        className="px-3 py-1.5 text-slate-500 hover:text-slate-800 text-2xs font-semibold transition"
+                                      >
+                                        ▲ Collapse
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>

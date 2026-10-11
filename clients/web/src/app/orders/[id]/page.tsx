@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { ConfirmationModal } from "@/components/ui";
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -850,91 +851,78 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* Cancellation Modal */}
-      {cancelModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 border border-slate-200 shadow-2xl">
-            <div className="flex items-center gap-2 text-red-600 font-bold text-base">
-              <span>✕</span>
-              <h3>Cancel Order #ECO-ORD-{order.id}</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Cancelling this order will release reserved inventory back to the local farmer and atomically credit{" "}
-              <span className="font-bold text-emerald-700">{order.totalTokens} EcoTokens</span> back to your account wallet.
-            </p>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                Reason for Cancellation
-              </label>
-              <textarea
-                required
-                rows={3}
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="E.g., Ordered wrong quantity, change of mind..."
-                className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-            <div className="flex gap-2 justify-end pt-2">
-              <button
-                onClick={() => setCancelModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition"
-              >
-                Keep Order
-              </button>
-              <button
-                onClick={handleCancelOrder}
-                disabled={isProcessing || !cancelReason.trim()}
-                className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 disabled:bg-slate-300 transition"
-              >
-                {isProcessing ? "Processing..." : "Confirm Cancellation"}
-              </button>
-            </div>
-          </div>
+      <ConfirmationModal
+        isOpen={cancelModalOpen}
+        title="Cancel Order"
+        recordIdentifier={`ECO-ORD-${order.id}`}
+        description="Cancelling this order will release reserved inventory back to the local farmer and atomically credit the purchase price back to your EcoToken wallet."
+        isDestructive={true}
+        reversible={false}
+        confirmLabel="Confirm Cancellation"
+        cancelLabel="Keep Order"
+        isLoading={isProcessing}
+        consequences={[
+          `Order status will transition to CANCELLED`,
+          `${order.totalTokens} EcoTokens will be immediately refunded to your wallet`,
+          `Reserved inventory items will be restocked to the farmer's store`,
+        ]}
+        onConfirm={handleCancelOrder}
+        onCancel={() => {
+          setCancelModalOpen(false);
+          setCancelReason("");
+        }}
+      >
+        <div className="space-y-1.5 pt-1">
+          <label className="text-3xs font-bold text-slate-500 uppercase tracking-wider block">
+            Reason for Cancellation <span className="text-rose-500">*</span>
+          </label>
+          <textarea
+            required
+            rows={3}
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="E.g., Ordered wrong quantity, change of delivery schedule..."
+            className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:outline-none"
+          />
         </div>
-      )}
+      </ConfirmationModal>
 
       {/* Dispute Modal */}
-      {disputeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white p-6 rounded-3xl max-w-md w-full space-y-4 border border-slate-200 shadow-2xl">
-            <div className="flex items-center gap-2 text-amber-700 font-bold text-base">
-              <span>⚖️</span>
-              <h3>Open Order Resolution Dispute</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              AgroLoop platform arbitration ensures fair exchange. Provide details regarding damaged items, missing quantities, or non-delivery.
-            </p>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                Describe the issue
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={disputeReason}
-                onChange={(e) => setDisputeReason(e.target.value)}
-                placeholder="Please describe the discrepancy with item photos or delivery details..."
-                className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              />
-            </div>
-            <div className="flex gap-2 justify-end pt-2">
-              <button
-                onClick={() => setDisputeModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDisputeOrder}
-                disabled={isProcessing || !disputeReason.trim()}
-                className="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-xl hover:bg-amber-700 disabled:bg-slate-300 transition"
-              >
-                {isProcessing ? "Submitting..." : "Submit to Arbitrator"}
-              </button>
-            </div>
-          </div>
+      <ConfirmationModal
+        isOpen={disputeModalOpen}
+        title="Open Order Resolution Dispute"
+        recordIdentifier={`ECO-ORD-${order.id}`}
+        description="AgroLoop platform arbitration ensures fair exchange. Provide details regarding damaged items, missing quantities, or delivery discrepancies."
+        isDestructive={false}
+        reversible={true}
+        confirmLabel="Submit to Arbitrator"
+        cancelLabel="Cancel"
+        isLoading={isProcessing}
+        consequences={[
+          "An administrative dispute claim will be opened with platform arbiters",
+          "Farmer and logistics coordinators will be notified for evidence submission",
+          "EcoToken settlement may be adjusted based on the arbitration ruling",
+        ]}
+        onConfirm={handleDisputeOrder}
+        onCancel={() => {
+          setDisputeModalOpen(false);
+          setDisputeReason("");
+        }}
+      >
+        <div className="space-y-1.5 pt-1">
+          <label className="text-3xs font-bold text-slate-500 uppercase tracking-wider block">
+            Describe the Issue <span className="text-emerald-700">*</span>
+          </label>
+          <textarea
+            required
+            rows={3}
+            value={disputeReason}
+            onChange={(e) => setDisputeReason(e.target.value)}
+            placeholder="Please describe the discrepancy with item photos or delivery details..."
+            className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          />
         </div>
-      )}
+      </ConfirmationModal>
 
       {/* Printable Invoice Modal */}
       {invoiceModalOpen && (

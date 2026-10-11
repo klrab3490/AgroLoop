@@ -80,6 +80,12 @@ export default function RootLayout() {
             title: "On-Site Verification",
           }}
         />
+        <Stack.Screen
+          name="admin/index"
+          options={{
+            title: "Admin Operations",
+          }}
+        />
       </RootStack>
     </AuthProvider>
   );

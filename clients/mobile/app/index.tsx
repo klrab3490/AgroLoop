@@ -79,6 +79,21 @@ export default function IndexScreen() {
       </View>
 
       <View style={styles.cardContainer}>
+        {user?.role === "ROLE_ADMIN" && (
+          <Link href="/admin" asChild>
+            <TouchableOpacity style={[styles.card, styles.adminCard]}>
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>Admin Portal</Text>
+                <Text style={[styles.cardTag, styles.adminTag]}>Governance</Text>
+              </View>
+              <Text style={styles.cardDescription}>
+                Oversee platform solvency metrics, audit token ledgers, approve farmer applications, and manage user directory.
+              </Text>
+              <Text style={[styles.cardAction, styles.adminAction]}>Open Admin Console &rarr;</Text>
+            </TouchableOpacity>
+          </Link>
+        )}
+
         <Link href="/household" asChild>
           <TouchableOpacity style={styles.card}>
             <View style={styles.cardHeaderRow}>
@@ -237,6 +252,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
+  },
+  adminCard: {
+    borderColor: "#c7d2fe",
+    backgroundColor: "#faf5ff",
+  },
+  adminTag: {
+    color: "#4338ca",
+    backgroundColor: "#e0e7ff",
+  },
+  adminAction: {
+    color: "#4f46e5",
   },
   sessionCard: {
     backgroundColor: "#ffffff",

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
+import { ConfirmationModal } from "@/components/ui";
 
 const WASTE_CATEGORIES = [
   { value: "FOOD_SCRAPS", label: "Kitchen Scraps", icon: "🥦", desc: "Fruit & vegetable peels, leftover organic food" },
@@ -343,56 +344,28 @@ export default function SubmitWastePage() {
         </button>
       </form>
 
-      {/* Review -> Confirm -> Execute Location Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center text-2xl">
-                📍
-              </div>
-              <div>
-                <h3 className="text-base font-black text-slate-900">Confirm Your Pickup Location</h3>
-                <p className="text-xs text-slate-500">The farmer will use this location for doorstep collection.</p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3 text-xs">
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-3xs block">Pickup Address</span>
-                <span className="font-bold text-slate-800 text-sm">{address}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 font-bold uppercase text-3xs block">Navigation Location</span>
-                <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                  {coordinates ? "🛰️ GPS Coordinates Captured" : "📮 Registered Postal Address"}
-                </span>
-              </div>
-              <div className="pt-2 border-t border-slate-200/60 flex justify-between items-center text-3xs text-slate-400">
-                <span>Estimated Batch: {weight} kg</span>
-                <span>Category: {WASTE_CATEGORIES.find((c) => c.value === category)?.label}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(false)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
-              >
-                Change Location
-              </button>
-              <button
-                type="button"
-                onClick={executeSubmit}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-200 transition"
-              >
-                Confirm Location
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Review -> Confirm -> Execute Consequential Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        title="Confirm Doorstep Waste Pickup"
+        recordIdentifier={`EST-${weight}KG-${category}`}
+        description={`You are scheduling a certified doorstep collection for ${WASTE_CATEGORIES.find((c) => c.value === category)?.label || category}. A local farmer will navigate to the specified location to collect and weigh the batch.`}
+        consequences={[
+          `Pickup location confirmed: ${address}`,
+          coordinates
+            ? `Exact GPS coordinates attached (${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}) for turn-by-turn routing`
+            : "Postal doorstep address will be used for farmer dispatch",
+          `Estimated initial batch weight: ${weight} kg`,
+          "EcoTokens will be minted to your wallet immediately upon certified farmer weigh-in",
+        ]}
+        confirmLabel="Confirm & Queue Pickup"
+        cancelLabel="Modify Details"
+        isDestructive={false}
+        reversible={true}
+        isLoading={isSubmitting}
+        onConfirm={executeSubmit}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 }

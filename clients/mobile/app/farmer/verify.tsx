@@ -156,7 +156,32 @@ export default function FarmerVerifyScreen() {
     );
   };
 
-  const handleVerifySubmit = async () => {
+  const handleReviewAndCommitVerify = () => {
+    const id = Number(pickupIdInput);
+    if (!id || isNaN(id)) {
+      Alert.alert("Invalid Pickup", "Please enter or scan a valid numeric Pickup ID.");
+      return;
+    }
+    if (numericWeight <= 0) {
+      Alert.alert("Invalid Weight", "Verified weight must be greater than 0 kg.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Waste Certification & Token Minting",
+      `Are you sure you want to certify this collection?\n\n• Pickup: #${id} (${pickup?.householdName || "Resident"})\n• Certified Net Weight: ${numericWeight} kg\n• Quality Grade: ${selectedGradeObj.label} (${selectedGradeObj.multiplier}x)\n• Scale Photo Evidence: ${scalePhotoUri ? "Attached ✓" : "None"}\n• EcoTokens Minted: +${estimatedTokensAwarded.toFixed(2)} EcoTokens\n\nNotice: This action creates an immutable ledger entry and permanently credits tokens to the household.`,
+      [
+        { text: "Modify Readings", style: "cancel" },
+        {
+          text: "Confirm & Mint Tokens",
+          style: "default",
+          onPress: executeVerifySubmit,
+        },
+      ]
+    );
+  };
+
+  const executeVerifySubmit = async () => {
     const id = Number(pickupIdInput);
     if (!id || isNaN(id)) {
       Alert.alert("Invalid Pickup", "Please enter a valid numeric Pickup ID.");
@@ -407,13 +432,13 @@ export default function FarmerVerifyScreen() {
       {/* Submission Action */}
       <TouchableOpacity
         style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-        onPress={handleVerifySubmit}
+        onPress={handleReviewAndCommitVerify}
         disabled={submitting}
       >
         {submitting ? (
           <ActivityIndicator color="#ffffff" size="small" />
         ) : (
-          <Text style={styles.submitButtonText}>Commit Verification & Mint Tokens</Text>
+          <Text style={styles.submitButtonText}>Review &amp; Mint Tokens</Text>
         )}
       </TouchableOpacity>
 

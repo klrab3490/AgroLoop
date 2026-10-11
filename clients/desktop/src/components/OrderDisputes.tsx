@@ -356,6 +356,36 @@ export const OrderDisputes: React.FC = () => {
                 />
               </div>
 
+              {/* Consequential Action Breakdown */}
+              <div
+                style={{
+                  padding: "12px",
+                  borderRadius: "8px",
+                  background: resolution === "APPROVED_REFUND" ? "rgba(16, 185, 129, 0.08)" : "rgba(244, 63, 94, 0.08)",
+                  border: `1px solid ${resolution === "APPROVED_REFUND" ? "rgba(16, 185, 129, 0.25)" : "rgba(244, 63, 94, 0.25)"}`,
+                  fontSize: "11px",
+                  lineHeight: "1.5",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                <div style={{ fontWeight: "700", color: resolution === "APPROVED_REFUND" ? "var(--accent-emerald)" : "var(--accent-rose)", marginBottom: "4px" }}>
+                  {resolution === "APPROVED_REFUND" ? "⚡ Consequential Ledger Reversal:" : "⚠️ Consequential Dispute Dismissal:"}
+                </div>
+                {resolution === "APPROVED_REFUND" ? (
+                  <div>
+                    • 🪙 <strong>{activeOrder.totalTokens ?? 0} EcoTokens</strong> will be transferred from escrow back to the customer's wallet.<br />
+                    • Order state transitions irreversibly to <strong>REFUNDED</strong>.<br />
+                    • Merchant and customer audit logs will record your administrative notes.
+                  </div>
+                ) : (
+                  <div>
+                    • 🪙 <strong>{activeOrder.totalTokens ?? 0} EcoTokens</strong> in escrow will be released to the merchant.<br />
+                    • Order state transitions irreversibly to <strong>FULFILLED</strong>.<br />
+                    • Customer dispute claim is formally closed without appeal.
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "8px" }}>
                 <button
                   type="button"

@@ -24,7 +24,6 @@ import {
   formatTokenAmount,
   calculateEstimatedTokens,
   buildVerificationRequest,
-  type QualityGradeOption,
 } from "../utils/weigh-in";
 
 export interface DoorstepWeighInModalProps {

@@ -20,6 +20,22 @@ export const UserGovernance: React.FC<UserGovernanceProps> = ({ currentUserId })
   // User Details Inspection Modal
   const [inspectedUser, setInspectedUser] = useState<UserApiResponse | null>(null);
 
+  // Expandable Accordion Rows under each User
+  const [expandedUserIds, setExpandedUserIds] = useState<Set<number>>(new Set());
+
+  const toggleExpandUser = (userId?: number) => {
+    if (userId == null) return;
+    setExpandedUserIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
   // Add User Modal State
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [addName, setAddName] = useState("");
@@ -319,7 +335,8 @@ export const UserGovernance: React.FC<UserGovernanceProps> = ({ currentUserId })
                   letterSpacing: "0.05em",
                 }}
               >
-                <th style={{ padding: "12px 16px" }}>ID</th>
+                <th style={{ padding: "12px 10px", width: "36px", textAlign: "center" }}></th>
+                <th style={{ padding: "12px 14px" }}>ID</th>
                 <th style={{ padding: "12px 16px" }}>Name / Contact</th>
                 <th style={{ padding: "12px 16px" }}>Role</th>
                 <th style={{ padding: "12px 16px" }}>Balance</th>
@@ -330,146 +347,264 @@ export const UserGovernance: React.FC<UserGovernanceProps> = ({ currentUserId })
             <tbody>
               {users.map((u) => {
                 const isSelf = u.id === currentUserId;
+                const isExpanded = u.id != null && expandedUserIds.has(u.id);
+                const displayRole = formatRole(u.role);
+                const isRoleAdmin = displayRole === "Admin";
+                const isRoleFarmer = displayRole === "Farmer";
+
                 return (
-                  <tr
-                    key={u.id}
-                    style={{
-                      borderBottom: "1px solid var(--border-subtle)",
-                      background: isSelf ? "rgba(16, 185, 129, 0.04)" : "transparent",
-                    }}
-                  >
-                    <td style={{ padding: "12px 16px", fontFamily: "monospace", color: "var(--text-muted)" }}>
-                      #{u.id}
-                    </td>
-                    <td style={{ padding: "12px 16px" }}>
-                      <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>
-                        {u.name || "Nameless User"} {isSelf && <span style={{ color: "var(--accent-emerald)" }}>(You)</span>}
-                      </div>
-                      <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>{u.email}</div>
-                    </td>
-                    <td style={{ padding: "12px 16px" }}>
-                      {(() => {
-                        const displayRole = formatRole(u.role);
-                        const isRoleAdmin = displayRole === "Admin";
-                        const isRoleFarmer = displayRole === "Farmer";
-                        return (
-                          <span
-                            style={{
-                              padding: "2px 8px",
-                              borderRadius: "4px",
-                              fontSize: "11px",
-                              fontWeight: "700",
-                              background: isRoleAdmin
-                                ? "rgba(168, 85, 247, 0.15)"
-                                : isRoleFarmer
-                                ? "rgba(245, 158, 11, 0.15)"
-                                : "rgba(56, 189, 248, 0.15)",
-                              color: isRoleAdmin
-                                ? "var(--accent-purple)"
-                                : isRoleFarmer
-                                ? "var(--accent-amber)"
-                                : "var(--accent-blue)",
-                            }}
-                          >
-                            {displayRole}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td style={{ padding: "12px 16px", fontFamily: "monospace", fontWeight: "700", color: "var(--accent-emerald)" }}>
-                      {u.tokenBalance != null ? `${u.tokenBalance} 🪙` : "—"}
-                    </td>
-                    <td style={{ padding: "12px 16px" }}>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          fontSize: "11px",
-                          fontWeight: "600",
-                          color: u.enabled ? "var(--accent-emerald)" : "var(--accent-rose)",
-                        }}
+                  <React.Fragment key={u.id}>
+                    <tr
+                      onClick={() => toggleExpandUser(u.id)}
+                      style={{
+                        borderBottom: "1px solid var(--border-subtle)",
+                        background: isExpanded
+                          ? "rgba(16, 185, 129, 0.06)"
+                          : isSelf
+                          ? "rgba(16, 185, 129, 0.04)"
+                          : "transparent",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <td
+                        style={{ padding: "12px 8px", textAlign: "center" }}
+                        onClick={(e) => e.stopPropagation()}
                       >
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandUser(u.id)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: isExpanded ? "var(--accent-emerald)" : "var(--text-muted)",
+                            cursor: "pointer",
+                            fontSize: "11px",
+                            padding: "4px",
+                            transform: isExpanded ? "rotate(90deg)" : "none",
+                            transition: "transform 0.15s ease",
+                          }}
+                          title={isExpanded ? "Collapse" : "Expand"}
+                        >
+                          ▶
+                        </button>
+                      </td>
+                      <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "var(--text-muted)" }}>
+                        #{u.id}
+                      </td>
+                      <td style={{ padding: "12px 16px" }}>
+                        <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>
+                          {u.name || "Nameless User"} {isSelf && <span style={{ color: "var(--accent-emerald)" }}>(You)</span>}
+                        </div>
+                        <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>{u.email}</div>
+                      </td>
+                      <td style={{ padding: "12px 16px" }}>
                         <span
                           style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "50%",
-                            background: u.enabled ? "var(--accent-emerald)" : "var(--accent-rose)",
-                          }}
-                        />
-                        {u.enabled ? "Active" : "Disabled"}
-                      </span>
-                    </td>
-                    <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                      <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
-                        <button
-                          onClick={() => setInspectedUser(u)}
-                          style={{
-                            padding: "4px 8px",
-                            background: "var(--bg-surface)",
-                            color: "var(--text-secondary)",
-                            border: "1px solid var(--border-subtle)",
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                            cursor: "pointer",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            background: isRoleAdmin
+                              ? "rgba(168, 85, 247, 0.15)"
+                              : isRoleFarmer
+                              ? "rgba(245, 158, 11, 0.15)"
+                              : "rgba(56, 189, 248, 0.15)",
+                            color: isRoleAdmin
+                              ? "var(--accent-purple)"
+                              : isRoleFarmer
+                              ? "var(--accent-amber)"
+                              : "var(--accent-blue)",
                           }}
                         >
-                          Details
-                        </button>
-                        <button
-                          onClick={() => handleOpenModifyRole(u)}
+                          {displayRole}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px 16px", fontFamily: "monospace", fontWeight: "700", color: "var(--accent-emerald)" }}>
+                        {u.tokenBalance != null ? `${u.tokenBalance} 🪙` : "—"}
+                      </td>
+                      <td style={{ padding: "12px 16px" }}>
+                        <span
                           style={{
-                            padding: "4px 8px",
-                            background: "rgba(168, 85, 247, 0.12)",
-                            color: "var(--accent-purple)",
-                            border: "1px solid rgba(168, 85, 247, 0.3)",
-                            borderRadius: "6px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "11px",
                             fontWeight: "600",
-                            cursor: "pointer",
+                            color: u.enabled ? "var(--accent-emerald)" : "var(--accent-rose)",
                           }}
                         >
-                          Role
-                        </button>
-                        {u.role === "ROLE_HOUSEHOLD" && (
-                          <button
-                            onClick={() => {
-                              setAdjustTargetUser(u);
-                              setAdjustResult(null);
-                              setAdjustError(null);
+                          <span
+                            style={{
+                              width: "6px",
+                              height: "6px",
+                              borderRadius: "50%",
+                              background: u.enabled ? "var(--accent-emerald)" : "var(--accent-rose)",
                             }}
+                          />
+                          {u.enabled ? "Active" : "Disabled"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px 16px", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                          <button
+                            onClick={() => toggleExpandUser(u.id)}
                             style={{
                               padding: "4px 8px",
-                              background: "rgba(16, 185, 129, 0.15)",
-                              color: "var(--accent-emerald)",
-                              border: "1px solid rgba(16, 185, 129, 0.3)",
+                              background: isExpanded ? "var(--accent-emerald)" : "var(--bg-surface)",
+                              color: isExpanded ? "#fff" : "var(--text-secondary)",
+                              border: "1px solid var(--border-subtle)",
                               borderRadius: "6px",
                               fontWeight: "600",
                               cursor: "pointer",
                             }}
                           >
-                            Tokens
+                            {isExpanded ? "▲ Hide" : "▼ Details"}
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleToggleStatus(u)}
-                          disabled={isSelf}
-                          style={{
-                            padding: "4px 8px",
-                            background: u.enabled ? "rgba(244, 63, 94, 0.15)" : "rgba(16, 185, 129, 0.15)",
-                            color: u.enabled ? "var(--accent-rose)" : "var(--accent-emerald)",
-                            border: `1px solid ${u.enabled ? "rgba(244, 63, 94, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
-                            borderRadius: "6px",
-                            fontWeight: "600",
-                            cursor: isSelf ? "not-allowed" : "pointer",
-                            opacity: isSelf ? 0.5 : 1,
-                          }}
-                        >
-                          {u.enabled ? "Disable" : "Enable"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                          <button
+                            onClick={() => handleOpenModifyRole(u)}
+                            style={{
+                              padding: "4px 8px",
+                              background: "rgba(168, 85, 247, 0.12)",
+                              color: "var(--accent-purple)",
+                              border: "1px solid rgba(168, 85, 247, 0.3)",
+                              borderRadius: "6px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Role
+                          </button>
+                          {u.role === "ROLE_HOUSEHOLD" && (
+                            <button
+                              onClick={() => {
+                                setAdjustTargetUser(u);
+                                setAdjustResult(null);
+                                setAdjustError(null);
+                              }}
+                              style={{
+                                padding: "4px 8px",
+                                background: "rgba(16, 185, 129, 0.15)",
+                                color: "var(--accent-emerald)",
+                                border: "1px solid rgba(16, 185, 129, 0.3)",
+                                borderRadius: "6px",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Tokens
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleToggleStatus(u)}
+                            disabled={isSelf}
+                            style={{
+                              padding: "4px 8px",
+                              background: u.enabled ? "rgba(244, 63, 94, 0.15)" : "rgba(16, 185, 129, 0.15)",
+                              color: u.enabled ? "var(--accent-rose)" : "var(--accent-emerald)",
+                              border: `1px solid ${u.enabled ? "rgba(244, 63, 94, 0.3)" : "rgba(16, 185, 129, 0.3)"}`,
+                              borderRadius: "6px",
+                              fontWeight: "600",
+                              cursor: isSelf ? "not-allowed" : "pointer",
+                              opacity: isSelf ? 0.5 : 1,
+                            }}
+                          >
+                            {u.enabled ? "Disable" : "Enable"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Accordion Row Under Each User */}
+                    {isExpanded && (
+                      <tr style={{ background: "rgba(0, 0, 0, 0.2)", borderBottom: "1px solid var(--border-subtle)" }}>
+                        <td colSpan={7} style={{ padding: "16px 24px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                                gap: "12px",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  background: "var(--bg-surface)",
+                                  padding: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid var(--border-subtle)",
+                                }}
+                              >
+                                <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>
+                                  📍 Address / Location
+                                </span>
+                                <div style={{ fontSize: "12px", color: "var(--text-primary)", marginTop: "4px", fontWeight: "500" }}>
+                                  {u.farmAddress || u.address || "No address on file"}
+                                </div>
+                                {u.farmName && (
+                                  <div style={{ fontSize: "11px", color: "var(--accent-amber)", marginTop: "2px" }}>
+                                    Farm: <strong>{u.farmName}</strong>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div
+                                style={{
+                                  background: "var(--bg-surface)",
+                                  padding: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid var(--border-subtle)",
+                                }}
+                              >
+                                <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>
+                                  ⭐ Reputation & Trust
+                                </span>
+                                <div style={{ fontSize: "12px", color: "var(--text-primary)", marginTop: "4px", fontWeight: "500" }}>
+                                  {u.averageRating != null && u.averageRating > 0 ? `${u.averageRating.toFixed(1)} ★ Rating` : "New Participant"}
+                                </div>
+                                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
+                                  {u.reviewCount ?? 0} verified reviews
+                                </div>
+                              </div>
+
+                              <div
+                                style={{
+                                  background: "var(--bg-surface)",
+                                  padding: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid var(--border-subtle)",
+                                }}
+                              >
+                                <span style={{ fontSize: "10px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>
+                                  📝 Operations Notes
+                                </span>
+                                <div style={{ fontSize: "12px", color: "var(--text-primary)", marginTop: "4px" }}>
+                                  {u.notes || (isRoleAdmin ? "Operator Account" : "None")}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                              <button
+                                onClick={() => setInspectedUser(u)}
+                                style={{
+                                  padding: "4px 10px",
+                                  background: "var(--bg-surface)",
+                                  color: "var(--text-primary)",
+                                  border: "1px solid var(--border-subtle)",
+                                  borderRadius: "6px",
+                                  fontSize: "11px",
+                                  cursor: "pointer",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Inspect in Modal ↗
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

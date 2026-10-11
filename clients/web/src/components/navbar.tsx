@@ -211,7 +211,10 @@ export function Navbar() {
                     <span>Products</span>
                   </Link>
                   <Link href="/farmer/orders" className={navLinkClass("/farmer/orders")}>
-                    <span>Orders &amp; Requests</span>
+                    <span>Orders &amp; Fulfillment</span>
+                  </Link>
+                  <Link href="/farmer/audit" className={navLinkClass("/farmer/audit")}>
+                    <span>Audit</span>
                   </Link>
                 </>
               )}
@@ -547,7 +550,14 @@ export function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="block px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
-                      Orders &amp; Requests
+                      Orders &amp; Fulfillment
+                    </Link>
+                    <Link
+                      href="/farmer/audit"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Operations Audit
                     </Link>
                   </div>
                 )}

@@ -178,8 +178,8 @@ export default function HouseholdPickupsPage() {
 
       {/* Dynamic Handshake QR Modal */}
       {selectedPass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-3xl max-w-md w-full space-y-6 text-center border border-slate-200 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white p-5 sm:p-8 rounded-3xl max-w-md w-full max-h-[92vh] overflow-y-auto space-y-5 sm:space-y-6 text-center border border-slate-200 shadow-2xl animate-in zoom-in-95 duration-150">
             <div>
               <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-2xs font-bold uppercase tracking-wider">
                 Server-Authoritative Handshake

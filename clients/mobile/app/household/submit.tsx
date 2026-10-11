@@ -118,6 +118,28 @@ export default function SubmitWasteScreen() {
     );
   };
 
+  const handleReviewAndSubmit = () => {
+    if (weightNum <= 0) {
+      setErrorMessage("Please enter a valid weight greater than 0 kg.");
+      return;
+    }
+
+    Alert.alert(
+      "Confirm Waste Submission",
+      `Are you ready to register this batch for doorstep collection?\n\n• Category: ${selectedCategoryObj.label}\n• Estimated Weight: ${weightNum} kg\n• Photo Verification: ${hasPhoto ? "Attached ✓" : "None"}\n• Est. Reward: +${estimatedRewardTokens} EcoTokens\n\nTokens will be minted immediately upon certified farmer weigh-in.`,
+      [
+        { text: "Review Details", style: "cancel" },
+        {
+          text: "Confirm & Submit",
+          style: "default",
+          onPress: () => {
+            handleSubmit();
+          },
+        },
+      ]
+    );
+  };
+
   const handleSubmit = async () => {
     if (weightNum <= 0) {
       setErrorMessage("Please enter a valid weight greater than 0 kg.");
@@ -355,12 +377,12 @@ export default function SubmitWasteScreen() {
           <TouchableOpacity
             style={[styles.primaryButton, submitting && styles.buttonDisabled]}
             disabled={submitting}
-            onPress={handleSubmit}
+            onPress={handleReviewAndSubmit}
           >
             {submitting ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.buttonText}>Submit Batch & Earn Tokens</Text>
+              <Text style={styles.buttonText}>Review &amp; Submit Batch</Text>
             )}
           </TouchableOpacity>
         </View>

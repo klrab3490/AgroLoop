@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
 import { useMarketplace } from "@/hooks/use-marketplace";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,8 @@ export default function MarketplacePage() {
     setSortBy,
     inStockOnly,
     setInStockOnly,
+    isFarmer,
+    farmerHiddenCount,
   } = useMarketplace();
 
   const handleAddToCart = (product: ProductApiResponse) => {
@@ -79,6 +82,29 @@ export default function MarketplacePage() {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Farmer Self-Purchase Safeguard Notice */}
+        {isFarmer && (
+          <div className="p-4 bg-emerald-50/90 border border-emerald-200/90 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-900 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🧑‍🌾</span>
+              <div>
+                <p className="font-bold text-emerald-950">
+                  Producer Account Active
+                </p>
+                <p className="text-emerald-800/90 text-2xs">
+                  Your own farm catalog items {farmerHiddenCount > 0 ? `(${farmerHiddenCount} listed)` : ""} are hidden from buyer catalog view to prevent self-purchasing.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/farmer/products"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-3xs rounded-xl transition shadow-2xs self-start sm:self-auto whitespace-nowrap"
+            >
+              <span>Manage Your Farm Products ➔</span>
+            </Link>
+          </div>
+        )}
+
         {/* Search, Filter & Sort Controls */}
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
