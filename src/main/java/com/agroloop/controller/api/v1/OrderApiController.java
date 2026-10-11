@@ -284,6 +284,9 @@ public class OrderApiController {
 
 
     private Long getUserId(Authentication auth) {
+        if (auth == null) {
+            throw new AccessDeniedException("Unauthenticated user");
+        }
         Long id = orderSecurityEvaluator.extractUserId(auth);
         if (id == null) {
             throw new AccessDeniedException("Unauthenticated user");
@@ -307,6 +310,11 @@ public class OrderApiController {
     }
 
     private boolean hasRole(Authentication auth, String role) {
-        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+        if (auth == null || auth.getAuthorities() == null) {
+            return false;
+        }
+        String normalizedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(role) || a.getAuthority().equals(normalizedRole));
     }
 }

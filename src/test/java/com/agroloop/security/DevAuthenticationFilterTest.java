@@ -103,6 +103,54 @@ class DevAuthenticationFilterTest {
         assertEquals(OrderStatus.IN_TRANSIT, updated.getStatus());
     }
 
+    @Autowired
+    private TokenService tokenService;
+
+    @Test
+    @DisplayName("Farmer JWT successfully updates order status to PACKED")
+    void updateOrderStatus_withFarmerJwt_success() throws Exception {
+        Farmer f = farmerRepository.findByEmail("farmer@agroloop.com").orElseThrow();
+        String farmerJwt = tokenService.issueAccessToken(f);
+
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/status")
+                        .header("Authorization", "Bearer " + farmerJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PACKED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PACKED"));
+    }
+
+    @Test
+    @DisplayName("Farmer JWT successfully updates order status to IN_TRANSIT")
+    void updateOrderStatus_withFarmerJwt_inTransit_success() throws Exception {
+        Farmer f = farmerRepository.findByEmail("farmer@agroloop.com").orElseThrow();
+        String farmerJwt = tokenService.issueAccessToken(f);
+
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/status")
+                        .header("Authorization", "Bearer " + farmerJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"IN_TRANSIT\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_TRANSIT"));
+
+        Order updated = orderRepository.findById(order.getId()).orElseThrow();
+        assertEquals(OrderStatus.IN_TRANSIT, updated.getStatus());
+    }
+
+    @Test
+    @DisplayName("Farmer not on order is forbidden from updating order status (403 Forbidden)")
+    void updateOrderStatus_otherFarmer_returnsForbidden() throws Exception {
+        Farmer otherFarmer = farmerRepository.findByEmail("priya.farmer@agroloop.com").orElseThrow();
+        String priyaJwt = tokenService.issueAccessToken(otherFarmer);
+
+        mockMvc.perform(post("/api/v1/orders/" + order.getId() + "/status")
+                        .header("Authorization", "Bearer " + priyaJwt)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"PACKED\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
     @Test
     @DisplayName("Missing auth header rejects request with 401 Unauthorized")
     void updateOrderStatus_unauthenticated_returnsUnauthorized() throws Exception {

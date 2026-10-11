@@ -129,6 +129,14 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ProblemDetail> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest request) {
+        logger.error("Database constraint violation on URI {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        String rootMsg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildProblem(HttpStatus.CONFLICT, "DATA_INTEGRITY_VIOLATION", "Database Constraint Violation", rootMsg, request));
+    }
+
     @ExceptionHandler(RateLimitExceededException.class)
     public ResponseEntity<ProblemDetail> handleRateLimit(RateLimitExceededException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)

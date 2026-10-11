@@ -36,6 +36,9 @@ async function proxyRequest(req: NextRequest, { params }: { params: Promise<{ pa
   const idempotencyKey = req.headers.get("idempotency-key");
   if (idempotencyKey) forwardHeaders.set("Idempotency-Key", idempotencyKey);
 
+  const apiKey = req.headers.get("x-api-key");
+  if (apiKey) forwardHeaders.set("X-API-Key", apiKey);
+
   forwardHeaders.set("X-Request-Id", req.headers.get("x-request-id") || crypto.randomUUID());
 
   try {
