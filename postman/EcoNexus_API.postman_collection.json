@@ -1,0 +1,2310 @@
+{
+  "info": {
+    "_postman_id": "85288e5f-83c8-444b-824d-fa3b955fabc9",
+    "name": "AgroLoop Circular Economy Platform API",
+    "description": "# AgroLoop Circular Economy Platform API\n\nAuthoritative REST API collection for AgroLoop covering:\n- **Authentication & Sessions** (`/api/v1/auth/*`)\n- **System Discovery & Meta** (`/api/v1/meta`, `/api/v1/health`)\n- **Marketplace & Products** (`/api/v1/marketplace/*`)\n- **Orders & Status Lifecycle** (`/api/v1/orders/*`)\n- **Household Operations** (`/api/v1/household/*`)\n- **Farmer Fulfillment & Routes** (`/api/v1/farmer/*`)\n- **Handshake & Verification** (`/api/v1/pickups/*`)\n- **Reviews & Reputation** (`/api/v1/reviews/*`)\n- **Media Storage Engine** (`/api/v1/media/*`)\n- **Real-Time Notifications** (`/api/v1/notifications/*`)\n- **Admin Governance** (`/api/v1/admin/*`)\n\n## Authentication Modes:\n1. **Fixed Dev API Key (Zero Setup)**: Header `X-API-Key: {{apiKey}}` (defaults to `agroloop-dev-key`). Works immediately for local development and carrier simulation.\n2. **Standard JWT**: Header `Authorization: Bearer {{bearerToken}}`. Automatically saved into environment upon running `POST /api/v1/auth/login`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Add X-API-Key if set in environment and no Bearer token",
+          "const apiKey = pm.environment.get('apiKey');",
+          "if (apiKey && !pm.request.headers.has('X-API-Key')) {",
+          "    pm.request.headers.add({ key: 'X-API-Key', value: apiKey });",
+          "}",
+          "// Ensure X-Request-Id header is present",
+          "if (!pm.request.headers.has('X-Request-Id')) {",
+          "    pm.request.headers.add({ key: 'X-Request-Id', value: 'req_' + pm.variables.replaceIn('{{$guid}}') });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. System Discovery & Meta",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Returns system status, service identity, and database readiness.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "System Metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/meta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "meta"
+              ]
+            },
+            "description": "Returns authoritative platform metadata, server version, and minimum required client version.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication & Sessions",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as System Administrator and populates bearerToken in environment.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\",\n  \"clientType\": \"WEB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('bearerToken', jsonData.accessToken);",
+                  "    console.log('Saved bearerToken to environment');",
+                  "}",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    console.log('Saved refreshToken to environment');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Farmer - Bob)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as Bob Farmer and populates bearerToken in environment.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{farmerEmail}}\",\n  \"password\": \"{{farmerPassword}}\",\n  \"clientType\": \"WEB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('bearerToken', jsonData.accessToken);",
+                  "    console.log('Saved bearerToken to environment');",
+                  "}",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    console.log('Saved refreshToken to environment');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Household)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as Household user and populates bearerToken in environment.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{householdEmail}}\",\n  \"password\": \"{{householdPassword}}\",\n  \"clientType\": \"WEB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('bearerToken', jsonData.accessToken);",
+                  "    console.log('Saved bearerToken to environment');",
+                  "}",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    console.log('Saved refreshToken to environment');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Rotates refresh token and issues a fresh short-lived JWT access token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"clientType\": \"WEB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('bearerToken', jsonData.accessToken);",
+                  "    console.log('Saved bearerToken to environment');",
+                  "}",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    console.log('Saved refreshToken to environment');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current Authenticated User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns profile, roles, and balance of currently authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Register New User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registers a new household account with password validation.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Resident\",\n  \"email\": \"jane.a2c16df2@example.com\",\n  \"password\": \"Password123!\",\n  \"address\": \"742 Evergreen Terrace, Kochi\",\n  \"phoneNumber\": \"+919876543210\",\n  \"clientType\": \"WEB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('bearerToken', jsonData.accessToken);",
+                  "    console.log('Saved bearerToken to environment');",
+                  "}",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "    console.log('Saved refreshToken to environment');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout Current Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes active refresh token for current device session.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"clientType\": \"WEB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout-all"
+              ]
+            },
+            "description": "Revokes all active token families and sessions across all devices for current user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Marketplace & Products",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/marketplace/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "marketplace",
+                "categories"
+              ]
+            },
+            "description": "Lists all supported circular product categories with display names.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Products (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/marketplace/products?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "marketplace",
+                "products?page=0&size=20"
+              ]
+            },
+            "description": "Browses marketplace items with optional keyword and category filters.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/marketplace/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "marketplace",
+                "products",
+                "1"
+              ]
+            },
+            "description": "Retrieves full product details, farmer profile, and stock inventory.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Orders & Fulfillment Lifecycle",
+      "item": [
+        {
+          "name": "List Orders (Current User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "description": "Lists orders placed by household or fulfilled by farmer."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402"
+              ]
+            },
+            "description": "Fetches order items, timeline tracking, and live status."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order (Household Checkout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "description": "Atomically places a marketplace order using debited EcoTokens.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 1\n    }\n  ],\n  \"deliveryAddress\": \"42 Ocean Drive, Marine Lines, Kochi\",\n  \"notes\": \"Leave at front gate with security.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status: PACKED (Farmer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402",
+                "status"
+              ]
+            },
+            "description": "Marks order produce as harvested, sealed, and packed by the farmer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PACKED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status: IN_TRANSIT (Courier / Farmer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402",
+                "status"
+              ]
+            },
+            "description": "Marks order as dispatched with green courier fleet for transit.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_TRANSIT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status: COMPLETED / DELIVERED (Farmer / Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402",
+                "status"
+              ]
+            },
+            "description": "Marks order produce as delivered to resident doorstep.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Order as Completed (/complete endpoint)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402",
+                "complete"
+              ]
+            },
+            "description": "Fulfills the order directly via the dedicated completion endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order (Household / Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402",
+                "cancel"
+              ]
+            },
+            "description": "Cancels a PLACED order and refunds debited EcoTokens back to household ledger.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Accidental purchase, placed duplicate items.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dispute Order (Household / Farmer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/402/dispute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "402",
+                "dispute"
+              ]
+            },
+            "description": "Raises an official dispute for administrative adjudication.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"disputeReason\": \"Items arrived partially damaged during transit.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Household Operations",
+      "item": [
+        {
+          "name": "Get EcoToken Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household",
+                "balance"
+              ]
+            },
+            "description": "Returns available and pending EcoToken balance for the household."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Household Ledger History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household/ledger",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household",
+                "ledger"
+              ]
+            },
+            "description": "Returns immutable double-entry audit history of token earnings and redemptions."
+          },
+          "response": []
+        },
+        {
+          "name": "List Waste Submissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household/waste-submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household",
+                "waste-submissions"
+              ]
+            },
+            "description": "Returns list of all bio-waste pickup requests submitted by household."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Organic Waste for Pickup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household/waste-submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household",
+                "waste-submissions"
+              ]
+            },
+            "description": "Submits a new batch of segregated organic waste for local farmer collection.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"FOOD_SCRAPS\",\n  \"estimatedWeight\": 14.5,\n  \"addressOverride\": \"Villa 14, Palm Meadows, Thrissur\",\n  \"notes\": \"Clean vegetable peels and coffee grounds in sealed compost container.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Apply for Farmer Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household/farmer-application",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household",
+                "farmer-application"
+              ]
+            },
+            "description": "Submits an application to convert household to verified agricultural producer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"farmName\": \"Green Valley Agro Farm\",\n  \"farmAddress\": \"Survey #45/2, Aluva Road, Kochi\",\n  \"notes\": \"5 acres of organic vegetable cultivation with on-site composting.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Farmer Application Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household/farmer-application",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household",
+                "farmer-application"
+              ]
+            },
+            "description": "Checks pending/approved/rejected status of farmer application."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Farmer Fulfillment & Fleet",
+      "item": [
+        {
+          "name": "Get Farmer Assigned Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "orders"
+              ]
+            },
+            "description": "Returns orders containing produce sold by the authenticated farmer."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Waste Pickups in Radius",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/pickups/available",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "pickups",
+                "available"
+              ]
+            },
+            "description": "Lists unclaimed organic waste submissions within farmer service perimeter."
+          },
+          "response": []
+        },
+        {
+          "name": "Claim Pickup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/pickups/110/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "pickups",
+                "110",
+                "claim"
+              ]
+            },
+            "description": "Claims an available household waste pickup request for the farmer's route."
+          },
+          "response": []
+        },
+        {
+          "name": "Schedule Pickup Window",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/pickups/110/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "pickups",
+                "110",
+                "schedule"
+              ]
+            },
+            "description": "Sets arrival timestamp window for scheduled waste collection.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduledTime\": \"2026-10-12T10:30:00Z\",\n  \"farmerNotes\": \"Collecting along morning route with Green Van #1.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Collect Pickup at Doorstep",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/pickups/110/collect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "pickups",
+                "110",
+                "collect"
+              ]
+            },
+            "description": "Marks arrival and physical loading of waste containers."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Waste & Mint Tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/pickups/110/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "pickups",
+                "110",
+                "verify"
+              ]
+            },
+            "description": "Records measured scale weight, quality grade, and mints rewarded EcoTokens.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"verifiedWeight\": 15.2,\n  \"qualityGrade\": \"GRADE_A\",\n  \"notes\": \"Excellent segregation, zero non-compostable contaminants.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Farmer Products Catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "products"
+              ]
+            },
+            "description": "Lists products published by the farmer."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Marketplace Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "products"
+              ]
+            },
+            "description": "Lists a new circular product or compost batch in the marketplace.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Artisanal Enriched Bio-Compost (10kg)\",\n  \"description\": \"Slow-cured 90-day aerobic compost with mycorrhizal fungi.\",\n  \"category\": \"COMPOST_AND_SOIL\",\n  \"price\": 45.0,\n  \"stock\": 30,\n  \"unit\": \"10kg Bag\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get AI / Composite Pickup Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/matching/recommendations?strategy=COMPOSITE",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "matching",
+                "recommendations?strategy=COMPOSITE"
+              ]
+            },
+            "description": "Calculates scored waste pickup recommendations factoring distance, freshness, and vehicle capacity."
+          },
+          "response": []
+        },
+        {
+          "name": "Optimize Collection Route",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/routes/optimize",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "routes",
+                "optimize"
+              ]
+            },
+            "description": "Generates TSP-optimized waypoint route connecting selected pickups.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickupIds\": [\n    110,\n    111\n  ],\n  \"routeDate\": \"2026-10-12\",\n  \"notes\": \"Morning organic corridor loop.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Fleet Routes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/routes/active",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "routes",
+                "active"
+              ]
+            },
+            "description": "Returns currently ongoing pickup routes with live stop statuses."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Farm Coordinates & Capacity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/farmer/location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "farmer",
+                "location"
+              ]
+            },
+            "description": "Updates farm geographic coordinates, service radius (km), and max daily capacity.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 10.8505,\n  \"longitude\": 76.2711,\n  \"serviceRadiusKm\": 30.0,\n  \"maxDailyCapacityKg\": 250.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Doorstep Handshake & QR",
+      "item": [
+        {
+          "name": "Issue Handshake Passcode & QR (Household)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pickups/110/handshake/pass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pickups",
+                "110",
+                "handshake",
+                "pass"
+              ]
+            },
+            "description": "Generates cryptographically signed, ephemeral 6-digit passcode and compact QR payload for doorstep exchange."
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Handshake (Farmer / Courier Scanner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pickups/110/handshake",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pickups",
+                "110",
+                "handshake"
+              ]
+            },
+            "description": "Verifies either scanned Ed25519 QR signature or manual 6-digit passcode to prove physical handover.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"MANUAL_PASSCODE\",\n  \"passCode\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Pickup Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pickups/110/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pickups",
+                "110",
+                "cancel"
+              ]
+            },
+            "description": "Cancels an uncollected pickup request with reason.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Resident not available during pickup window.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Reviews & Peer Reputation",
+      "item": [
+        {
+          "name": "Submit Pickup Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reviews/pickups/110",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reviews",
+                "pickups",
+                "110"
+              ]
+            },
+            "description": "Reviews collector punctuality, courteousness, and weighing accuracy.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Prompt arrival, sanitized containers, accurate weight scale.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Order Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reviews/orders/402",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reviews",
+                "orders",
+                "402"
+              ]
+            },
+            "description": "Reviews compost or organic produce quality from farmer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Tomatoes and fresh farm milk were delicious and sustainably packaged!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Reputation Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reviews/summary/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reviews",
+                "summary",
+                "2"
+              ]
+            },
+            "description": "Returns average rating, breakdown of 1-5 star ratings, and Trust Badge status.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reviews for User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reviews/users/2?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reviews",
+                "users",
+                "2?page=0&size=10"
+              ]
+            },
+            "description": "Paginated review feed and testimonials for target producer or resident.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Media & Blob Engine",
+      "item": [
+        {
+          "name": "Request Pre-Signed Upload Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/media/upload-ticket",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "upload-ticket"
+              ]
+            },
+            "description": "Requests authorization to upload waste verification photo or product thumbnail.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purpose\": \"WASTE_SUBMISSION\",\n  \"contentType\": \"image/jpeg\",\n  \"sizeBytes\": 204800,\n  \"checksum\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Uploaded Media Asset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/media/med_mock123/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "med_mock123",
+                "confirm"
+              ]
+            },
+            "description": "Finalizes media registration and validates magic byte safety.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Media Asset",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/media/download/med_mock123",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "media",
+                "download",
+                "med_mock123"
+              ]
+            },
+            "description": "Streams binary media asset with content disposition headers.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Real-Time Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications?page=0&size=20"
+              ]
+            },
+            "description": "Paginated list of push notifications and in-app circular alerts."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Returns integer badge count of unread notifications."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/954/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "954",
+                "read"
+              ]
+            },
+            "description": "Marks single notification record as read."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Bulk-marks all notifications as read for current user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11. Administrative Governance",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ]
+            },
+            "description": "Returns platform directory of all registered accounts with roles and balances."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Retrieves full administrative user profile."
+          },
+          "response": []
+        },
+        {
+          "name": "Adjust Household Token Balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/2/token-adjustment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "2",
+                "token-adjustment"
+              ]
+            },
+            "description": "Issues an auditable administrative credit or debit correction to household balance.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 25.0,\n  \"direction\": \"CREDIT\",\n  \"reason\": \"Administrative goodwill credit for local compost campaign.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/2/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "2",
+                "role"
+              ]
+            },
+            "description": "Elevates or alters user authority level (ROLE_HOUSEHOLD, ROLE_FARMER, ROLE_ADMIN).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ROLE_FARMER\",\n  \"farmName\": \"Sunrise Community Farm\",\n  \"farmAddress\": \"Plot 88, Green Corridor, Wayanad\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle User Account Status (Enable/Disable)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/2/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users",
+                "2",
+                "status"
+              ]
+            },
+            "description": "Enables or suspends a platform user account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Platform Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "orders"
+              ]
+            },
+            "description": "Lists orders across all households with lifecycle state filtering."
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Order Dispute (Approve Refund)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/orders/402/dispute/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "orders",
+                "402",
+                "dispute",
+                "resolve"
+              ]
+            },
+            "description": "Adjudicates an order dispute and issues an atomic token ledger refund.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolution\": \"APPROVED_REFUND\",\n  \"adminNotes\": \"Approved refund: produce batch damaged during extreme weather.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Pending Farmer Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/farmer-applications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "farmer-applications"
+              ]
+            },
+            "description": "Lists all pending agricultural vetting requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Farmer Application",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/farmer-applications/1/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "farmer-applications",
+                "1",
+                "approve"
+              ]
+            },
+            "description": "Vets farmer application and promotes applicant to verified agricultural producer."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Solvency & Liquidity Metrics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/solvency",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "solvency"
+              ]
+            },
+            "description": "Computes system-wide token velocity, minted vs redeemed ratios, and platform solvency reserves."
+          },
+          "response": []
+        },
+        {
+          "name": "Audit Global Platform Ledger",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/ledger?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "ledger?page=0&size=20"
+              ]
+            },
+            "description": "Immutable audit trail of all token transactions occurring in the circular economy."
+          },
+          "response": []
+        },
+        {
+          "name": "Storage Engine Diagnostics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/storage/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "storage",
+                "status"
+              ]
+            },
+            "description": "Inspects cloud/local object store connectivity and orphaned upload metrics."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
