@@ -247,7 +247,7 @@ jobs:
     name: Publish GitHub Release
     needs: [docker-build, mobile-packages, desktop-linux, desktop-windows]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
     steps:
@@ -256,24 +256,28 @@ jobs:
 
       - name: Download Mobile Bundle Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: agroloop-mobile-expo-export
           path: release-assets/mobile-expo-bundle
 
       - name: Download Mobile APK Artifact
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: agroloop-mobile-android-debug
           path: release-assets/mobile-android
 
       - name: Download Desktop Linux Artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: agroloop-desktop-linux-x86_64
           path: release-assets/desktop-linux
 
       - name: Download Desktop Windows Artifacts
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: agroloop-desktop-windows-x64
           path: release-assets/desktop-windows
@@ -283,23 +287,33 @@ jobs:
           mkdir -p dist-release
           TAG_NAME="${{ github.ref_name }}"
           VERSION="${TAG_NAME:-v1.0.4}"
-          # Package Mobile Expo Web Bundle into Zip
-          (cd release-assets/mobile-expo-bundle && zip -r ../../dist-release/AgroLoop-Mobile-${VERSION}-expo-bundle.zip .)
+          # Package Mobile Expo Web Bundle into Zip if present
+          if [ -d "release-assets/mobile-expo-bundle" ]; then
+            (cd release-assets/mobile-expo-bundle && zip -r ../../dist-release/AgroLoop-Mobile-${VERSION}-expo-bundle.zip .)
+          fi
           # Android APK
-          cp release-assets/mobile-android/*.apk dist-release/AgroLoop-Mobile-${VERSION}-android-debug.apk || true
+          if [ -d "release-assets/mobile-android" ]; then
+            cp release-assets/mobile-android/*.apk dist-release/AgroLoop-Mobile-${VERSION}-android-debug.apk 2>/dev/null || true
+          fi
           # Desktop Linux packages (.deb, .AppImage)
-          find release-assets/desktop-linux -name "*.deb" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-linux-amd64.deb \;
-          find release-assets/desktop-linux -name "*.AppImage" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-linux-x86_64.AppImage \;
+          if [ -d "release-assets/desktop-linux" ]; then
+            find release-assets/desktop-linux -name "*.deb" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-linux-amd64.deb \; 2>/dev/null || true
+            find release-assets/desktop-linux -name "*.AppImage" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-linux-x86_64.AppImage \; 2>/dev/null || true
+          fi
           # Desktop Windows packages (.msi, setup .exe)
-          find release-assets/desktop-windows -name "*.msi" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-windows-x64.msi \;
-          find release-assets/desktop-windows -name "*setup.exe" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-windows-x64-setup.exe \;
+          if [ -d "release-assets/desktop-windows" ]; then
+            find release-assets/desktop-windows -name "*.msi" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-windows-x64.msi \; 2>/dev/null || true
+            find release-assets/desktop-windows -name "*setup.exe" -exec cp {} dist-release/AgroLoop-Desktop-${VERSION}-windows-x64-setup.exe \; 2>/dev/null || true
+          fi
           ls -lh dist-release/
 
       - name: Upload Consolidated Release Artifacts
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: agroloop-release-distribution
           path: dist-release/
+          if-no-files-found: warn
           retention-days: 14
 
       - name: Publish or Update GitHub Release
