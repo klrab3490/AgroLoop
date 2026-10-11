@@ -24,6 +24,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   // Live status updater & carrier sync state
   const [apiModalOpen, setApiModalOpen] = useState(false);
+  const [devCurlTab, setDevCurlTab] = useState<"devKey" | "jwt">("devKey");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
   const [copiedTrackingId, setCopiedTrackingId] = useState(false);
   const [copiedCurl, setCopiedCurl] = useState(false);
@@ -1039,26 +1040,89 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               External logistics providers, IoT couriers, and warehouse scanners can update this order status directly via the REST API:
             </p>
 
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                cURL Webhook Request
-              </span>
-              <div className="relative">
-                <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
+            {/* Mode Switcher Tabs */}
+            <div className="flex rounded-xl bg-slate-100 p-1 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setDevCurlTab("devKey")}
+                className={`flex-1 py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  devCurlTab === "devKey"
+                    ? "bg-white text-emerald-800 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>⚡</span>
+                <span>Fixed Dev Key (Zero Setup)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDevCurlTab("jwt")}
+                className={`flex-1 py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  devCurlTab === "jwt"
+                    ? "bg-white text-emerald-800 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>🔐</span>
+                <span>Standard JWT Auth</span>
+              </button>
+            </div>
+
+            {devCurlTab === "devKey" ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <span>Instant Testing cURL (No Login Needed)</span>
+                  <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-mono">
+                    X-API-Key: agroloop-dev-key
+                  </span>
+                </div>
+                <div className="relative">
+                  <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
 {`curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" \\
   -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer <TOKEN>" \\
+  -H "X-API-Key: agroloop-dev-key" \\
   -d '{"status": "IN_TRANSIT"}'`}
-                </pre>
-                <button
-                  type="button"
-                  onClick={() => handleCopyCurl(`curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"status": "IN_TRANSIT"}'`)}
-                  className="absolute top-2 right-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold transition cursor-pointer"
-                >
-                  {copiedCurl ? "✓ Copied" : "Copy"}
-                </button>
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCurl(`curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" -H "Content-Type: application/json" -H "X-API-Key: agroloop-dev-key" -d '{"status": "IN_TRANSIT"}'`)}
+                    className="absolute top-2 right-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold transition cursor-pointer"
+                  >
+                    {copiedCurl ? "✓ Copied" : "Copy"}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Tip: You can also use <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">-H &quot;Authorization: Bearer dev-carrier-token&quot;</code>
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Step 1: Get Token &amp; Step 2: Update Status
+                </span>
+                <div className="relative">
+                  <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
+{`# 1. Fetch JWT access token (admin or farmer)
+TOKEN=$(curl -s -X POST "http://localhost:8080/api/v1/auth/login" \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"admin@agroloop.com","password":"admin123"}' | jq -r .accessToken)
+
+# 2. Call status update with Bearer token
+curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -d '{"status": "IN_TRANSIT"}'`}
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCurl(`TOKEN=$(curl -s -X POST "http://localhost:8080/api/v1/auth/login" -H "Content-Type: application/json" -d '{"email":"admin@agroloop.com","password":"admin123"}' | jq -r .accessToken) && curl -X POST "http://localhost:8080/api/v1/orders/${order.id}/status" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"status": "IN_TRANSIT"}'`)}
+                    className="absolute top-2 right-2 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] font-bold transition cursor-pointer"
+                  >
+                    {copiedCurl ? "✓ Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5 text-slate-600">
               <div className="flex justify-between">
@@ -1070,8 +1134,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <span className="font-mono font-bold text-emerald-700">POST /api/v1/orders/{order.id}/status</span>
               </div>
               <div className="flex justify-between">
-                <span>Authorization:</span>
-                <span className="text-slate-700 font-medium">JWT Bearer (Farmer, Carrier, Admin)</span>
+                <span>Fixed Dev Keys:</span>
+                <span className="text-emerald-800 font-mono font-bold">agroloop-dev-key, dev-carrier-token</span>
               </div>
             </div>
 

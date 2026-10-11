@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final CustomAuthenticationSuccessHandler successHandler;
     private final TokenService tokenService;
     private final RequestIdFilter requestIdFilter;
+    private final com.agroloop.security.DevAuthenticationFilter devAuthenticationFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
     private final ApiCorsConfiguration apiCorsConfiguration;
@@ -51,6 +52,7 @@ public class SecurityConfig {
             CustomAuthenticationSuccessHandler successHandler,
             TokenService tokenService,
             RequestIdFilter requestIdFilter,
+            com.agroloop.security.DevAuthenticationFilter devAuthenticationFilter,
             RestAuthenticationEntryPoint restAuthenticationEntryPoint,
             RestAccessDeniedHandler restAccessDeniedHandler,
             ApiCorsConfiguration apiCorsConfiguration
@@ -59,6 +61,7 @@ public class SecurityConfig {
         this.successHandler = successHandler;
         this.tokenService = tokenService;
         this.requestIdFilter = requestIdFilter;
+        this.devAuthenticationFilter = devAuthenticationFilter;
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
         this.restAccessDeniedHandler = restAccessDeniedHandler;
         this.apiCorsConfiguration = apiCorsConfiguration;
@@ -125,6 +128,7 @@ public class SecurityConfig {
             )
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(devAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.GET, "/api/v1/health", "/api/v1/meta").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
