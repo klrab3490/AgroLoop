@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for unit test mocks and dev credentials"
+paths = [
+    '''src/test/.*''',
+    '''clients/web/src/app/orders/.*''',
+    '''clients/packages/api-client/src/client.test.ts'''
+]
+regexes = [
+    '''agroloop-dev-key''',
+    '''whsec_test_secret_key_12345'''
+]
