@@ -189,6 +189,30 @@ export default function RegisterPage() {
             )}
           </div>
 
+          {/* Data Minimization & Consent Disclosure */}
+          <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 text-[11px] text-slate-500 leading-relaxed">
+            <div className="flex items-start gap-1.5">
+              <span className="text-emerald-600 font-bold">🔒</span>
+              <p>
+                <strong>Data Minimization:</strong> We only collect your physical address to schedule doorstep collections and deliver organic inputs. We never sell your personal data.
+              </p>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              By creating an account, you certify that you are <strong>18 years of age or older</strong> and agree to our{" "}
+              <Link href="/terms" target="_blank" className="text-emerald-700 underline font-semibold">
+                Terms of Service
+              </Link>
+              ,{" "}
+              <Link href="/privacy" target="_blank" className="text-emerald-700 underline font-semibold">
+                Privacy Policy
+              </Link>
+              , and{" "}
+              <Link href="/cookies" target="_blank" className="text-emerald-700 underline font-semibold">
+                Cookie Policy
+              </Link>.
+            </p>
+          </div>
+
           <button
             type="submit"
             data-testid="register-submit"

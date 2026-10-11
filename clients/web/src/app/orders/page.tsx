@@ -1,71 +1,55 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
-import { webApiClient } from "@/lib/api";
 import { useCart } from "@/lib/cart-context";
+import { useOrders } from "@/hooks/use-orders";
+import { useToast } from "@/hooks/use-toast";
+import { formatDate } from "@/utils/formatters";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/spinner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Alert } from "@/components/ui/alert";
 
 export default function OrdersPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { addItem } = useCart();
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const { data: orders, isLoading, error } = useQuery({
-    queryKey: ["user-orders"],
-    queryFn: () => webApiClient.orders.listOrders(),
-    enabled: isAuthenticated,
-  });
+  const { success } = useToast();
+  const { orders, isLoading, error } = useOrders();
 
   const handleBuyAgain = (productId?: number, productName?: string) => {
     if (!productId) return;
     addItem(productId, 1);
-    setToastMessage(`Added "${productName || "Product"}" to your cart!`);
-    setTimeout(() => setToastMessage(null), 3000);
+    success(`Added "${productName || "Product"}" to your cart!`);
   };
 
   if (authLoading) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-4">
-        <div className="h-28 rounded-3xl bg-slate-200/60 animate-pulse" />
-        <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
-        <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
+        <Skeleton className="h-28 rounded-3xl" />
+        <Skeleton className="h-44 rounded-3xl" />
+        <Skeleton className="h-44 rounded-3xl" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl font-black">
-          📦
-        </div>
-        <h2 className="text-2xl font-black text-slate-900">Sign In to View Orders</h2>
-        <p className="text-xs text-slate-500">Access your historical orders, tracking, and dispute adjudication.</p>
-        <Link
-          href="/auth/login"
-          className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition shadow-sm"
-        >
-          Sign In
-        </Link>
-      </div>
+      <EmptyState
+        icon="📦"
+        title="Sign In to View Orders"
+        description="Access your historical orders, tracking, itemized receipts, and dispute adjudication."
+        actionText="Sign In"
+        actionHref="/auth/login"
+        className="py-24"
+      />
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-emerald-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-2">
-          <span>🛍️</span>
-          <span>{toastMessage}</span>
-          <Link href="/marketplace/checkout" className="underline font-black ml-2 text-emerald-200 hover:text-white">
-            View Cart
-          </Link>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -76,41 +60,31 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        <Link
-          href="/marketplace"
-          className="self-start sm:self-auto px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
-        >
-          <span>🌱</span>
-          <span>Browse Marketplace</span>
+        <Link href="/marketplace">
+          <Button variant="outline" size="sm" className="bg-emerald-50 text-emerald-800 border-emerald-200/80">
+            🌱 Browse Marketplace
+          </Button>
         </Link>
       </div>
 
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
+            <Skeleton key={i} className="h-44 rounded-3xl" />
           ))}
         </div>
       ) : error ? (
-        <div className="p-6 bg-red-50 text-red-700 rounded-2xl border border-red-200 text-xs">
-          Failed to load orders. Please refresh or check your connection.
-        </div>
+        <Alert variant="error" title="Failed to load orders">
+          Please refresh the page or verify your network connection.
+        </Alert>
       ) : !orders || orders.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/80 shadow-2xs space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl">
-            🛍️
-          </div>
-          <h3 className="text-base font-bold text-slate-900">No orders placed yet</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Browse our farmer marketplace to redeem your EcoTokens for verified organic farm supplies.
-          </p>
-          <Link
-            href="/marketplace"
-            className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition shadow-sm"
-          >
-            Explore Marketplace
-          </Link>
-        </div>
+        <EmptyState
+          icon="🛍️"
+          title="No orders placed yet"
+          description="Browse our farmer marketplace to redeem your EcoTokens for verified organic farm supplies."
+          actionText="Explore Marketplace"
+          actionHref="/marketplace"
+        />
       ) : (
         <div className="space-y-6">
           {orders.map((order) => {
@@ -119,20 +93,20 @@ export default function OrdersPage() {
             const isCancelled = order.status === "CANCELLED";
             const isDisputed = order.status === "DISPUTED";
 
-            const orderDateFormatted = order.createdAt
-              ? new Date(order.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
-              : "—";
+            const badgeVariant = isDelivered
+              ? "success"
+              : isPlaced
+              ? "info"
+              : isCancelled
+              ? "neutral"
+              : "warning";
 
             return (
               <div
                 key={order.id}
                 className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden hover:border-slate-300 transition"
               >
-                {/* Amazon / Flipkart Style Order Header Strip */}
+                {/* Order Header Strip */}
                 <div className="bg-slate-50/90 border-b border-slate-200/80 px-6 py-4 flex flex-wrap items-center justify-between gap-4 text-xs">
                   <div className="flex flex-wrap items-center gap-6 sm:gap-10">
                     <div>
@@ -140,7 +114,7 @@ export default function OrdersPage() {
                         Order Placed
                       </span>
                       <span className="font-bold text-slate-800 mt-0.5 block">
-                        {orderDateFormatted}
+                        {formatDate(order.createdAt)}
                       </span>
                     </div>
 
@@ -181,7 +155,6 @@ export default function OrdersPage() {
 
                 {/* Card Body */}
                 <div className="p-6 space-y-5">
-                  {/* Status Banner */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <span
@@ -203,19 +176,9 @@ export default function OrdersPage() {
                       </h4>
                     </div>
 
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-2xs font-extrabold uppercase tracking-wider ${
-                        isDelivered
-                          ? "bg-emerald-100 text-emerald-800"
-                          : isPlaced
-                          ? "bg-blue-100 text-blue-800"
-                          : isCancelled
-                          ? "bg-slate-100 text-slate-600"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
+                    <Badge variant={badgeVariant}>
                       {order.status}
-                    </span>
+                    </Badge>
                   </div>
 
                   {/* Items List */}
@@ -250,19 +213,17 @@ export default function OrdersPage() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                          <button
+                          <Button
+                            size="sm"
                             onClick={() => handleBuyAgain(item.productId, item.productName)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-2xs flex items-center gap-1"
                           >
-                            <span>↺</span>
-                            <span>Buy it again</span>
-                          </button>
+                            ↺ Buy it again
+                          </Button>
 
-                          <Link
-                            href={`/orders/${order.id}`}
-                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
-                          >
-                            View Details
+                          <Link href={`/orders/${order.id}`}>
+                            <Button variant="ghost" size="sm">
+                              View Details
+                            </Button>
                           </Link>
                         </div>
                       </div>

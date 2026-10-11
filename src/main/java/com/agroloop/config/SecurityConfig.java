@@ -115,6 +115,14 @@ public class SecurityConfig {
             .securityMatcher("/api/v1/**")
             .cors(cors -> cors.configurationSource(apiCorsConfiguration.apiCorsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
+            .headers(headers -> headers
+                .contentTypeOptions(contentType -> {})
+                .frameOptions(frame -> frame.deny())
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)
+                )
+            )
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
@@ -147,6 +155,14 @@ public class SecurityConfig {
     public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .authenticationProvider(authenticationProvider())
+            .headers(headers -> headers
+                .contentTypeOptions(contentType -> {})
+                .frameOptions(frame -> frame.sameOrigin())
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000)
+                )
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login/**", "/register/**", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**", "/favicon.ico", "/marketplace", "/marketplace/products/**", "/marketplace/cart/**", "/reviews/farmer/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

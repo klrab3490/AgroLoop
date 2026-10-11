@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { webTokenStorage, webApiClient } from "./lib/api.js";
+import { webTokenStorage, webApiClient } from "../lib/api";
 
 describe("Web Security Invariants", () => {
   it("never stores refresh tokens in JavaScript-accessible storage in Web mode", async () => {
