@@ -65,7 +65,7 @@ export function Navbar() {
     systemMeta?.app_version ||
     process.env.NEXT_PUBLIC_APP_VERSION ||
     CURRENT_PLATFORM_VERSION ||
-    "1.0.6";
+    "1.0.7";
 
   // Close user dropdown on outside click
   useEffect(() => {
@@ -109,7 +109,7 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 transition-colors shadow-[0_2px_12px_-4px_rgba(15,23,42,0.03)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Brand Logo & Version Pill */}
             <div className="flex items-center gap-3 lg:gap-5">
@@ -164,6 +164,13 @@ export function Navbar() {
 
             {/* Desktop Center Navigation */}
             <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+              <Link href="/" className={navLinkClass("/")}>
+                <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>Home</span>
+              </Link>
+
               <Link href="/marketplace" className={navLinkClass("/marketplace")}>
                 <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -171,12 +178,27 @@ export function Navbar() {
                 <span>Marketplace</span>
               </Link>
 
-              <Link href="/orders" className={navLinkClass("/orders")}>
-                <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>My Orders</span>
-              </Link>
+              {/* Show Orders and Users tabs after login */}
+              {isAuthenticated && (
+                <>
+                  <Link href="/orders" className={navLinkClass("/orders")}>
+                    <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Orders</span>
+                  </Link>
+
+                  <Link
+                    href={user?.role === "ROLE_ADMIN" ? "/admin?tab=users" : "/users"}
+                    className={navLinkClass(user?.role === "ROLE_ADMIN" ? "/admin?tab=users" : "/users")}
+                  >
+                    <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Users</span>
+                  </Link>
+                </>
+              )}
 
               {/* Household Links */}
               {user?.role === "ROLE_HOUSEHOLD" && (
@@ -449,6 +471,19 @@ export function Navbar() {
 
               <div className="space-y-1">
                 <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold ${
+                    isActive("/") && pathname === "/" ? "bg-emerald-50 text-emerald-900 font-bold" : "text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span>Home</span>
+                </Link>
+
+                <Link
                   href="/marketplace"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold ${
@@ -461,18 +496,35 @@ export function Navbar() {
                   <span>Circular Marketplace</span>
                 </Link>
 
-                <Link
-                  href="/orders"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold ${
-                    isActive("/orders") ? "bg-emerald-50 text-emerald-900 font-bold" : "text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span>My Orders</span>
-                </Link>
+                {isAuthenticated && (
+                  <>
+                    <Link
+                      href="/orders"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold ${
+                        isActive("/orders") ? "bg-emerald-50 text-emerald-900 font-bold" : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>Orders</span>
+                    </Link>
+
+                    <Link
+                      href={user?.role === "ROLE_ADMIN" ? "/admin?tab=users" : "/users"}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold ${
+                        isActive(user?.role === "ROLE_ADMIN" ? "/admin?tab=users" : "/users") ? "bg-emerald-50 text-emerald-900 font-bold" : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                      <span>Users</span>
+                    </Link>
+                  </>
+                )}
 
                 {/* Mobile Household Links */}
                 {user?.role === "ROLE_HOUSEHOLD" && (

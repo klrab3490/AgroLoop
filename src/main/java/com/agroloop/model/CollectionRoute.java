@@ -114,6 +114,19 @@ public class CollectionRoute {
         return stop;
     }
 
+    public void clearStops() {
+        if (this.status != RouteStatus.PLANNED) {
+            throw new IllegalStateException("Stops can only be cleared from a PLANNED route. Current status: " + this.status);
+        }
+        this.stops.clear();
+        this.totalDistanceKm = 0.0;
+        this.totalEstimatedWeight = BigDecimal.ZERO;
+    }
+
+    public void updateNotes(String notes) {
+        this.notes = notes != null ? notes.trim() : null;
+    }
+
     public void startRoute() {
         if (this.status != RouteStatus.PLANNED) {
             throw new IllegalStateException("Only PLANNED routes can be started. Current status: " + this.status);

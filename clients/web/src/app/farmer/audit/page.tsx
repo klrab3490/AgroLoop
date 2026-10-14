@@ -76,7 +76,7 @@ export default function FarmerAuditDashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-6 min-h-[calc(100vh-4rem)]">
         <Skeleton className="h-10 w-48 rounded-xl" />
         <Skeleton className="h-32 rounded-3xl" />
         <Skeleton className="h-64 rounded-3xl" />
@@ -102,7 +102,7 @@ export default function FarmerAuditDashboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

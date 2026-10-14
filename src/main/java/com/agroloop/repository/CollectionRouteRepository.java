@@ -18,9 +18,9 @@ public interface CollectionRouteRepository extends JpaRepository<CollectionRoute
 
     List<CollectionRoute> findByFarmerIdAndStatusIn(Long farmerId, List<RouteStatus> statuses);
 
-    @Query("SELECT r FROM CollectionRoute r LEFT JOIN FETCH r.stops s LEFT JOIN FETCH s.pickupRequest p LEFT JOIN FETCH p.wasteSubmission WHERE r.id = :id")
+    @Query("SELECT DISTINCT r FROM CollectionRoute r LEFT JOIN FETCH r.stops s LEFT JOIN FETCH s.pickupRequest p LEFT JOIN FETCH p.wasteSubmission WHERE r.id = :id")
     Optional<CollectionRoute> findByIdWithDetails(@Param("id") Long id);
 
-    @Query("SELECT r FROM CollectionRoute r LEFT JOIN FETCH r.stops s LEFT JOIN FETCH s.pickupRequest p LEFT JOIN FETCH p.wasteSubmission WHERE r.farmer.id = :farmerId AND r.status IN ('PLANNED', 'IN_PROGRESS') ORDER BY r.routeDate ASC, r.id ASC")
+    @Query("SELECT DISTINCT r FROM CollectionRoute r LEFT JOIN FETCH r.stops s LEFT JOIN FETCH s.pickupRequest p LEFT JOIN FETCH p.wasteSubmission WHERE r.farmer.id = :farmerId AND r.status IN ('PLANNED', 'IN_PROGRESS') ORDER BY r.routeDate ASC, r.id ASC")
     List<CollectionRoute> findActiveRoutesWithStops(@Param("farmerId") Long farmerId);
 }

@@ -92,6 +92,18 @@ public class PickupApiController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/{id}/collect")
+    @PreAuthorize("hasAnyRole('FARMER', 'ADMIN')")
+    public ResponseEntity<PickupRequestApiResponse> collectPickup(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        Long userId = getUserId(auth);
+        PickupRequest collected = pickupService.collectPickup(id, userId);
+        boolean verified = pickupHandshakeService.isHandshakeVerified(collected);
+        return ResponseEntity.ok(PickupRequestApiResponse.from(collected, verified));
+    }
+
     @PostMapping("/{id}/cancel")
     @PreAuthorize("@pickupAuth.canCancelPickupAsHousehold(authentication, #id)")
     public ResponseEntity<PickupRequestApiResponse> cancelPickup(

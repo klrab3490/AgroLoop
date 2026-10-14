@@ -69,6 +69,7 @@ class RouteServiceTest {
     @BeforeEach
     void setUp() {
         farmer = new Farmer("Farmer Bob", "farmer@test.com", "hash", "Farm", "Addr", "notes");
+        org.springframework.test.util.ReflectionTestUtils.setField(farmer, "id", 1L);
         Household household = new Household("Household Alice", "alice@test.com", "hash", "Addr");
         WasteSubmission submission = new WasteSubmission(household, WasteCategory.FOOD_SCRAPS, new BigDecimal("12.00"), "Pickup Addr", null, null);
         pickupRequest = new PickupRequest(submission);
@@ -109,5 +110,49 @@ class RouteServiceTest {
         assertThat(created.getTotalDistanceKm()).isEqualTo(4.2);
         verify(pickupService).claimPickup(10L, 1L);
         verify(collectionRouteRepository).save(any(CollectionRoute.class));
+    }
+
+    @Test
+    void createOptimizedRoute_shouldScheduleAssignedPickups() {
+        pickupRequest.accept(farmer);
+        assertThat(pickupRequest.getStatus()).isEqualTo(PickupStatus.ASSIGNED);
+
+        when(farmerRepository.findById(1L)).thenReturn(Optional.of(farmer));
+        when(pickupRequestRepository.findById(10L)).thenReturn(Optional.of(pickupRequest));
+        when(routeOptimizationService.optimizeRoute(eq(farmer), any()))
+                .thenReturn(new RouteOptimizationService.RoutePlan(
+                        List.of(new RouteOptimizationService.OptimizedStopPlan(pickupRequest, 1, 3.5)),
+                        3.5,
+                        "https://maps.google.com"
+                ));
+        when(collectionRouteRepository.save(any(CollectionRoute.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        CollectionRoute created = routeService.createOptimizedRoute(1L, LocalDate.now(), List.of(10L), "Needs Scheduling To Route");
+
+        assertThat(created).isNotNull();
+        assertThat(pickupRequest.getStatus()).isEqualTo(PickupStatus.SCHEDULED);
+        assertThat(pickupRequest.getScheduledTime()).isNotNull();
+        verify(pickupRequestRepository).save(pickupRequest);
+    }
+
+    @Test
+    void completeStop_shouldMarkRouteStopAndUnderlyingPickupCollected() {
+        pickupRequest.accept(farmer);
+        pickupRequest.schedule(java.time.LocalDateTime.now().plusHours(2));
+
+        CollectionRoute route = new CollectionRoute(farmer, LocalDate.now(), "Active Run");
+        com.agroloop.model.RouteStop stop = route.addStop(pickupRequest, 1, 2.0);
+        route.startRoute();
+
+        when(collectionRouteRepository.findById(50L)).thenReturn(Optional.of(route));
+        when(routeStopRepository.findById(100L)).thenReturn(Optional.of(stop));
+
+        routeService.completeStop(50L, 100L, farmer.getId());
+
+        assertThat(stop.getStatus()).isEqualTo(com.agroloop.model.RouteStopStatus.COMPLETED);
+        assertThat(pickupRequest.getStatus()).isEqualTo(PickupStatus.COLLECTED);
+        verify(pickupRequestRepository).save(pickupRequest);
+        verify(routeStopRepository).save(stop);
     }
 }

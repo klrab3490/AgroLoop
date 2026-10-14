@@ -14,7 +14,7 @@ export function Footer() {
 
   return (
     <footer className="bg-slate-900 text-slate-300 py-12 border-t border-slate-800" role="contentinfo">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand & Corporate Business Details */}
           <div className="space-y-3">

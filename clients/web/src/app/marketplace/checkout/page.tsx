@@ -96,7 +96,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       <div>
         <span className="text-2xs font-bold uppercase tracking-widest text-emerald-600">
           Authoritative Checkout
@@ -110,9 +110,9 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Order Items Review & Shipping */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="lg:col-span-8 space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
               Selected Products ({hydratedItems.length})
@@ -153,7 +153,7 @@ export default function CheckoutPage() {
         </div>
 
         {/* Right: Wallet & Total Summary */}
-        <div className="space-y-6">
+        <div className="lg:col-span-4 space-y-6">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
               Wallet & Solvency Check

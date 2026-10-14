@@ -3,3 +3,4 @@ export * from "./common";
 export * from "./product-card";
 export * from "./qr-code-view";
 export * from "./doorstep-weighin-modal";
+export * from "./camera-qr-scanner";

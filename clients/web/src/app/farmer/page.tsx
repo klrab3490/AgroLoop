@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
+import { PageContainer, DashboardGrid } from "@/components/ui/layout";
+
 export default function FarmerHubPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -39,33 +41,35 @@ export default function FarmerHubPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+      <PageContainer>
         <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (!isAuthenticated || user?.role !== "ROLE_FARMER") {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
-        <p className="text-4xl">🚜</p>
-        <h2 className="text-2xl font-black text-slate-900">Farmer Operations Portal</h2>
-        <p className="text-xs text-slate-500">Sign in with an approved Farmer account to access collection routes.</p>
-        <Link href="/auth/login?redirect=/farmer" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition">
-          Sign In
-        </Link>
-      </div>
+      <PageContainer>
+        <div className="max-w-md mx-auto py-16 text-center space-y-4">
+          <p className="text-4xl">🚜</p>
+          <h2 className="text-2xl font-black text-slate-900">Farmer Operations Portal</h2>
+          <p className="text-xs text-slate-500">Sign in with an approved Farmer account to access collection routes.</p>
+          <Link href="/auth/login?redirect=/farmer" className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition">
+            Sign In
+          </Link>
+        </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-10">
+    <PageContainer>
       {/* Welcome Banner */}
       <div className="bg-gradient-to-br from-amber-700 to-emerald-800 p-8 sm:p-10 rounded-3xl text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-2">
@@ -184,6 +188,6 @@ export default function FarmerHubPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

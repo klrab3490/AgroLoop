@@ -102,7 +102,7 @@ export default function OrdersPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-4">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-4 min-h-[calc(100vh-4rem)]">
         <Skeleton className="h-28 rounded-3xl" />
         <Skeleton className="h-44 rounded-3xl" />
         <Skeleton className="h-44 rounded-3xl" />
@@ -130,7 +130,7 @@ export default function OrdersPage() {
   const issuesCount = userPurchasedOrders.filter((o) => o.status === "DISPUTED" || o.status === "CANCELLED").length;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -29,7 +29,7 @@ public class SystemApiController {
             @Value("${agroloop.server.version:8.0.0}") String serverVersion,
             @Value("${agroloop.api.version:v1}") String apiVersion,
             @Value("${agroloop.api.minimum-client-version:1.0.0}") String minimumClientVersion,
-            @Value("${agroloop.app.version:1.0.6}") String appVersion,
+            @Value("${agroloop.app.version:1.0.7}") String appVersion,
             @Value("${agroloop.github.repo:AgnaMariya/AgroLoop}") String githubRepo
     ) {
         this.serverVersion = serverVersion;

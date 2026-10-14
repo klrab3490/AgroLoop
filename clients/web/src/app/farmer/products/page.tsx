@@ -55,7 +55,7 @@ export default function FarmerProductsPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
         <div className="h-6 w-32 rounded-xl bg-slate-200/60 animate-pulse" />
         <div className="h-16 rounded-2xl bg-slate-200/60 animate-pulse" />
         <div className="space-y-4">
@@ -80,7 +80,7 @@ export default function FarmerProductsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <Link href="/farmer" className="text-xs font-bold text-slate-500 hover:text-emerald-700 inline-flex items-center gap-1 mb-2">
@@ -158,7 +158,7 @@ export default function FarmerProductsPage() {
       {/* List New Product Modal */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-3xl max-w-md w-full space-y-4 border border-slate-200 shadow-2xl">
+          <div className="bg-white p-8 rounded-3xl max-w-lg lg:max-w-xl w-full space-y-4 border border-slate-200 shadow-2xl">
             <h3 className="font-bold text-lg text-slate-900">List New Product</h3>
             <form onSubmit={handleCreateProduct} className="space-y-4 text-xs">
               <div>

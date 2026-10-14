@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
@@ -22,6 +22,17 @@ export default function AdminHubPage() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+
+  // Read URL query parameter for tab selection (e.g. /admin?tab=users)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get("tab") as AdminTab | null;
+      if (tab && ["overview", "users", "farmer-applications", "orders-disputes"].includes(tab)) {
+        setActiveTab(tab);
+      }
+    }
+  }, []);
 
   // User Filter & Search State
   const [userSearch, setUserSearch] = useState("");
@@ -557,9 +568,10 @@ export default function AdminHubPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-6 min-h-[calc(100vh-4rem)]">
         <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
@@ -589,7 +601,7 @@ export default function AdminHubPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white p-8 sm:p-10 shadow-xl border border-slate-700/50">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
@@ -1726,7 +1738,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {inspectedUser && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-4xl xl:max-w-5xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex justify-between items-start border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
@@ -1936,7 +1948,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {isAddUserModalOpen && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-2xs font-bold uppercase tracking-wider text-emerald-600 block">
@@ -2123,7 +2135,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {modifyRoleUser && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-2xs font-bold uppercase tracking-wider text-purple-600 block">
@@ -2263,7 +2275,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {conversionTargetUser && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-2xs font-bold uppercase tracking-wider text-amber-600 block">
@@ -2377,7 +2389,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {adjustTargetUser && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-2xs font-bold uppercase tracking-wider text-emerald-600 block">
@@ -2501,7 +2513,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {rejectTargetApp && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-2xs font-bold uppercase tracking-wider text-rose-600 block">
@@ -2582,7 +2594,7 @@ export default function AdminHubPage() {
       {/* ========================================================================= */}
       {disputeTargetOrder && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-2xs font-bold uppercase tracking-wider text-rose-600 block">

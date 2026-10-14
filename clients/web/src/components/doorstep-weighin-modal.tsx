@@ -7,6 +7,7 @@ import type {
   CompactQrPayload,
 } from "@agroloop/api-types";
 import { webApiClient } from "../lib/api";
+import { CameraQrScanner } from "./camera-qr-scanner";
 
 export {
   QUALITY_GRADES,
@@ -374,8 +375,8 @@ export function DoorstepWeighInModal({
       aria-labelledby="modal-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/65 backdrop-blur-xs animate-in fade-in duration-200"
     >
-      {/* Modal Container: Target 520–600px width on desktop, responsive for tablet & mobile */}
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-[560px] max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+      {/* Modal Container: responsive width from mobile up to desktop */}
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-[560px] lg:max-w-3xl xl:max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
         
         {/* ========================================================== */}
         {/* 1. MODAL HEADER                                            */}
@@ -536,46 +537,20 @@ export function DoorstepWeighInModal({
                 )}
               </div>
 
-              {/* Optical QR Scanner Viewfinder (Simulation) */}
+              {/* Real Optical Camera QR Scanner */}
               {scannerOpen && (
-                <div className="p-4 bg-slate-900 text-white rounded-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">📷</span>
-                      <span className="text-xs font-bold">Household QR Optical Scanner</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setScannerOpen(false)}
-                      className="text-slate-400 hover:text-white text-xs font-bold"
-                    >
-                      Close ×
-                    </button>
-                  </div>
-                  <div className="h-28 border-2 border-dashed border-emerald-400/60 rounded-xl flex flex-col items-center justify-center p-3 bg-slate-950/40 text-center relative overflow-hidden">
-                    <div className="absolute inset-x-0 h-0.5 bg-emerald-400/80 animate-bounce" />
-                    <p className="text-2xs text-slate-300">Align household QR pass inside viewfinder</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPasscode("ECO-2126-PASS");
-                        setPasscodeError(null);
-                        setScannerOpen(false);
-                      }}
-                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-2xs rounded-lg transition"
-                    >
-                      ✓ Capture Household Code
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setScannerOpen(false)}
-                      className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-2xs rounded-lg transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                <div className="space-y-2 animate-in fade-in zoom-in-95 duration-150">
+                  <CameraQrScanner
+                    title="Household QR Camera Scanner"
+                    subtitle={`Scan physical QR pass for Household #${pickup.householdId}`}
+                    simulateSampleCode={`ECO-${pickup.id}-PASS`}
+                    onScan={(scanned) => {
+                      setPasscode(scanned);
+                      setPasscodeError(null);
+                      setScannerOpen(false);
+                    }}
+                    onClose={() => setScannerOpen(false)}
+                  />
                 </div>
               )}
 

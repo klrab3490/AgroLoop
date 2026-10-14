@@ -2,17 +2,25 @@ package com.agroloop.service;
 
 import com.agroloop.dto.SchedulePickupRequest;
 import com.agroloop.dto.WasteVerificationRequest;
+import com.agroloop.model.CollectionRoute;
 import com.agroloop.model.Farmer;
 import com.agroloop.model.PickupRequest;
 import com.agroloop.model.PickupStatus;
+import com.agroloop.model.RouteStatus;
+import com.agroloop.model.RouteStop;
+import com.agroloop.model.RouteStopStatus;
 import com.agroloop.model.WasteSubmission;
 import com.agroloop.model.WasteVerification;
+import com.agroloop.repository.CollectionRouteRepository;
 import com.agroloop.repository.FarmerRepository;
 import com.agroloop.repository.PickupRequestRepository;
+import com.agroloop.repository.RouteStopRepository;
 import com.agroloop.repository.WasteVerificationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,6 +33,12 @@ public class PickupServiceImpl implements PickupService {
     private final WasteVerificationRepository wasteVerificationRepository;
     private final FarmerRepository farmerRepository;
     private final TokenRewardService tokenRewardService;
+
+    @Autowired(required = false)
+    private RouteStopRepository routeStopRepository;
+
+    @Autowired(required = false)
+    private CollectionRouteRepository collectionRouteRepository;
 
     public PickupServiceImpl(
             PickupRequestRepository pickupRequestRepository,
@@ -112,8 +126,38 @@ public class PickupServiceImpl implements PickupService {
         PickupRequest pickup = findPickupOrThrow(pickupId);
         assertFarmerAuthorized(pickup, farmerId);
 
+        if (pickup.getStatus() == PickupStatus.ASSIGNED) {
+            pickup.schedule(LocalDateTime.now().plusMinutes(1));
+        }
+
         pickup.markCollected();
-        return pickupRequestRepository.save(pickup);
+        PickupRequest saved = pickupRequestRepository.save(pickup);
+
+        syncRouteStopOnPickupCollected(pickupId);
+
+        return saved;
+    }
+
+    private void syncRouteStopOnPickupCollected(Long pickupId) {
+        if (routeStopRepository == null) {
+            return;
+        }
+        try {
+            List<RouteStop> stops = routeStopRepository.findByPickupRequestId(pickupId);
+            for (RouteStop stop : stops) {
+                if (stop.getStatus() == RouteStopStatus.PENDING) {
+                    stop.markCompleted();
+                    routeStopRepository.save(stop);
+                    CollectionRoute route = stop.getRoute();
+                    if (route != null && collectionRouteRepository != null && route.areAllStopsCompleted() && route.getStatus() == RouteStatus.IN_PROGRESS) {
+                        route.completeRoute();
+                        collectionRouteRepository.save(route);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Non-blocking route stop synchronization
+        }
     }
 
     @Override

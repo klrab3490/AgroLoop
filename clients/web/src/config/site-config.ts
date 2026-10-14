@@ -12,9 +12,9 @@ export interface NavItem {
 export const siteConfig = {
   name: "AgroLoop",
   description: "Circular Economy & Regenerative Agriculture Platform",
-  version: "1.0.6",
+  version: "1.0.7",
   links: {
-    github: "https://github.com/rahul-ab/agroloop",
+    github: "https://github.com/klrab3490/agroloop",
   },
   nav: {
     main: [

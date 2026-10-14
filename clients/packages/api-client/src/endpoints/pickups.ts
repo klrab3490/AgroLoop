@@ -14,6 +14,7 @@ export interface PickupEndpoints {
   cancelPickup(id: number, request: CancelOrderApiRequest, options?: MutationOptions): Promise<PickupRequestApiResponse>;
   generateHandshakePass(pickupId: number): Promise<PickupHandshakePassResponse>;
   verifyHandshake(pickupId: number, request: VerifyPickupHandshakeApiRequest): Promise<PickupHandshakeResultApiResponse>;
+  collectPickup(id: number, options?: MutationOptions): Promise<PickupRequestApiResponse>;
 }
 
 export function createPickupEndpoints(client: AgroLoopApiClient): PickupEndpoints {
@@ -39,6 +40,13 @@ export function createPickupEndpoints(client: AgroLoopApiClient): PickupEndpoint
 
     async verifyHandshake(pickupId: number, request: VerifyPickupHandshakeApiRequest) {
       return client.post<PickupHandshakeResultApiResponse>(`/pickups/${pickupId}/handshake`, request);
+    },
+
+    async collectPickup(id: number, options?: MutationOptions) {
+      return client.post<PickupRequestApiResponse>(`/pickups/${id}/collect`, undefined, {
+        idempotentMutation: true,
+        idempotencyKey: options?.idempotencyKey,
+      });
     },
   };
 }

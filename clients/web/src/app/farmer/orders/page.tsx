@@ -128,7 +128,7 @@ export default function FarmerOrdersPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-4">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-6 min-h-[calc(100vh-4rem)]">
         <Skeleton className="h-28 rounded-3xl" />
         <Skeleton className="h-44 rounded-3xl" />
         <Skeleton className="h-44 rounded-3xl" />
@@ -155,7 +155,7 @@ export default function FarmerOrdersPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

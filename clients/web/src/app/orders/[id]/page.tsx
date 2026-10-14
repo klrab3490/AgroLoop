@@ -131,7 +131,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-6 min-h-[calc(100vh-4rem)]">
         <div className="h-6 w-36 rounded-lg bg-slate-200 animate-pulse" />
         <div className="h-28 rounded-2xl bg-slate-200/70 animate-pulse" />
         <div className="h-44 rounded-2xl bg-slate-200/60 animate-pulse" />
@@ -203,7 +203,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const trackingNumber = `ECO-TRK-${((order.id ?? orderId) * 1000 + 482)}`;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-6 min-h-[calc(100vh-4rem)]">
       {/* Toast Notification */}
       {addedItemMessage && (
         <div className="fixed top-20 right-6 z-50 bg-emerald-900 text-white text-xs font-bold px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-in slide-in-from-top-2">

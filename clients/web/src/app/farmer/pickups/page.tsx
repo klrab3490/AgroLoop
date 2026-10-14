@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 import { DoorstepWeighInModal } from "@/components/doorstep-weighin-modal";
+import { CameraQrScanner } from "@/components/camera-qr-scanner";
 import type {
   PickupRequestApiResponse,
   CollectionRouteApiResponse,
@@ -221,6 +222,7 @@ export default function FarmerPickupsPage() {
   // Quick QR Code / Passcode Lookup Tool
   const [qrLookupOpen, setQrLookupOpen] = useState(false);
   const [qrLookupInput, setQrLookupInput] = useState("");
+  const [qrLookupMode, setQrLookupMode] = useState<"camera" | "manual">("camera");
   const [qrLookupError, setQrLookupError] = useState<string | null>(null);
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -267,10 +269,15 @@ export default function FarmerPickupsPage() {
     enabled: isAuthenticated && user?.role === "ROLE_FARMER",
   });
 
+  // Current primary active route: prioritize IN_PROGRESS, then PLANNED
+  const currentRoute =
+    activeRoutes.find((r) => r.status === "IN_PROGRESS") ||
+    activeRoutes.find((r) => r.status === "PLANNED");
+
   // Group farmer's pickups by clear operational schedule states
   const now = new Date();
   const todayPickups = myPickups.filter((p) => {
-    if (p.status === "VERIFIED" || p.status === "CANCELLED") return false;
+    if (p.status === "VERIFIED" || p.status === "CANCELLED" || p.status === "COLLECTED") return false;
     if (!p.scheduledTime) return false;
     const d = new Date(p.scheduledTime);
     return (
@@ -281,14 +288,16 @@ export default function FarmerPickupsPage() {
   });
 
   const upcomingPickups = myPickups.filter((p) => {
-    if (p.status === "VERIFIED" || p.status === "CANCELLED") return false;
+    if (p.status === "VERIFIED" || p.status === "CANCELLED" || p.status === "COLLECTED") return false;
     if (!p.scheduledTime) return false;
     const d = new Date(p.scheduledTime);
     return d > now && !todayPickups.some((tp) => tp.id === p.id);
   });
 
   const unscheduledPickups = myPickups.filter((p) => {
-    if (p.status === "VERIFIED" || p.status === "CANCELLED") return false;
+    if (p.status === "VERIFIED" || p.status === "CANCELLED" || p.status === "COLLECTED") return false;
+    // Pickups already present in active route stops have already been routed
+    if (currentRoute?.stops?.some((s) => s.pickupId === p.id)) return false;
     return !p.scheduledTime || p.status === "ASSIGNED";
   });
 
@@ -296,14 +305,21 @@ export default function FarmerPickupsPage() {
     (p) => p.status === "VERIFIED" || p.status === "COLLECTED"
   );
 
-  // Accepted pickups ready to sequence into a route
-  const acceptedUnroutedPickups = myPickups.filter(
-    (p) => p.status === "ASSIGNED" || p.status === "SCHEDULED" || p.status === "REQUESTED"
+  // Pickups ready to bundle into an optimized route
+  const existingUncompletedStopIds = (currentRoute?.stops || [])
+    .filter((s) => s.status !== "COMPLETED")
+    .map((s) => s.pickupId)
+    .filter(Boolean) as number[];
+
+  const candidateRoutePickupIds = Array.from(
+    new Set([
+      ...existingUncompletedStopIds,
+      ...unscheduledPickups.map((p) => p.id).filter(Boolean) as number[],
+    ])
   );
 
-  // Current primary active route
-  const currentRoute = activeRoutes.find(
-    (r) => r.status === "IN_PROGRESS" || r.status === "PLANNED"
+  const acceptedUnroutedPickups = unscheduledPickups.filter(
+    (p) => p.status === "ASSIGNED" || p.status === "SCHEDULED" || p.status === "REQUESTED"
   );
 
   // Navigation helpers (Google Maps)
@@ -356,9 +372,8 @@ export default function FarmerPickupsPage() {
 
   // 2. Plan & Confirm Route
   const handleExecutePlanRoute = async () => {
-    const candidateIds = acceptedUnroutedPickups.map((p) => p.id).filter(Boolean) as number[];
-    if (candidateIds.length === 0) {
-      setActionError("No accepted pickups available to bundle into a route.");
+    if (candidateRoutePickupIds.length === 0) {
+      setActionError("No pickups available to bundle into a route.");
       return;
     }
     setActionLoading(true);
@@ -366,7 +381,7 @@ export default function FarmerPickupsPage() {
     try {
       const todayStr = new Date().toISOString().split("T")[0];
       await webApiClient.farmer.createOptimizedRoute({
-        pickupIds: candidateIds,
+        pickupIds: candidateRoutePickupIds,
         routeDate: todayStr,
         notes: "Automated TSP collection sequence",
       });
@@ -379,6 +394,40 @@ export default function FarmerPickupsPage() {
       setActionSuccess("Collection route planned and optimized!");
     } catch (err: unknown) {
       setActionError(err instanceof Error ? err.message : "Failed to generate optimized route");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // 2b. Move an individual pickup to optimized route
+  const handleMoveToRoute = async (pickup: PickupRequestApiResponse) => {
+    if (!pickup?.id) return;
+    setActionLoading(true);
+    setActionError(null);
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const existingStopIds = (currentRoute?.stops || [])
+        .filter((s) => s.status !== "COMPLETED")
+        .map((s) => s.pickupId)
+        .filter(Boolean) as number[];
+      const candidateIds = Array.from(new Set([...existingStopIds, pickup.id]));
+
+      await webApiClient.farmer.createOptimizedRoute({
+        pickupIds: candidateIds,
+        routeDate: todayStr,
+        notes: "Automated TSP collection sequence",
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["farmer-active-routes"] }),
+        queryClient.invalidateQueries({ queryKey: ["farmer-my-pickups"] }),
+      ]);
+
+      const residentName = resolveHouseholdName(pickup);
+      setActionSuccess(`Pickup for ${residentName} moved to your optimized collection route!`);
+      setActiveTab("route");
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to move pickup to route");
     } finally {
       setActionLoading(false);
     }
@@ -477,9 +526,9 @@ export default function FarmerPickupsPage() {
   };
 
   // Quick QR Code / Passcode Lookup Handler
-  const handleExecuteQrLookup = () => {
+  const handleExecuteQrLookup = (overrideInput?: string) => {
     setQrLookupError(null);
-    const trimmed = qrLookupInput.trim();
+    const trimmed = (overrideInput ?? qrLookupInput).trim();
     if (!trimmed) {
       setQrLookupError("Please enter or scan a QR pass or passcode.");
       return;
@@ -532,7 +581,7 @@ export default function FarmerPickupsPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8 animate-pulse">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)] animate-pulse">
         <div className="h-6 w-32 rounded-xl bg-slate-200/60" />
         <div className="h-16 rounded-2xl bg-slate-200/60" />
         <div className="space-y-4">
@@ -642,6 +691,16 @@ export default function FarmerPickupsPage() {
 
           {!isCompleted && !options?.allowClaim && (
             <>
+              {unscheduledPickups.some((u) => u.id === pickup.id) && (
+                <button
+                  type="button"
+                  disabled={actionLoading}
+                  onClick={() => handleMoveToRoute(pickup)}
+                  className="px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl border border-emerald-200 transition flex items-center gap-1 shadow-2xs"
+                >
+                  <span>🚜 Move to Route</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -682,7 +741,7 @@ export default function FarmerPickupsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       {/* Header */}
       <div>
         <Link
@@ -705,6 +764,7 @@ export default function FarmerPickupsPage() {
               type="button"
               onClick={() => {
                 setQrLookupOpen(true);
+                setQrLookupMode("camera");
                 setQrLookupError(null);
               }}
               className="px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl border border-emerald-200 transition flex items-center gap-1.5 shadow-2xs"
@@ -1037,7 +1097,13 @@ export default function FarmerPickupsPage() {
               <div className="space-y-4">
                 {(currentRoute.stops || []).map((stop: RouteStopApiResponse, idx: number) => {
                   const navUrl = getSingleStopNavUrl(stop.latitude, stop.longitude, stop.pickupAddress);
-                  const isCompleted = stop.status === "COMPLETED";
+                  const isCompleted =
+                    stop.status === "COMPLETED" ||
+                    myPickups.some(
+                      (p) =>
+                        p.id === stop.pickupId &&
+                        (p.status === "COLLECTED" || p.status === "VERIFIED")
+                    );
                   const residentName = resolveHouseholdName(stop);
                   const neighborhood = getNeighborhood(stop.pickupAddress);
                   const metrics = getProximityMetrics(farmLat, farmLng, stop.latitude, stop.longitude);
@@ -1209,7 +1275,7 @@ export default function FarmerPickupsPage() {
       {/* ============================================================== */}
       {qrLookupOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-3xs uppercase font-extrabold tracking-widest text-emerald-700">
@@ -1219,7 +1285,7 @@ export default function FarmerPickupsPage() {
                   Scan or Lookup Household QR Pass
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Scan the resident&apos;s QR code or enter their 8-digit passcode.
+                  Scan the resident&apos;s QR code with your camera or enter their 8-digit passcode.
                 </p>
               </div>
               <button
@@ -1231,41 +1297,88 @@ export default function FarmerPickupsPage() {
               </button>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Household QR Payload or Passcode
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. ECO-2126-2838 or paste QR payload"
-                value={qrLookupInput}
-                onChange={(e) => {
-                  setQrLookupInput(e.target.value);
-                  if (qrLookupError) setQrLookupError(null);
-                }}
-                className="w-full px-3.5 py-2.5 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-              />
-              {qrLookupError && (
-                <p className="text-2xs text-red-600 font-semibold mt-1">⚠️ {qrLookupError}</p>
-              )}
+            {/* Mode Selector Tabs */}
+            <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setQrLookupMode("camera")}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
+                  qrLookupMode === "camera"
+                    ? "bg-white text-emerald-700 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>📷</span>
+                <span>Camera Scanner</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setQrLookupMode("manual")}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-1.5 ${
+                  qrLookupMode === "manual"
+                    ? "bg-white text-emerald-700 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>⌨️</span>
+                <span>Manual Passcode</span>
+              </button>
             </div>
 
-            <div className="flex gap-2.5 pt-1">
-              <button
-                type="button"
-                onClick={() => setQrLookupOpen(false)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleExecuteQrLookup}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-200 transition"
-              >
-                Identify Household &rarr;
-              </button>
-            </div>
+            {qrLookupError && (
+              <p className="text-2xs text-red-600 font-semibold flex items-center gap-1 bg-red-50 p-2.5 rounded-xl border border-red-200">
+                <span>⚠️</span> {qrLookupError}
+              </p>
+            )}
+
+            {qrLookupMode === "camera" ? (
+              <div className="space-y-3">
+                <CameraQrScanner
+                  title="Household QR Pass Scanner"
+                  subtitle="Hold your camera to the household's QR pass"
+                  simulateSampleCode={myPickups[0] ? `ECO-${myPickups[0].id}-PASS` : "ECO-2126-PASS"}
+                  onScan={(scanned) => {
+                    handleExecuteQrLookup(scanned);
+                  }}
+                  onClose={() => setQrLookupOpen(false)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4 pt-1">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Household QR Payload or Passcode
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ECO-2126-2838 or paste QR payload"
+                    value={qrLookupInput}
+                    onChange={(e) => {
+                      setQrLookupInput(e.target.value);
+                      if (qrLookupError) setQrLookupError(null);
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs font-mono rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  />
+                </div>
+
+                <div className="flex gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setQrLookupOpen(false)}
+                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteQrLookup()}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-200 transition"
+                  >
+                    Identify Household &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1560,11 +1673,11 @@ export default function FarmerPickupsPage() {
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Pickups Count</span>
-                <span className="font-bold text-slate-800">{acceptedUnroutedPickups.length} pickups</span>
+                <span className="font-bold text-slate-800">{candidateRoutePickupIds.length} pickups</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Estimated Travel</span>
-                <span className="font-bold text-emerald-700">~{(acceptedUnroutedPickups.length * 3.6).toFixed(1)} km</span>
+                <span className="font-bold text-emerald-700">~{(candidateRoutePickupIds.length * 3.6).toFixed(1)} km</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400 font-bold uppercase text-3xs">Starting From</span>

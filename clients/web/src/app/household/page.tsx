@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
+import { PageContainer, DashboardGrid } from "@/components/ui/layout";
+
 export default function HouseholdHubPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -29,30 +31,33 @@ export default function HouseholdHubPage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+      <PageContainer>
         <div className="h-44 rounded-3xl bg-slate-200/60 animate-pulse" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
           <div className="h-28 rounded-2xl bg-slate-200/50 animate-pulse" />
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (!isAuthenticated || user?.role !== "ROLE_HOUSEHOLD") {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
-        <p className="text-4xl">🏡</p>
-        <h2 className="text-2xl font-black text-slate-900">Household Composter Portal</h2>
-        <p className="text-xs text-slate-500">Sign in with a Household account to manage compost collections.</p>
-        <Link
-          href="/auth/login?redirect=/household"
-          className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition"
-        >
-          Sign In
-        </Link>
-      </div>
+      <PageContainer>
+        <div className="max-w-md mx-auto py-16 text-center space-y-4">
+          <p className="text-4xl">🏡</p>
+          <h2 className="text-2xl font-black text-slate-900">Household Composter Portal</h2>
+          <p className="text-xs text-slate-500">Sign in with a Household account to manage compost collections.</p>
+          <Link
+            href="/auth/login?redirect=/household"
+            className="inline-block px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs hover:bg-emerald-700 transition"
+          >
+            Sign In
+          </Link>
+        </div>
+      </PageContainer>
     );
   }
 
@@ -62,7 +67,7 @@ export default function HouseholdHubPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-10">
+    <PageContainer>
       {/* Welcome Banner */}
       <div className="bg-gradient-to-br from-emerald-600 to-teal-700 p-8 sm:p-10 rounded-3xl text-white shadow-xl shadow-emerald-700/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-2">
@@ -72,43 +77,53 @@ export default function HouseholdHubPage() {
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
             Welcome back, {user.name ?? user.email}!
           </h1>
-          <p className="text-xs text-emerald-100 max-w-lg">
+          <p className="text-xs sm:text-sm text-emerald-100 max-w-2xl">
             Track your organic waste submissions, verify doorstep collections with QR passes, and spend earned EcoTokens.
           </p>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 min-w-[200px] text-center">
+        <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 min-w-[220px] text-center">
           <span className="text-xs text-emerald-200 uppercase font-bold tracking-wider block">Wallet Balance</span>
           <span className="text-4xl font-black mt-1 block">{balanceData?.availableBalance ?? 0}</span>
           <span className="text-2xs text-emerald-200">EcoTokens Available</span>
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* Metric Cards - 4 columns on desktop */}
+      <DashboardGrid cols={4}>
+        <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <span className="text-2xl">🪙</span>
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Available Balance</h3>
+          <p className="text-3xl font-black text-emerald-600">{balanceData?.availableBalance ?? 0}</p>
+          <p className="text-[11px] text-slate-400">EcoTokens in wallet</p>
+        </div>
+
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
           <span className="text-2xl">⚖️</span>
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Organic Waste Diverted</h3>
           <p className="text-3xl font-black text-slate-900">{totalDivertedKg.toFixed(1)} kg</p>
+          <p className="text-[11px] text-slate-400">Household compost volume</p>
         </div>
 
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
           <span className="text-2xl">📦</span>
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Submissions</h3>
           <p className="text-3xl font-black text-slate-900">{submissions?.length ?? 0}</p>
+          <p className="text-[11px] text-slate-400">Batches recorded</p>
         </div>
 
         <div className="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
           <span className="text-2xl">🛒</span>
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Redeem Rewards</h3>
+          <p className="text-3xl font-black text-slate-900">Store</p>
           <Link
             href="/marketplace"
-            className="inline-block mt-2 text-xs font-bold text-emerald-600 hover:text-emerald-700"
+            className="inline-block text-xs font-bold text-emerald-600 hover:text-emerald-700"
           >
             Visit Marketplace ➔
           </Link>
         </div>
-      </div>
+      </DashboardGrid>
 
       {/* Farmer Partner Application Banner if Pending or Rejected */}
       {farmerApp?.status === "PENDING" && (
@@ -194,6 +209,6 @@ export default function HouseholdHubPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

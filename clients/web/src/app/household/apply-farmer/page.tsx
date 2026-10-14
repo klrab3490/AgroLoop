@@ -89,7 +89,7 @@ export default function ApplyFarmerPage() {
   const isRejected = existingApp?.status === "REJECTED";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 space-y-8 animate-fadeIn">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)] animate-fadeIn">
       {/* Header */}
       <div className="space-y-2">
         <Link
@@ -104,10 +104,13 @@ export default function ApplyFarmerPage() {
             Apply to Become a Farmer Partner
           </h1>
         </div>
-        <p className="text-xs text-slate-600 leading-relaxed">
+        <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
           Upgrade your platform credentials to become a verified local producer. Once approved by our administration, you can accept organic waste deliveries for composting and list harvested produce directly in the AgroLoop Agricultural Marketplace.
         </p>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6">
 
       {/* Existing Application Status Card */}
       {isPending && (
@@ -252,5 +255,42 @@ export default function ApplyFarmerPage() {
         </div>
       )}
     </div>
+
+    {/* Desktop Side Panel: Partner Benefits & Requirements */}
+    <div className="lg:col-span-4 space-y-6">
+      <div className="bg-gradient-to-br from-amber-700 to-emerald-800 text-white p-6 sm:p-7 rounded-3xl shadow-lg space-y-3">
+        <span className="px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-white/20">
+          Producer Status
+        </span>
+        <h3 className="text-xl font-black text-white">Why Partner with AgroLoop?</h3>
+        <p className="text-xs text-emerald-100 leading-relaxed">
+          Transform municipal and residential waste into fertile humus, certified organic inputs, and sustainable revenue.
+        </p>
+      </div>
+
+      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <h4 className="text-sm font-bold text-slate-900">Partner Privileges</h4>
+        <ul className="space-y-3 text-xs text-slate-600">
+          <li className="flex items-start gap-2.5">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <span><strong>Waste Stream Sourcing:</strong> Direct access to pre-sorted household organic waste batches.</span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <span><strong>Turn-by-turn Route Dispatch:</strong> Automated TSP route optimization connecting all scheduled pickups.</span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <span><strong>Zero-Fee Marketplace:</strong> List compost and produce directly to households with instant EcoToken settlement.</span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="text-emerald-600 font-bold">✓</span>
+            <span><strong>Certified Audit Trails:</strong> Cryptographic doorstep validation passes guarantee uncompromised dispute resolution.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
   );
 }

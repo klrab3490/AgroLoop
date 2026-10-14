@@ -93,10 +93,13 @@ export default function SubmitWastePage() {
 
   if (authLoading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-8 animate-pulse">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)] animate-pulse">
         <div className="h-6 w-32 rounded-xl bg-slate-200/60" />
         <div className="h-16 rounded-2xl bg-slate-200/60" />
-        <div className="h-96 rounded-3xl bg-slate-200/50" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 h-96 rounded-3xl bg-slate-200/50" />
+          <div className="lg:col-span-4 h-96 rounded-3xl bg-slate-200/50" />
+        </div>
       </div>
     );
   }
@@ -182,8 +185,12 @@ export default function SubmitWastePage() {
     }
   };
 
+  const parsedWeightVal = parseFloat(weight) || 0;
+  const estimatedTokens = Math.max(0, Math.round(parsedWeightVal * 5));
+  const estimatedCo2Offset = (parsedWeightVal * 1.8).toFixed(1);
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
       <div>
         <Link href="/household" className="text-xs font-bold text-slate-500 hover:text-emerald-700 inline-flex items-center gap-1 mb-2">
           ← Back to Hub
@@ -194,13 +201,15 @@ export default function SubmitWastePage() {
         </p>
       </div>
 
-      {errorMsg && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl">
-          {errorMsg}
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6">
+          {errorMsg && (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-2xl">
+              {errorMsg}
+            </div>
+          )}
 
-      <form onSubmit={handleFormSubmit} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <form onSubmit={handleFormSubmit} className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         {/* Category Grid */}
         <div className="space-y-2">
           <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -343,29 +352,94 @@ export default function SubmitWastePage() {
           )}
         </button>
       </form>
-
-      {/* Review -> Confirm -> Execute Consequential Modal */}
-      <ConfirmationModal
-        isOpen={showConfirmModal}
-        title="Confirm Doorstep Waste Pickup"
-        recordIdentifier={`EST-${weight}KG-${category}`}
-        description={`You are scheduling a certified doorstep collection for ${WASTE_CATEGORIES.find((c) => c.value === category)?.label || category}. A local farmer will navigate to the specified location to collect and weigh the batch.`}
-        consequences={[
-          `Pickup location confirmed: ${address}`,
-          coordinates
-            ? `Exact GPS coordinates attached (${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}) for turn-by-turn routing`
-            : "Postal doorstep address will be used for farmer dispatch",
-          `Estimated initial batch weight: ${weight} kg`,
-          "EcoTokens will be minted to your wallet immediately upon certified farmer weigh-in",
-        ]}
-        confirmLabel="Confirm & Queue Pickup"
-        cancelLabel="Modify Details"
-        isDestructive={false}
-        reversible={true}
-        isLoading={isSubmitting}
-        onConfirm={executeSubmit}
-        onCancel={() => setShowConfirmModal(false)}
-      />
     </div>
+
+    {/* Desktop Side Panel: Live Estimator & Guidelines */}
+    <div className="lg:col-span-4 space-y-6">
+      {/* Live Reward Calculation Card */}
+      <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-3xl p-6 sm:p-7 shadow-lg shadow-emerald-700/10 space-y-4">
+        <span className="px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-wider bg-white/20">
+          Estimated Reward
+        </span>
+        <div>
+          <span className="text-3xs uppercase font-bold text-emerald-200 block">Projected Mint</span>
+          <p className="text-3xl font-black text-white mt-0.5">
+            🪙 ~{estimatedTokens} <span className="text-sm font-semibold text-emerald-100">EcoTokens</span>
+          </p>
+          <p className="text-3xs text-emerald-100 mt-1">
+            Calculated at ~5 tokens / kg of organic matter. Final token mint occurs on digital scale validation.
+          </p>
+        </div>
+
+        <div className="pt-3 border-t border-white/20 flex items-center justify-between text-xs">
+          <div>
+            <span className="text-3xs text-emerald-200 uppercase font-bold block">CO₂ Avoided</span>
+            <span className="font-bold text-white">🌿 {estimatedCo2Offset} kg CO₂e</span>
+          </div>
+          <div>
+            <span className="text-3xs text-emerald-200 uppercase font-bold block">Batch Weight</span>
+            <span className="font-bold text-white">⚖️ {parsedWeightVal.toFixed(1)} kg</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Composting Guidelines Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
+        <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+          <span>📋</span> Doorstep Pickup Process
+        </h3>
+        <ol className="space-y-3 text-xs text-slate-600">
+          <li className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-2xs flex items-center justify-center shrink-0 mt-0.5">
+              1
+            </span>
+            <span>
+              <strong>Queue Batch:</strong> Submit your estimated weight and doorstep location.
+            </span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-2xs flex items-center justify-center shrink-0 mt-0.5">
+              2
+            </span>
+            <span>
+              <strong>Farmer Dispatched:</strong> A certified local partner adds your stop to today&apos;s optimized route.
+            </span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-2xs flex items-center justify-center shrink-0 mt-0.5">
+              3
+            </span>
+            <span>
+              <strong>Doorstep Weigh-in:</strong> Show your QR pass upon arrival; farmer records weight on scale and tokens are instantly minted.
+            </span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  {/* Review -> Confirm -> Execute Consequential Modal */}
+  <ConfirmationModal
+    isOpen={showConfirmModal}
+    title="Confirm Doorstep Waste Pickup"
+    recordIdentifier={`EST-${weight}KG-${category}`}
+    description={`You are scheduling a certified doorstep collection for ${WASTE_CATEGORIES.find((c) => c.value === category)?.label || category}. A local farmer will navigate to the specified location to collect and weigh the batch.`}
+    consequences={[
+      `Pickup location confirmed: ${address}`,
+      coordinates
+        ? `Exact GPS coordinates attached (${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}) for turn-by-turn routing`
+        : "Postal doorstep address will be used for farmer dispatch",
+      `Estimated initial batch weight: ${weight} kg`,
+      "EcoTokens will be minted to your wallet immediately upon certified farmer weigh-in",
+    ]}
+    confirmLabel="Confirm & Queue Pickup"
+    cancelLabel="Modify Details"
+    isDestructive={false}
+    reversible={true}
+    isLoading={isSubmitting}
+    onConfirm={executeSubmit}
+    onCancel={() => setShowConfirmModal(false)}
+  />
+</div>
   );
 }

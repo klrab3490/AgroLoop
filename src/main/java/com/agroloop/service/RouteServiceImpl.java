@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -104,11 +105,35 @@ public class RouteServiceImpl implements RouteService {
         // 2. Run TSP nearest-neighbor optimization
         RouteOptimizationService.RoutePlan plan = routeOptimizationService.optimizeRoute(farmer, pickups);
 
-        // 3. Create route entity
-        CollectionRoute route = new CollectionRoute(farmer, targetDate, notes);
+        // 3. Create or reuse existing PLANNED route entity
+        List<CollectionRoute> existingPlannedRoutes = collectionRouteRepository.findByFarmerIdAndRouteDate(farmerId, targetDate)
+                .stream()
+                .filter(r -> r.getStatus() == RouteStatus.PLANNED)
+                .toList();
+
+        CollectionRoute route;
+        if (!existingPlannedRoutes.isEmpty()) {
+            route = existingPlannedRoutes.get(0);
+            route.clearStops();
+            if (notes != null && !notes.isBlank()) {
+                route.updateNotes(notes);
+            }
+        } else {
+            route = new CollectionRoute(farmer, targetDate, notes);
+        }
 
         for (RouteOptimizationService.OptimizedStopPlan stopPlan : plan.getStops()) {
-            route.addStop(stopPlan.getPickupRequest(), stopPlan.getStopOrder(), stopPlan.getDistanceFromPrevKm());
+            PickupRequest p = stopPlan.getPickupRequest();
+            route.addStop(p, stopPlan.getStopOrder(), stopPlan.getDistanceFromPrevKm());
+
+            if (p.getStatus() == PickupStatus.ASSIGNED) {
+                LocalDateTime baseTime = targetDate.isAfter(LocalDate.now())
+                        ? targetDate.atTime(9, 0)
+                        : LocalDateTime.now().plusHours(1);
+                LocalDateTime slot = baseTime.plusMinutes(stopPlan.getStopOrder() * 15L);
+                p.schedule(slot);
+                pickupRequestRepository.save(p);
+            }
         }
 
         return collectionRouteRepository.save(route);
@@ -141,6 +166,18 @@ public class RouteServiceImpl implements RouteService {
 
         stop.markCompleted();
         routeStopRepository.save(stop);
+
+        // Synchronize underlying PickupRequest to COLLECTED
+        PickupRequest pickup = stop.getPickupRequest();
+        if (pickup != null && pickup.getStatus() != PickupStatus.COLLECTED && pickup.getStatus() != PickupStatus.VERIFIED) {
+            if (pickup.getStatus() == PickupStatus.ASSIGNED) {
+                pickup.schedule(LocalDateTime.now().plusMinutes(1));
+            }
+            if (pickup.getStatus() == PickupStatus.SCHEDULED) {
+                pickup.markCollected();
+                pickupRequestRepository.save(pickup);
+            }
+        }
 
         // Automatically complete the route if all stops are finished
         if (route.areAllStopsCompleted()) {

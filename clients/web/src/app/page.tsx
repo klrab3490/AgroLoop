@@ -39,7 +39,7 @@ export default function HomePage() {
       )}
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden rounded-3xl mx-4 sm:mx-6 lg:mx-8 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white p-8 sm:p-16 lg:p-20 shadow-2xl border border-slate-800">
+      <section className="relative overflow-hidden rounded-3xl mx-4 sm:mx-6 lg:mx-8 xl:mx-10 2xl:mx-auto max-w-[1920px] bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white p-8 sm:p-16 lg:p-20 shadow-2xl border border-slate-800">
         <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
 
@@ -95,7 +95,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works 3-Step Section */}
-      <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="how-it-works" className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
         <div className="text-center mb-12">
           <span className="text-2xs font-bold tracking-widest text-emerald-600 uppercase">Circular Flow Architecture</span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-1">
@@ -146,7 +146,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Sustainable Products Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+      <section className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 pb-10">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <div className="inline-flex items-center gap-1.5 text-2xs font-bold tracking-widest text-emerald-600 uppercase mb-1">
