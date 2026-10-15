@@ -28,6 +28,7 @@ services:
   # ==========================================================
   migration:
     image: flyway/flyway:10-alpine
+    platform: linux/amd64
     container_name: agroloop-migration
     restart: "no"
     command: >
