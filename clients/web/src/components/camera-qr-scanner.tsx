@@ -41,6 +41,8 @@ export function CameraQrScanner({
   const animFrameRef = useRef<number | null>(null);
   const lastScanTimeRef = useRef<number>(0);
   const hasScannedRef = useRef<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const barcodeDetectorRef = useRef<any>(null);
 
   const stopCamera = useCallback(() => {
     if (animFrameRef.current) {
@@ -281,13 +283,15 @@ export function CameraQrScanner({
           // 1. Native BarcodeDetector API if supported
           if ("BarcodeDetector" in window) {
             try {
-              const BarcodeDetectorCtor = (window as unknown as {
-                BarcodeDetector: new (opts: { formats: string[] }) => {
-                  detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue: string }>>;
-                };
-              }).BarcodeDetector;
-              const detector = new BarcodeDetectorCtor({ formats: ["qr_code"] });
-              const barcodes = await detector.detect(video);
+              if (!barcodeDetectorRef.current) {
+                const BarcodeDetectorCtor = (window as unknown as {
+                  BarcodeDetector: new (opts: { formats: string[] }) => {
+                    detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue: string }>>;
+                  };
+                }).BarcodeDetector;
+                barcodeDetectorRef.current = new BarcodeDetectorCtor({ formats: ["qr_code"] });
+              }
+              const barcodes = await barcodeDetectorRef.current.detect(video);
               if (barcodes.length > 0 && barcodes[0].rawValue) {
                 resultText = barcodes[0].rawValue;
               }
@@ -301,6 +305,7 @@ export function CameraQrScanner({
             const canvas = canvasRef.current;
             const ctx = canvas.getContext("2d", { willReadFrequently: true });
             if (ctx) {
+              // Pass A: Full frame (downscaled for speed)
               const maxDim = 800;
               let w = video.videoWidth;
               let h = video.videoHeight;
@@ -325,6 +330,34 @@ export function CameraQrScanner({
                 }
               } catch {
                 // Ignore canvas read error
+              }
+
+              // Pass B: Center viewfinder crop at native video resolution (sharpest detail for dense QR codes)
+              if (!resultText && video.videoWidth > 300 && video.videoHeight > 300) {
+                try {
+                  const cropRatio = 0.65;
+                  const cropDim = Math.round(Math.min(video.videoWidth, video.videoHeight) * cropRatio);
+                  const sx = Math.round((video.videoWidth - cropDim) / 2);
+                  const sy = Math.round((video.videoHeight - cropDim) / 2);
+
+                  // Scale crop down to at most 600px for instant decoding
+                  const targetCropDim = Math.min(cropDim, 600);
+                  if (canvas.width !== targetCropDim || canvas.height !== targetCropDim) {
+                    canvas.width = targetCropDim;
+                    canvas.height = targetCropDim;
+                  }
+                  ctx.drawImage(video, sx, sy, cropDim, cropDim, 0, 0, targetCropDim, targetCropDim);
+
+                  const cropData = ctx.getImageData(0, 0, targetCropDim, targetCropDim);
+                  const cropDecoded = jsQR(cropData.data, targetCropDim, targetCropDim, {
+                    inversionAttempts: "attemptBoth",
+                  });
+                  if (cropDecoded && cropDecoded.data) {
+                    resultText = cropDecoded.data;
+                  }
+                } catch {
+                  // Ignore crop error
+                }
               }
             }
           }

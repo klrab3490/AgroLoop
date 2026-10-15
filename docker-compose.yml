@@ -24,6 +24,28 @@ services:
       - agroloop-network
 
   # ==========================================================
+  # Dedicated Database Migration Service (Flyway)
+  # ==========================================================
+  migration:
+    image: flyway/flyway:10-alpine
+    container_name: agroloop-migration
+    restart: "no"
+    command: >
+      -url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-agroloop}
+      -user=${POSTGRES_USER:-postgres}
+      -password=${POSTGRES_PASSWORD:-postgres}
+      -baselineOnMigrate=true
+      -baselineVersion=0
+      migrate
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agroloop-network
+
+  # ==========================================================
   # Java Spring Boot Server Service
   # ==========================================================
   app:
@@ -50,6 +72,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     volumes:
       - agroloop_uploads:/app/uploads
     networks:

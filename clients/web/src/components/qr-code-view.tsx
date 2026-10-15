@@ -38,11 +38,13 @@ export function QrCodeView({
   }
 
   const moduleCount = matrix.length;
-  const cellSize = size / moduleCount;
+  const quietZone = 2;
+  const totalModules = moduleCount + quietZone * 2;
+  const cellSize = size / totalModules;
 
   return (
     <div
-      className={`inline-block p-3 rounded-xl border border-slate-200 shadow-sm ${className}`}
+      className={`inline-block p-2 rounded-xl border border-slate-200 shadow-sm ${className}`}
       style={{ backgroundColor: bgColor }}
     >
       <svg
@@ -58,8 +60,8 @@ export function QrCodeView({
             isDark ? (
               <rect
                 key={`${r}-${c}`}
-                x={c * cellSize}
-                y={r * cellSize}
+                x={(c + quietZone) * cellSize}
+                y={(r + quietZone) * cellSize}
                 width={cellSize}
                 height={cellSize}
                 fill={fgColor}

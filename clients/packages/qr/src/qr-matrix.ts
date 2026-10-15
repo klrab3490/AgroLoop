@@ -285,6 +285,7 @@ const QRUtil = {
   ],
   G15: (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | 1,
   G15_MASK: (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1),
+  G18: (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | 1,
 
   getBCHTypeInfo(data: number): number {
     let d = data << 10;
@@ -292,6 +293,14 @@ const QRUtil = {
       d ^= QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15));
     }
     return ((data << 10) | d) ^ QRUtil.G15_MASK;
+  },
+
+  getBCHTypeNumber(data: number): number {
+    let d = data << 12;
+    while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) {
+      d ^= QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18));
+    }
+    return (data << 12) | d;
   },
 
   getBCHDigit(data: number): number {
@@ -369,9 +378,12 @@ export class QRCodeModel {
     this.setupPositionProbePattern(0, 0);
     this.setupPositionProbePattern(this.moduleCount - 7, 0);
     this.setupPositionProbePattern(0, this.moduleCount - 7);
-    this.setupTimingPattern();
     this.setupPositionAdjustPattern();
+    this.setupTimingPattern();
     this.setupTypeInfo(false, 0);
+    if (this.typeNumber >= 7) {
+      this.setupTypeNumber(false);
+    }
 
     const data = this.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
     this.mapData(data, 0);
@@ -446,6 +458,15 @@ export class QRCodeModel {
       else this.modules[8][15 - i - 1] = mod;
     }
     this.modules[this.moduleCount - 8][8] = !test;
+  }
+
+  private setupTypeNumber(test: boolean): void {
+    const bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+    for (let i = 0; i < 18; i++) {
+      const mod = !test && ((bits >> i) & 1) === 1;
+      this.modules[Math.floor(i / 3)][(i % 3) + this.moduleCount - 8 - 3] = mod;
+      this.modules[(i % 3) + this.moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+    }
   }
 
   private mapData(data: number[], maskPattern: number): void {
