@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +26,39 @@ export default function CheckoutPage() {
   const householdBalance = balanceData?.availableBalance ?? 0;
   const isInsufficient = isAuthenticated && householdBalance < estimatedTotalTokens;
 
+  // Group cart items by farmer (same farmer -> one order; different farmers -> separate orders)
+  const farmerPackages = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        farmerId?: number;
+        farmerName: string;
+        items: typeof hydratedItems;
+        totalTokens: number;
+      }
+    >();
+
+    for (const item of hydratedItems) {
+      const farmerId = item.product?.farmerId;
+      const farmerName = item.product?.farmerName || "Regional Farm Partner";
+      const key = farmerId != null ? `id-${farmerId}` : `name-${farmerName}`;
+
+      const existing = map.get(key) || {
+        farmerId,
+        farmerName,
+        items: [],
+        totalTokens: 0,
+      };
+
+      existing.items.push(item);
+      const itemSubtotal = (item.product?.price ?? 0) * item.quantity;
+      existing.totalTokens += itemSubtotal;
+      map.set(key, existing);
+    }
+
+    return Array.from(map.values());
+  }, [hydratedItems]);
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
@@ -42,18 +75,30 @@ export default function CheckoutPage() {
     setErrorMsg(null);
 
     try {
-      // Backend validates inventory, prices, and balance authoritatively under pessimistic locks
-      const orderRequest = {
-        deliveryAddress: shippingAddress || "Registered Address",
-        items: hydratedItems.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-        })),
-      };
+      const createdOrders = [];
+      const deliveryAddress = shippingAddress.trim() || "Registered Address";
 
-      const createdOrder = await webApiClient.orders.createOrder(orderRequest);
+      // Place a separate order for each farmer package
+      for (const pkg of farmerPackages) {
+        const orderRequest = {
+          deliveryAddress,
+          items: pkg.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+        };
+
+        const createdOrder = await webApiClient.orders.createOrder(orderRequest);
+        createdOrders.push(createdOrder);
+      }
+
       clearCart();
-      router.push(`/orders/${createdOrder.id}`);
+
+      if (createdOrders.length === 1) {
+        router.push(`/orders/${createdOrders[0].id}`);
+      } else {
+        router.push(`/orders?placed=true&count=${createdOrders.length}`);
+      }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Failed to place order. Please try again.");
     } finally {
@@ -113,24 +158,63 @@ export default function CheckoutPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Order Items Review & Shipping */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <h3 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
-              Selected Products ({hydratedItems.length})
-            </h3>
-            <div className="divide-y divide-slate-100">
-              {hydratedItems.map((item) => (
-                <div key={item.productId} className="py-3 flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-xs text-slate-800">
-                      {item.product?.name ?? `Product #${item.productId}`}
-                    </h4>
-                    <p className="text-2xs text-slate-500">
-                      {item.quantity} × {item.product?.price ?? 0} EcoTokens
-                    </p>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-900">
+                  Marketplace Packages ({farmerPackages.length} {farmerPackages.length === 1 ? "Order" : "Orders"})
+                </h3>
+                <p className="text-2xs text-slate-500 mt-0.5">
+                  {farmerPackages.length > 1
+                    ? "Items from different farmers are created as separate orders for independent fulfillment."
+                    : "All items belong to the same producer and will be fulfilled in a single order."}
+                </p>
+              </div>
+              <span className="text-2xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200/60 self-start sm:self-auto">
+                {hydratedItems.length} {hydratedItems.length === 1 ? "Item" : "Items"} Total
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {farmerPackages.map((pkg, idx) => (
+                <div
+                  key={pkg.farmerId ?? pkg.farmerName}
+                  className="rounded-xl border border-slate-200/90 bg-slate-50/50 p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🚜</span>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900">
+                          Order {idx + 1}: {pkg.farmerName}
+                        </h4>
+                        <p className="text-3xs text-slate-500">
+                          {pkg.items.length} {pkg.items.length === 1 ? "item" : "items"} direct from producer
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                      {pkg.totalTokens} Tokens
+                    </span>
                   </div>
-                  <span className="text-xs font-bold text-emerald-700">
-                    {(item.product?.price ?? 0) * item.quantity} Tokens
-                  </span>
+
+                  <div className="divide-y divide-slate-100 bg-white rounded-lg px-3 py-1 border border-slate-100">
+                    {pkg.items.map((item) => (
+                      <div key={item.productId} className="py-2.5 flex items-center justify-between">
+                        <div>
+                          <h5 className="font-bold text-xs text-slate-800">
+                            {item.product?.name ?? `Product #${item.productId}`}
+                          </h5>
+                          <p className="text-2xs text-slate-500">
+                            {item.quantity} × {item.product?.price ?? 0} EcoTokens
+                          </p>
+                        </div>
+                        <span className="text-xs font-semibold text-slate-700">
+                          {(item.product?.price ?? 0) * item.quantity} Tokens
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -190,7 +274,11 @@ export default function CheckoutPage() {
               disabled={isSubmitting || isInsufficient}
               className="w-full py-3.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 transition shadow-md shadow-emerald-200"
             >
-              {isSubmitting ? "Processing Transaction..." : "Confirm & Pay with EcoTokens"}
+              {isSubmitting
+                ? "Processing Orders..."
+                : farmerPackages.length > 1
+                ? `Confirm & Place ${farmerPackages.length} Orders (${estimatedTotalTokens} Tokens)`
+                : `Confirm & Place Order (${estimatedTotalTokens} Tokens)`}
             </button>
 
             <p className="text-3xs text-slate-400 text-center leading-tight">

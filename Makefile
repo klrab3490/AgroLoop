@@ -236,6 +236,11 @@ test-e2e: ## Run Playwright end-to-end tests for Web and Desktop
 	@pnpm --dir clients test:e2e
 	@echo -e "$(GREEN)✓ E2E tests passed.$(RESET)"
 
+test-e2e-users: ## Run Playwright E2E tests across all seeded users
+	@echo -e "$(CYAN)Running Playwright E2E tests across all 7 seeded platform users...$(RESET)"
+	@pnpm --dir clients test:e2e:users
+	@echo -e "$(GREEN)✓ Seeded users E2E tests passed.$(RESET)"
+
 test-e2e-ui: ## Launch Playwright interactive UI test runner
 	@pnpm --dir clients test:e2e:ui
 

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import jsQR from "jsqr";
+import { decodeQrFromImage } from "../utils/qr-image-decoder";
 
 export interface CameraQrScannerProps {
   onScan: (decodedText: string) => void;
@@ -35,6 +36,7 @@ export function CameraQrScanner({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const lastScanTimeRef = useRef<number>(0);
@@ -371,88 +373,30 @@ export function CameraQrScanner({
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsProcessingFile(true);
     setErrorMessage(null);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        let decodedText: string | null = null;
-
-        // Downscale high-resolution smartphone camera photos (e.g. 12MP-48MP from native camera)
-        // to max 1200px to prevent browser out-of-memory crashes and speed up decoding
-        const maxUploadDim = 1200;
-        let w = img.width;
-        let h = img.height;
-        if (w > maxUploadDim || h > maxUploadDim) {
-          const ratio = Math.min(maxUploadDim / w, maxUploadDim / h);
-          w = Math.round(w * ratio);
-          h = Math.round(h * ratio);
-        }
-
-        // Try BarcodeDetector first on image
-        if ("BarcodeDetector" in window) {
-          try {
-            const BarcodeDetectorCtor = (window as unknown as {
-              BarcodeDetector: new (opts: { formats: string[] }) => {
-                detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue: string }>>;
-              };
-            }).BarcodeDetector;
-            const detector = new BarcodeDetectorCtor({ formats: ["qr_code"] });
-            const barcodes = await detector.detect(img);
-            if (barcodes.length > 0 && barcodes[0].rawValue) {
-              decodedText = barcodes[0].rawValue;
-            }
-          } catch {
-            // Fall through to jsQR
-          }
-        }
-
-        // Try jsQR fallback with downscaled canvas
-        if (!decodedText && canvasRef.current) {
-          const canvas = canvasRef.current;
-          const ctx = canvas.getContext("2d", { willReadFrequently: true });
-          if (ctx) {
-            canvas.width = w;
-            canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            try {
-              const imgData = ctx.getImageData(0, 0, w, h);
-              const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
-                inversionAttempts: "attemptBoth",
-              });
-              if (decoded && decoded.data) {
-                decodedText = decoded.data;
-              }
-            } catch {
-              // Ignore
-            }
-          }
-        }
-
-        setIsProcessingFile(false);
-        if (decodedText) {
-          handleSuccessfulScan(decodedText);
-        } else {
-          setErrorMessage("No QR code detected in the uploaded image. Please ensure the QR pass is clear and well-lit.");
-        }
-      };
-      img.onerror = () => {
-        setIsProcessingFile(false);
-        setErrorMessage("Could not parse the selected image file.");
-      };
-      if (event.target?.result) {
-        img.src = event.target.result as string;
+    try {
+      const decodedText = await decodeQrFromImage(file);
+      setIsProcessingFile(false);
+      if (decodedText) {
+        handleSuccessfulScan(decodedText);
+      } else {
+        setErrorMessage(
+          "No QR code detected in the selected photo. Please position the camera closer to the QR code, ensure good lighting, or enter the code manually."
+        );
       }
-    };
-    reader.readAsDataURL(file);
-    // Reset file input so user can choose same file again if desired
-    e.target.value = "";
+    } catch {
+      setIsProcessingFile(false);
+      setErrorMessage("Could not parse image file. Please try another picture or enter passcode.");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
+    }
   };
 
   const handleSimulateScan = () => {
@@ -465,8 +409,17 @@ export function CameraQrScanner({
     >
       {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
+      {/* File input for Photo Library / Gallery / File upload */}
       <input
         ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+      {/* File input for direct Camera Snap (mobile) */}
+      <input
+        ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture="environment"
@@ -601,18 +554,27 @@ export function CameraQrScanner({
             <div className="flex flex-col items-center gap-2 pt-2 w-full max-w-xs">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => cameraInputRef.current?.click()}
                 disabled={isProcessingFile}
                 className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2"
               >
                 <span>📸</span>
                 <span>{isProcessingFile ? "Scanning Image..." : "Snap Photo with Camera"}</span>
               </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessingFile}
+                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition border border-slate-700 flex items-center justify-center gap-2"
+              >
+                <span>🖼️</span>
+                <span>Choose Photo / Screenshot</span>
+              </button>
               {!isInsecureOrigin && (
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-2xs font-semibold rounded-lg transition border border-slate-700"
+                  className="w-full py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-2xs font-semibold rounded-lg transition border border-slate-800"
                 >
                   🔄 Retry Live Camera
                 </button>
@@ -627,12 +589,23 @@ export function CameraQrScanner({
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isProcessingFile}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white text-2xs font-bold rounded-lg border border-slate-700/80 transition flex items-center gap-1.5"
+            title="Snap a photo of the QR code using native camera"
+          >
+            <span>📸</span>
+            <span>{isProcessingFile ? "Scanning..." : "Snap Photo"}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isProcessingFile}
             className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 hover:text-white text-2xs font-bold rounded-lg border border-slate-700/80 transition flex items-center gap-1.5"
+            title="Upload a saved QR photo or screenshot from gallery"
           >
-            <span>📷</span>
-            <span>{isProcessingFile ? "Scanning Image..." : "Upload / Snap Photo"}</span>
+            <span>🖼️</span>
+            <span>Gallery</span>
           </button>
 
           {simulateSampleCode && (

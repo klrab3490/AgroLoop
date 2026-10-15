@@ -245,13 +245,33 @@ public class MarketplaceController {
         }
 
         try {
-            Order order = marketplaceService.checkout(authentication.getName(), cart, checkoutRequest);
+            // Group cart items by farmer so different farmers receive separate orders,
+            // while items from the same farmer are grouped into one single order.
+            java.util.Map<String, java.util.List<com.agroloop.dto.CartItemDto>> itemsByFarmer = cart.getItems().stream()
+                    .collect(java.util.stream.Collectors.groupingBy(item ->
+                            item.getFarmerName() != null && !item.getFarmerName().isBlank()
+                                    ? item.getFarmerName()
+                                    : "Unknown Farmer"
+                    ));
+
+            Order lastOrder = null;
+            for (java.util.List<com.agroloop.dto.CartItemDto> farmerItems : itemsByFarmer.values()) {
+                CartDto subCart = new CartDto(farmerItems);
+                lastOrder = marketplaceService.checkout(authentication.getName(), subCart, checkoutRequest);
+            }
 
             // Clear session cart strictly upon successful return from the checkout transaction
             cartService.clearCart(session);
 
-            redirectAttributes.addFlashAttribute("successMessage", "Order #" + order.getId() + " placed successfully!");
-            return "redirect:/marketplace/orders/" + order.getId() + "?success=true";
+            if (itemsByFarmer.size() > 1) {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        itemsByFarmer.size() + " separate orders placed across your selected producers!");
+                return "redirect:/marketplace/orders?success=true";
+            } else if (lastOrder != null) {
+                redirectAttributes.addFlashAttribute("successMessage", "Order #" + lastOrder.getId() + " placed successfully!");
+                return "redirect:/marketplace/orders/" + lastOrder.getId() + "?success=true";
+            }
+            return "redirect:/marketplace/orders";
 
         } catch (InsufficientStockException | InsufficientTokensException | IllegalStateException ex) {
             model.addAttribute("cart", cart);

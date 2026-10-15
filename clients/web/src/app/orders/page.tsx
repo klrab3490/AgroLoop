@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useCart } from "@/lib/cart-context";
@@ -36,6 +36,17 @@ export default function OrdersPage() {
   const [activeFilter, setActiveFilter] = useState<OrderFilter>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [placedInfo, setPlacedInfo] = useState<{ count: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("placed") === "true") {
+        const count = parseInt(params.get("count") || "1", 10);
+        setPlacedInfo({ count });
+      }
+    }
+  }, []);
 
   const handleCopyOrderId = (id: number) => {
     navigator.clipboard.writeText(`ECO-ORD-${id}`);
@@ -149,6 +160,35 @@ export default function OrdersPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Newly Placed Orders Notification Banner */}
+      {placedInfo && (
+        <div className="bg-emerald-50/90 border border-emerald-300/80 rounded-2xl p-4 flex items-center justify-between gap-3 text-emerald-950 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🎉</span>
+            <div>
+              <h4 className="font-bold text-xs text-emerald-900">
+                {placedInfo.count > 1
+                  ? `${placedInfo.count} Orders Successfully Created Across Your Selected Farmers!`
+                  : "Order Successfully Placed!"}
+              </h4>
+              <p className="text-2xs text-emerald-800 mt-0.5 leading-relaxed">
+                {placedInfo.count > 1
+                  ? "Items belonging to different farmers have been split into separate orders so each producer can independently prepare, pack, and dispatch their package."
+                  : "Your order has been forwarded to the producer for direct preparation and fulfillment."}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPlacedInfo(null)}
+            className="text-emerald-700 hover:text-emerald-950 text-xs font-bold px-2 py-1 shrink-0"
+            aria-label="Dismiss banner"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Role Notice for Farmers */}
       {user?.role === "ROLE_FARMER" && (
