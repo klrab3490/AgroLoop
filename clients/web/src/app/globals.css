@@ -29,3 +29,16 @@ body {
     opacity: 0.8;
   }
 }
+
+@layer utilities {
+  .scrollbar-none::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none,
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+

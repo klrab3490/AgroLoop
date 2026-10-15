@@ -33,6 +33,7 @@ export interface DoorstepWeighInModalProps {
   pickup: PickupRequestApiResponse | null;
   stopId?: number | null;
   routeId?: number | null;
+  initialPasscode?: string;
   onSuccess?: (result: {
     pickupId: number;
     weight: number;
@@ -51,6 +52,7 @@ export function DoorstepWeighInModal({
   pickup,
   stopId,
   routeId,
+  initialPasscode,
   onSuccess,
   onNavigateNextStop,
   hasNextStop = false,
@@ -103,7 +105,7 @@ export function DoorstepWeighInModal({
       setWeightInput(initialWeight);
       setQualityGrade("GRADE_A");
       setDropdownOpen(false);
-      setPasscode("");
+      setPasscode(initialPasscode || "");
       setWeightError(null);
       setPasscodeError(null);
       setApiErrorMessage(null);
@@ -120,7 +122,14 @@ export function DoorstepWeighInModal({
         setCurrentStep("form");
       }
     }
-  }, [pickup]);
+  }, [pickup, initialPasscode]);
+
+  useEffect(() => {
+    if (initialPasscode) {
+      setPasscode(initialPasscode);
+      setPasscodeError(null);
+    }
+  }, [initialPasscode]);
 
   if (!isOpen || !pickup) return null;
 

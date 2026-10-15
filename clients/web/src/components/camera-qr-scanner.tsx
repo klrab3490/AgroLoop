@@ -28,6 +28,7 @@ export function CameraQrScanner({
   const [hasTorch, setHasTorch] = useState<boolean>(false);
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isInsecureOrigin, setIsInsecureOrigin] = useState<boolean>(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState<boolean>(false);
 
@@ -64,37 +65,106 @@ export function CameraQrScanner({
   const startCamera = useCallback(async () => {
     stopCamera();
     setErrorMessage(null);
+    setIsInsecureOrigin(false);
 
-    if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setErrorMessage("Camera access is not supported by your browser environment.");
+    if (typeof window === "undefined") return;
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      if (!window.isSecureContext) {
+        setIsInsecureOrigin(true);
+        setErrorMessage(
+          "Mobile browsers (Safari/Chrome) disable live video streams over insecure HTTP connections (like 192.168.x.x). Please tap 'Snap Photo with Camera' below to scan."
+        );
+      } else {
+        setErrorMessage(
+          "Camera access is not supported by your browser environment. Please use 'Snap Photo with Camera' or manual passcode entry."
+        );
+      }
       return;
     }
 
     try {
-      let stream: MediaStream;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
+      let stream: MediaStream | null = null;
+      let lastErr: unknown = null;
+
+      // Progressive constraints for mobile and desktop browser compatibility:
+      // 1. Mobile-friendly ideal facingMode with reasonable portrait/landscape resolution
+      // 2. facingMode only (lets mobile OS pick native sensor resolution without overconstraining)
+      // 3. Fallback to basic video: true
+      const constraintCandidates: MediaStreamConstraints[] = [
+        {
           video: {
             facingMode: { ideal: facingMode },
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
           audio: false,
-        });
-      } catch {
-        // Fallback constraint if ideal facingMode is rejected
-        stream = await navigator.mediaDevices.getUserMedia({
+        },
+        {
+          video: {
+            facingMode: { ideal: facingMode },
+          },
+          audio: false,
+        },
+        {
+          video: {
+            facingMode: facingMode,
+          },
+          audio: false,
+        },
+        {
           video: true,
           audio: false,
-        });
+        },
+      ];
+
+      for (const constraints of constraintCandidates) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (stream) break;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+
+      if (!stream) {
+        throw lastErr || new Error("Failed to acquire camera stream");
       }
 
       streamRef.current = stream;
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute("playsinline", "true");
-        await videoRef.current.play();
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        // Strictly required for iOS Safari and mobile WebViews:
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.setAttribute("playsinline", "true");
+        video.setAttribute("webkit-playsinline", "true");
+
+        // Wait for video metadata to be loaded so dimensions and decoder are ready
+        await new Promise<void>((resolve) => {
+          if (video.readyState >= 1 && video.videoWidth > 0) {
+            resolve();
+          } else {
+            const onLoaded = () => {
+              video.removeEventListener("loadedmetadata", onLoaded);
+              resolve();
+            };
+            video.addEventListener("loadedmetadata", onLoaded);
+            setTimeout(resolve, 600);
+          }
+        });
+
+        try {
+          await video.play();
+        } catch (playErr) {
+          console.warn("video.play() initial attempt:", playErr);
+          video.muted = true;
+          await video.play();
+        }
+
         setIsCameraActive(true);
       }
 
@@ -131,7 +201,7 @@ export function CameraQrScanner({
       ) {
         setErrorMessage("Camera is currently in use by another application. Please close other camera apps.");
       } else {
-        setErrorMessage("Could not initialize camera stream. Please try file upload or manual input.");
+        setErrorMessage("Could not initialize camera stream. Please try 'Upload / Snap Photo' or manual entry.");
       }
       setIsCameraActive(false);
     }
@@ -200,8 +270,8 @@ export function CameraQrScanner({
       const video = videoRef.current;
       if (video && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
         const now = performance.now();
-        // Throttle decoding to ~120ms intervals
-        if (now - lastScanTimeRef.current >= 120) {
+        // Throttle decoding to ~100ms intervals
+        if (now - lastScanTimeRef.current >= 100) {
           lastScanTimeRef.current = now;
 
           let resultText: string | null = null;
@@ -237,14 +307,16 @@ export function CameraQrScanner({
                 w = Math.round(w * ratio);
                 h = Math.round(h * ratio);
               }
-              canvas.width = w;
-              canvas.height = h;
+              if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w;
+                canvas.height = h;
+              }
               ctx.drawImage(video, 0, 0, w, h);
 
               try {
                 const imgData = ctx.getImageData(0, 0, w, h);
                 const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
-                  inversionAttempts: "dontInvert",
+                  inversionAttempts: "attemptBoth",
                 });
                 if (decoded && decoded.data) {
                   resultText = decoded.data;
@@ -312,7 +384,18 @@ export function CameraQrScanner({
       img.onload = async () => {
         let decodedText: string | null = null;
 
-        // Try BarcodeDetector first
+        // Downscale high-resolution smartphone camera photos (e.g. 12MP-48MP from native camera)
+        // to max 1200px to prevent browser out-of-memory crashes and speed up decoding
+        const maxUploadDim = 1200;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxUploadDim || h > maxUploadDim) {
+          const ratio = Math.min(maxUploadDim / w, maxUploadDim / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+
+        // Try BarcodeDetector first on image
         if ("BarcodeDetector" in window) {
           try {
             const BarcodeDetectorCtor = (window as unknown as {
@@ -326,20 +409,20 @@ export function CameraQrScanner({
               decodedText = barcodes[0].rawValue;
             }
           } catch {
-            // Fall through
+            // Fall through to jsQR
           }
         }
 
-        // Try jsQR fallback
+        // Try jsQR fallback with downscaled canvas
         if (!decodedText && canvasRef.current) {
           const canvas = canvasRef.current;
           const ctx = canvas.getContext("2d", { willReadFrequently: true });
           if (ctx) {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
             try {
-              const imgData = ctx.getImageData(0, 0, img.width, img.height);
+              const imgData = ctx.getImageData(0, 0, w, h);
               const decoded = jsQR(imgData.data, imgData.width, imgData.height, {
                 inversionAttempts: "attemptBoth",
               });
@@ -356,7 +439,7 @@ export function CameraQrScanner({
         if (decodedText) {
           handleSuccessfulScan(decodedText);
         } else {
-          setErrorMessage("No QR code detected in the uploaded image. Please try a clearer picture.");
+          setErrorMessage("No QR code detected in the uploaded image. Please ensure the QR pass is clear and well-lit.");
         }
       };
       img.onerror = () => {
@@ -507,27 +590,33 @@ export function CameraQrScanner({
         {errorMessage && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center bg-slate-950/95 space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl">
-              ⚠️
+              {isInsecureOrigin ? "🔒" : "⚠️"}
             </div>
             <div className="max-w-xs space-y-1">
-              <p className="text-xs font-bold text-slate-200">Camera Notice</p>
-              <p className="text-2xs text-slate-400">{errorMessage}</p>
+              <p className="text-xs font-bold text-slate-200">
+                {isInsecureOrigin ? "HTTP Connection Notice" : "Camera Notice"}
+              </p>
+              <p className="text-2xs text-slate-400 leading-relaxed">{errorMessage}</p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={startCamera}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-2xs font-bold rounded-lg transition border border-slate-700"
-              >
-                🔄 Retry Camera
-              </button>
+            <div className="flex flex-col items-center gap-2 pt-2 w-full max-w-xs">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-2xs font-bold rounded-lg transition shadow-xs"
+                disabled={isProcessingFile}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white text-xs font-bold rounded-xl transition shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2"
               >
-                📁 Upload Photo
+                <span>📸</span>
+                <span>{isProcessingFile ? "Scanning Image..." : "Snap Photo with Camera"}</span>
               </button>
+              {!isInsecureOrigin && (
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-2xs font-semibold rounded-lg transition border border-slate-700"
+                >
+                  🔄 Retry Live Camera
+                </button>
+              )}
             </div>
           </div>
         )}

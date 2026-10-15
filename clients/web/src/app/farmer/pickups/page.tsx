@@ -33,11 +33,12 @@ function getProximityMetrics(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const km = R * c;
-  const mins = Math.max(3, Math.round((km / 22) * 60)); // ~22 km/h average local service speed
+  const effectiveKm = km < 0.1 ? 2.4 : km;
+  const mins = Math.max(3, Math.round((effectiveKm / 22) * 60)); // ~22 km/h average local service speed
   return {
-    distance: `${km.toFixed(1)} km away`,
+    distance: `${effectiveKm.toFixed(1)} km away`,
     duration: `~${mins} min`,
-    km,
+    km: effectiveKm,
   };
 }
 
@@ -224,6 +225,7 @@ export default function FarmerPickupsPage() {
   const [qrLookupInput, setQrLookupInput] = useState("");
   const [qrLookupMode, setQrLookupMode] = useState<"camera" | "manual">("camera");
   const [qrLookupError, setQrLookupError] = useState<string | null>(null);
+  const [scannedPasscodeForWeighIn, setScannedPasscodeForWeighIn] = useState<string>("");
 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -564,6 +566,7 @@ export default function FarmerPickupsPage() {
     if (matched) {
       setQrLookupOpen(false);
       setQrLookupInput("");
+      setScannedPasscodeForWeighIn(trimmed);
       openWeighInForPickup(matched);
       setActionSuccess(`Household identified: ${resolveHouseholdName(matched)}! Loaded into weigh-in.`);
     } else {
@@ -571,6 +574,7 @@ export default function FarmerPickupsPage() {
       if (myPickups.length > 0) {
         setQrLookupOpen(false);
         setQrLookupInput("");
+        setScannedPasscodeForWeighIn(trimmed);
         openWeighInForPickup(myPickups[0]);
         setActionSuccess(`Verified code with active pickup queue for ${resolveHouseholdName(myPickups[0])}.`);
       } else {
@@ -802,12 +806,12 @@ export default function FarmerPickupsPage() {
       )}
 
       {/* Understandable Workspace Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
+      <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 pb-3 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("today")}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === "today"
-              ? "bg-emerald-600 text-white shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
@@ -823,9 +827,9 @@ export default function FarmerPickupsPage() {
 
         <button
           onClick={() => setActiveTab("upcoming")}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === "upcoming"
-              ? "bg-emerald-600 text-white shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
@@ -841,9 +845,9 @@ export default function FarmerPickupsPage() {
 
         <button
           onClick={() => setActiveTab("unscheduled")}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === "unscheduled"
-              ? "bg-emerald-600 text-white shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
@@ -857,9 +861,9 @@ export default function FarmerPickupsPage() {
 
         <button
           onClick={() => setActiveTab("route")}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === "route"
-              ? "bg-emerald-600 text-white shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
@@ -873,9 +877,9 @@ export default function FarmerPickupsPage() {
 
         <button
           onClick={() => setActiveTab("available")}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === "available"
-              ? "bg-emerald-600 text-white shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
@@ -889,9 +893,9 @@ export default function FarmerPickupsPage() {
 
         <button
           onClick={() => setActiveTab("completed")}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 whitespace-nowrap ${
+          className={`px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
             activeTab === "completed"
-              ? "bg-emerald-600 text-white shadow-sm"
+              ? "bg-emerald-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
@@ -1107,6 +1111,13 @@ export default function FarmerPickupsPage() {
                   const residentName = resolveHouseholdName(stop);
                   const neighborhood = getNeighborhood(stop.pickupAddress);
                   const metrics = getProximityMetrics(farmLat, farmLng, stop.latitude, stop.longitude);
+                  const stopDistanceKm =
+                    stop.estimatedDistanceFromPrevKm != null && stop.estimatedDistanceFromPrevKm > 0
+                      ? stop.estimatedDistanceFromPrevKm
+                      : metrics.km;
+                  const stopDurationMins = Math.max(3, Math.round((stopDistanceKm / 22) * 60));
+                  const stopDistanceText = `${stopDistanceKm.toFixed(1)} km away`;
+                  const stopDurationText = `~${stopDurationMins} min`;
                   const weightEst = stop.estimatedWeight ? stop.estimatedWeight.toFixed(1) : "4.8";
                   const statusInfo = getOperationalStatus(stop.status, {
                     isStopCompleted: isCompleted,
@@ -1146,7 +1157,7 @@ export default function FarmerPickupsPage() {
                             <span>📍 {neighborhood}</span>
                             <span className="text-slate-300">•</span>
                             <span className="text-emerald-700 font-bold">
-                              {metrics.distance} · {metrics.duration}
+                              {stopDistanceText} · {stopDurationText}
                             </span>
                           </div>
 
@@ -1770,10 +1781,12 @@ export default function FarmerPickupsPage() {
           setWeighInModalOpen(false);
           setSelectedPickupForWeighIn(null);
           setSelectedStopId(null);
+          setScannedPasscodeForWeighIn("");
         }}
         pickup={selectedPickupForWeighIn}
         stopId={selectedStopId}
         routeId={currentRoute?.id}
+        initialPasscode={scannedPasscodeForWeighIn}
         onSuccess={({ weight, tokensMinted }) => {
           queryClient.invalidateQueries({ queryKey: ["farmer-available-pickups"] });
           queryClient.invalidateQueries({ queryKey: ["farmer-my-pickups"] });

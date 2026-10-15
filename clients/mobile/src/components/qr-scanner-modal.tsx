@@ -198,8 +198,15 @@ export function QrScannerModal({
                     <View style={styles.scanLaser} />
                   </View>
                   <Text style={styles.viewfinderHint}>
-                    Align household QR code within the viewfinder frame
+                    Live camera scanning is active in the AgroLoop Web UI. In mobile app, switch to &quot;Manual Pass Code&quot; to enter the code shown on resident&apos;s pass.
                   </Text>
+
+                  <TouchableOpacity
+                    style={[styles.actionBtn, styles.manualSwitchBtn]}
+                    onPress={() => setActiveTab("MANUAL")}
+                  >
+                    <Text style={styles.manualSwitchBtnText}>⌨️ Enter 8-Character Passcode Instead</Text>
+                  </TouchableOpacity>
 
                   {/* Dev / Simulator Scan Trigger */}
                   <TouchableOpacity
@@ -210,7 +217,7 @@ export function QrScannerModal({
                     {isVerifying ? (
                       <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
-                      <Text style={styles.actionBtnText}>Simulate Camera Scan</Text>
+                      <Text style={styles.actionBtnText}>⚡ Simulate Camera Scan (Dev / Test)</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -426,6 +433,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     marginTop: 12,
+  },
+  manualSwitchBtn: {
+    backgroundColor: "#0f172a",
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  manualSwitchBtnText: {
+    color: "#38bdf8",
+    fontSize: 13,
+    fontWeight: "700",
   },
   simulateBtn: {
     backgroundColor: "#059669",

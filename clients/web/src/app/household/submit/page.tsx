@@ -242,8 +242,9 @@ export default function SubmitWastePage() {
           <label className="block text-xs font-bold text-slate-700">Estimated Weight (kg)</label>
           <input
             type="number"
-            step="0.5"
+            step="any"
             min="0.1"
+            max="500"
             required
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
