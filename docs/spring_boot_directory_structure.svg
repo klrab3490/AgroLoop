@@ -1,0 +1,266 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1020" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    <linearGradient id="panelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a2234" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <style>
+    .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 800; font-size: 30px; fill: url(#headerGrad); }
+    .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 400; font-size: 14px; fill: #94a3b8; }
+    .code-font { font-family: "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace; font-size: 13px; }
+    .dir-text { fill: #f1f5f9; font-weight: 600; }
+    .pkg-text { fill: #38bdf8; font-weight: 600; }
+    .file-text { fill: #cbd5e1; }
+    .comment-text { fill: #64748b; font-style: italic; }
+    .badge-text { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11px; font-weight: 700; text-anchor: middle; }
+    .layer-title { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 15px; font-weight: 700; fill: #f8fafc; }
+    .layer-desc { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12px; fill: #94a3b8; line-height: 1.5; }
+    .tree-line { stroke: #334155; stroke-width: 1.5; stroke-dasharray: 2 2; }
+  </style>
+
+  <!-- Background -->
+  <rect width="1440" height="1020" fill="url(#bgGrad)" />
+  
+  <!-- Subtle Grid Accent -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" />
+    </pattern>
+    <rect width="1440" height="1020" fill="url(#grid)" />
+  </g>
+
+  <!-- Header Banner -->
+  <g transform="translate(60, 45)">
+    <!-- Tech Badges -->
+    <rect x="0" y="0" width="105" height="26" rx="13" fill="#0284c7" fill-opacity="0.2" stroke="#38bdf8" stroke-width="1.2"/>
+    <text x="52" y="17" class="badge-text" fill="#38bdf8">JAVA 21 / 17</text>
+
+    <rect x="115" y="0" width="130" height="26" rx="13" fill="#16a34a" fill-opacity="0.2" stroke="#4ade80" stroke-width="1.2"/>
+    <text x="180" y="17" class="badge-text" fill="#4ade80">SPRING BOOT 3.x</text>
+
+    <rect x="255" y="0" width="95" height="26" rx="13" fill="#9333ea" fill-opacity="0.2" stroke="#c084fc" stroke-width="1.2"/>
+    <text x="302" y="17" class="badge-text" fill="#c084fc">MAVEN / MVC</text>
+
+    <text x="0" y="65" class="title">Standard Backend Directory Structure</text>
+    <text x="0" y="90" class="subtitle">Production-ready Layered Architecture &amp; Clean Package Layout for Enterprise Spring Boot Applications</text>
+  </g>
+
+  <!-- LEFT PANEL: Directory Tree (macOS Window style) -->
+  <g transform="translate(60, 160)" filter="url(#shadow)">
+    <!-- Window Container -->
+    <rect width="660" height="800" rx="14" fill="url(#panelGrad)" stroke="#1e293b" stroke-width="1.5" />
+    
+    <!-- Titlebar -->
+    <path d="M 0 14 Q 0 0 14 0 L 646 0 Q 660 0 660 14 L 660 44 L 0 44 Z" fill="#0f172a" />
+    <line x1="0" y1="44" x2="660" y2="44" stroke="#1e293b" stroke-width="1.2" />
+    
+    <!-- Traffic Lights -->
+    <circle cx="22" cy="22" r="6" fill="#ef4444" />
+    <circle cx="42" cy="22" r="6" fill="#f59e0b" />
+    <circle cx="62" cy="22" r="6" fill="#10b981" />
+    <text x="90" y="27" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#94a3b8">Project Explorer — Spring Boot Root</text>
+
+    <!-- Tree Content -->
+    <g transform="translate(24, 68)" class="code-font">
+      <!-- Root: AgroLoop / project-root -->
+      <text x="0" y="0" class="dir-text">📦 my-spring-backend/ (or AgroLoop)</text>
+      
+      <!-- pom.xml & config files -->
+      <text x="24" y="24" class="file-text">├── 📄 pom.xml <tspan class="comment-text"># Maven dependencies &amp; plugins (or build.gradle)</tspan></text>
+      <text x="24" y="46" class="file-text">├── 📄 Dockerfile <tspan class="comment-text"># Multi-stage container build definition</tspan></text>
+      <text x="24" y="68" class="file-text">├── 📄 docker-compose.yml <tspan class="comment-text"># Postgres, Redis, MinIO / local services</tspan></text>
+      
+      <!-- src folder -->
+      <text x="24" y="94" class="dir-text">└── 📁 src/</text>
+      
+      <!-- src/test -->
+      <text x="52" y="118" class="dir-text">├── 📁 test/ <tspan class="comment-text"># Unit, integration, slice tests</tspan></text>
+      <text x="80" y="138" class="file-text">└── 📁 java/com/example/ <tspan class="comment-text"># @SpringBootTest, @WebMvcTest, mocks</tspan></text>
+      
+      <!-- src/main -->
+      <text x="52" y="164" class="dir-text">└── 📁 main/</text>
+      
+      <!-- src/main/resources -->
+      <text x="80" y="190" class="dir-text">├── 📁 resources/</text>
+      <text x="108" y="212" class="file-text">├── 📁 db/migration/ <tspan class="comment-text"># Flyway / Liquibase scripts (V1__, V2__)</tspan></text>
+      <text x="108" y="234" class="file-text">├── 📁 static/ <tspan class="comment-text"># CSS, JS, images, icons, public assets</tspan></text>
+      <text x="108" y="256" class="file-text">├── 📁 templates/ <tspan class="comment-text"># Thymeleaf / Mustache SSR templates</tspan></text>
+      <text x="108" y="278" class="file-text">├── 📄 application.properties <tspan class="comment-text"># Default &amp; common profiles</tspan></text>
+      <text x="108" y="300" class="file-text">└── 📄 application-dev.yml <tspan class="comment-text"># Environment profiles (prod, dev)</tspan></text>
+      
+      <!-- src/main/java -->
+      <text x="80" y="328" class="dir-text">└── 📁 java/com/example/app/</text>
+      
+      <!-- Application Entrypoint -->
+      <text x="108" y="352" class="file-text">├── ⚡ <tspan fill="#67e8f9" font-weight="700">Application.java</tspan> <tspan class="comment-text"># @SpringBootApplication entry</tspan></text>
+      
+      <!-- controller package -->
+      <text x="108" y="378" class="pkg-text">├── 📁 controller/</text>
+      <text x="136" y="400" class="file-text">├── 📁 api/ <tspan class="comment-text"># @RestController REST endpoints (JSON)</tspan></text>
+      <text x="136" y="422" class="file-text">└── 📁 web/ <tspan class="comment-text"># @Controller MVC view controllers</tspan></text>
+      
+      <!-- service package -->
+      <text x="108" y="448" class="pkg-text">├── 📁 service/</text>
+      <text x="136" y="470" class="file-text">├── 📄 OrderService.java <tspan class="comment-text"># Business logic interface</tspan></text>
+      <text x="136" y="492" class="file-text">└── 📄 OrderServiceImpl.java <tspan class="comment-text"># Transactional implementations</tspan></text>
+      
+      <!-- repository package -->
+      <text x="108" y="518" class="pkg-text">├── 📁 repository/</text>
+      <text x="136" y="540" class="file-text">└── 📄 OrderRepository.java <tspan class="comment-text"># Spring Data JPA / JpaRepository</tspan></text>
+
+      <!-- model package -->
+      <text x="108" y="566" class="pkg-text">├── 📁 model/ (or entity/)</text>
+      <text x="136" y="588" class="file-text">└── 📄 Order.java <tspan class="comment-text"># JPA @Entity, Enums, DB relations</tspan></text>
+
+      <!-- dto package -->
+      <text x="108" y="614" class="pkg-text">├── 📁 dto/</text>
+      <text x="136" y="636" class="file-text">├── 📄 OrderRequest.java <tspan class="comment-text"># Validation: @Valid, @NotNull</tspan></text>
+      <text x="136" y="658" class="file-text">└── 📄 OrderResponse.java <tspan class="comment-text"># Java 17+ record / POJO projection</tspan></text>
+
+      <!-- security & config & exception packages -->
+      <text x="108" y="684" class="pkg-text">├── 📁 security/ <tspan class="comment-text"># JWT filter, SecurityFilterChain, RBAC</tspan></text>
+      <text x="108" y="706" class="pkg-text">├── 📁 config/ <tspan class="comment-text"># @Configuration, CORS, OpenAPI/Swagger</tspan></text>
+      <text x="108" y="728" class="pkg-text">└── 📁 exception/ <tspan class="comment-text"># @RestControllerAdvice, custom errors</tspan></text>
+    </g>
+  </g>
+
+  <!-- RIGHT PANEL: Architecture & Flow Diagram -->
+  <g transform="translate(750, 160)" filter="url(#shadow)">
+    <!-- Right Container -->
+    <rect width="630" height="800" rx="14" fill="url(#panelGrad)" stroke="#1e293b" stroke-width="1.5" />
+    
+    <!-- Titlebar -->
+    <path d="M 0 14 Q 0 0 14 0 L 616 0 Q 630 0 630 14 L 630 44 L 0 44 Z" fill="#0f172a" />
+    <line x1="0" y1="44" x2="630" y2="44" stroke="#1e293b" stroke-width="1.2" />
+    <text x="24" y="27" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#94a3b8">Spring Boot Layered Request Flow</text>
+
+    <!-- Layers Stack -->
+    <!-- 1. Client / HTTP Request -->
+    <g transform="translate(30, 65)">
+      <rect width="570" height="65" rx="10" fill="#0369a1" fill-opacity="0.15" stroke="#0284c7" stroke-width="1.2" />
+      <circle cx="30" cy="32" r="14" fill="#0284c7" />
+      <text x="30" y="37" font-family="sans-serif" font-weight="800" font-size="14" fill="#ffffff" text-anchor="middle">1</text>
+      <text x="60" y="28" class="layer-title">Client Request &amp; Gateway / Security Filter</text>
+      <text x="60" y="48" class="layer-desc">HTTP GET/POST/PUT/DELETE • JWT Auth Filter • CORS • Rate Limiting • Idempotency</text>
+    </g>
+
+    <!-- Arrow 1 -> 2 -->
+    <line x1="315" y1="130" x2="315" y2="150" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)" />
+    <text x="325" y="144" font-family="sans-serif" font-size="10" fill="#38bdf8">JSON / DTO</text>
+
+    <!-- 2. Controller Layer -->
+    <g transform="translate(30, 150)">
+      <rect width="570" height="80" rx="10" fill="#0284c7" fill-opacity="0.15" stroke="#38bdf8" stroke-width="1.2" />
+      <circle cx="30" cy="40" r="14" fill="#38bdf8" />
+      <text x="30" y="45" font-family="sans-serif" font-weight="800" font-size="14" fill="#0f172a" text-anchor="middle">2</text>
+      <text x="60" y="28" class="layer-title">Presentation / Controller Layer (controller/)</text>
+      <text x="60" y="48" class="layer-desc">@RestController • @RequestMapping • @Valid • Request DTO Binding</text>
+      <text x="60" y="68" class="layer-desc" fill="#38bdf8">Role: Route endpoints, validate schema, delegate to business layer, return DTOs</text>
+    </g>
+
+    <!-- Arrow 2 -> 3 -->
+    <line x1="315" y1="230" x2="315" y2="250" stroke="#818cf8" stroke-width="2" />
+    <text x="325" y="244" font-family="sans-serif" font-size="10" fill="#818cf8">Domain Calls</text>
+
+    <!-- 3. Service Layer -->
+    <g transform="translate(30, 250)">
+      <rect width="570" height="85" rx="10" fill="#4338ca" fill-opacity="0.15" stroke="#818cf8" stroke-width="1.2" />
+      <circle cx="30" cy="42" r="14" fill="#818cf8" />
+      <text x="30" y="47" font-family="sans-serif" font-weight="800" font-size="14" fill="#ffffff" text-anchor="middle">3</text>
+      <text x="60" y="28" class="layer-title">Business Logic Layer (service/)</text>
+      <text x="60" y="48" class="layer-desc">@Service • @Transactional • Business Validations • Orchestration</text>
+      <text x="60" y="68" class="layer-desc" fill="#a5b4fc">Role: Enforce domain rules, emit events, coordinate repositories &amp; external APIs</text>
+    </g>
+
+    <!-- Arrow 3 -> 4 -->
+    <line x1="315" y1="335" x2="315" y2="355" stroke="#34d399" stroke-width="2" />
+    <text x="325" y="349" font-family="sans-serif" font-size="10" fill="#34d399">Entities</text>
+
+    <!-- 4. Data Access Layer -->
+    <g transform="translate(30, 355)">
+      <rect width="570" height="80" rx="10" fill="#047857" fill-opacity="0.15" stroke="#34d399" stroke-width="1.2" />
+      <circle cx="30" cy="40" r="14" fill="#34d399" />
+      <text x="30" y="45" font-family="sans-serif" font-weight="800" font-size="14" fill="#064e3b" text-anchor="middle">4</text>
+      <text x="60" y="28" class="layer-title">Data Access Layer (repository/ + model/)</text>
+      <text x="60" y="48" class="layer-desc">@Repository • JpaRepository&lt;Entity, ID&gt; • Derived Queries • @Entity Mapping</text>
+      <text x="60" y="68" class="layer-desc" fill="#6ee7b7">Role: Abstract SQL/Hibernate persistence, pagination, caching, relational joins</text>
+    </g>
+
+    <!-- Arrow 4 -> 5 -->
+    <line x1="315" y1="435" x2="315" y2="455" stroke="#fbbf24" stroke-width="2" />
+    <text x="325" y="449" font-family="sans-serif" font-size="10" fill="#fbbf24">SQL / Driver</text>
+
+    <!-- 5. Database Layer -->
+    <g transform="translate(30, 455)">
+      <rect width="570" height="65" rx="10" fill="#b45309" fill-opacity="0.15" stroke="#fbbf24" stroke-width="1.2" />
+      <circle cx="30" cy="32" r="14" fill="#fbbf24" />
+      <text x="30" y="37" font-family="sans-serif" font-weight="800" font-size="14" fill="#78350f" text-anchor="middle">5</text>
+      <text x="60" y="28" class="layer-title">Database &amp; Storage Infrastructure</text>
+      <text x="60" y="48" class="layer-desc">PostgreSQL / MySQL • Redis Cache • Flyway Migrations • MinIO / S3 Object Storage</text>
+    </g>
+
+    <!-- Cross-Cutting Concerns Box -->
+    <g transform="translate(30, 545)">
+      <rect width="570" height="225" rx="10" fill="#1e1b4b" fill-opacity="0.3" stroke="#6366f1" stroke-width="1" stroke-dasharray="4 4"/>
+      <text x="20" y="28" font-family="sans-serif" font-size="13" font-weight="700" fill="#a5b4fc">🛡️ Cross-Cutting Concerns &amp; Support Modules</text>
+      
+      <!-- Module 1: Security -->
+      <g transform="translate(20, 45)">
+        <rect width="255" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="14" y="24" font-family="sans-serif" font-size="12" font-weight="700" fill="#38bdf8">security/</text>
+        <text x="14" y="42" font-family="sans-serif" font-size="10" fill="#94a3b8">JwtAuthenticationFilter, RBAC</text>
+        <text x="14" y="58" font-family="sans-serif" font-size="10" fill="#94a3b8">MFA / TOTP, PasswordEncoder</text>
+      </g>
+
+      <!-- Module 2: Exception -->
+      <g transform="translate(295, 45)">
+        <rect width="255" height="70" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="14" y="24" font-family="sans-serif" font-size="12" font-weight="700" fill="#f43f5e">exception/</text>
+        <text x="14" y="42" font-family="sans-serif" font-size="10" fill="#94a3b8">@RestControllerAdvice</text>
+        <text x="14" y="58" font-family="sans-serif" font-size="10" fill="#94a3b8">RFC 7807 ProblemDetail / Errors</text>
+      </g>
+
+      <!-- Module 3: Config -->
+      <g transform="translate(20, 130)">
+        <rect width="255" height="75" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="14" y="24" font-family="sans-serif" font-size="12" font-weight="700" fill="#4ade80">config/</text>
+        <text x="14" y="42" font-family="sans-serif" font-size="10" fill="#94a3b8">CorsConfig, WebMvcConfig</text>
+        <text x="14" y="58" font-family="sans-serif" font-size="10" fill="#94a3b8">Swagger / OpenAPI, RedisConfig</text>
+      </g>
+
+      <!-- Module 4: Events / Notifications -->
+      <g transform="translate(295, 130)">
+        <rect width="255" height="75" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="14" y="24" font-family="sans-serif" font-size="12" font-weight="700" fill="#c084fc">event/ &amp; notification/</text>
+        <text x="14" y="42" font-family="sans-serif" font-size="10" fill="#94a3b8">ApplicationEventPublisher</text>
+        <text x="14" y="58" font-family="sans-serif" font-size="10" fill="#94a3b8">@EventListener, SSE, WebSockets</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Footer Banner -->
+  <g transform="translate(60, 980)">
+    <text x="0" y="0" font-family="-apple-system, sans-serif" font-size="12" fill="#64748b">
+      Spring Boot Best Practice: Keep Controllers lean, isolate Domain Logic in Services, never expose JPA Entities directly via API endpoints (always map to DTOs/Records).
+    </text>
+  </g>
+</svg>

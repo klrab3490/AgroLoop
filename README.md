@@ -9,6 +9,9 @@ AgroLoop is a Java Spring Boot web application designed to connect households an
 📚 **[Comprehensive Developer Documentation Hub & Freshers Guide](./docs/INDEX.md)**  
 *Complete setup guide (how to install Java, how to install Docker, start the project on Windows/Mac, OOP principles, and deep-dive documentation for all modules).*
 
+🎤 **[Presenter's Pitch & Project Reference Guide](./docs/PRESENTATION_GUIDE.md)**  
+*Concise summary for presentations: project workflow, architecture, OOP concepts, tech stack (Web + Backend focus), and Q&A defense.*
+
 📮 **[Interactive Postman API Collection & Testing Suite](./postman/README.md)**  
 *Complete Postman Collection (v2.1.0, 66 endpoints), local environment variables, pre-configured JWT scripts, zero-setup Dev API Key (`agroloop-dev-key`), and Newman CLI runner.*
 

@@ -4,6 +4,10 @@ Welcome to the **AgroLoop Developer Documentation Hub**. This central directory 
 
 ---
 
+> 🎤 **Presenting AgroLoop?** Check out the [**Presenter's Pitch & Project Reference Guide (PRESENTATION_GUIDE.md)**](./PRESENTATION_GUIDE.md) for quick talking points, architecture diagrams, OOP concepts, 3-minute pitch scripts, and Q&A defense.
+
+---
+
 ## Quick Navigation
 
 - [1. Freshers Onboarding & Installation Guide](#1-freshers-onboarding--installation-guide)
