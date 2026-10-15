@@ -3,220 +3,744 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${appName} + ' — Sustainable Waste & Reward Ecosystem'">AgroLoop</title>
+    <title th:text="${appName} + ' — Sustainable Waste & Reward Ecosystem'">AgroLoop — Circular Waste-to-Reward Platform</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c22',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #070b14;
+            color: #f8fafc;
+        }
+        .monospace {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
 </head>
-<body>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
 
-    <!-- Header / Navigation -->
-    <header class="navbar">
-        <div class="container nav-container">
-            <a th:href="@{/}" class="brand">
-                <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="brand-logo-img">
-                <div>
-                    <h1 class="brand-title" th:text="${appName}">AgroLoop</h1>
-                    <span class="brand-subtitle">Circular Economy Platform</span>
+    <!-- Header / Navbar matching Next.js Layout -->
+    <header class="sticky top-0 z-50 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 transition-all duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Brand Identity -->
+                <a th:href="@{/}" class="flex items-center gap-3.5 group">
+                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="w-10 h-10 rounded-xl object-contain shadow-lg shadow-emerald-950/40 border border-emerald-500/30 group-hover:scale-105 transition-transform duration-200">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl font-black tracking-tight text-white group-hover:text-emerald-400 transition" th:text="${appName}">AgroLoop</span>
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SSR UI</span>
+                        </div>
+                        <p class="text-xs text-slate-400 font-medium">Circular Economy Platform</p>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center gap-1">
+                    <a th:href="@{/marketplace}" class="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition flex items-center gap-1.5">
+                        <span>🛒</span>
+                        <span>Marketplace</span>
+                    </a>
+                    <a href="#how-it-works" class="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition">
+                        How It Works
+                    </a>
+                    <a href="#roles" class="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition">
+                        Stakeholders
+                    </a>
+                    <a href="#diagnostics" class="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition">
+                        Diagnostics
+                    </a>
+                    <a href="#roadmap" class="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-xl transition">
+                        Roadmap
+                    </a>
+                </nav>
+
+                <!-- Status & Auth Controls -->
+                <div class="hidden sm:flex items-center gap-3">
+                    <!-- Live Database Indicator -->
+                    <div th:if="${dbConnected}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 text-xs font-medium shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>PostgreSQL Connected</span>
+                    </div>
+                    <div th:unless="${dbConnected}" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-950/60 text-rose-300 border border-rose-800/60 text-xs font-medium shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                        <span>DB Disconnected</span>
+                    </div>
+
+                    <!-- Auth State: Anonymous -->
+                    <div sec:authorize="isAnonymous()" class="flex items-center gap-2">
+                        <a th:href="@{/login}" class="px-4 py-2 text-xs font-bold text-slate-200 hover:text-white hover:bg-slate-800/80 rounded-xl border border-slate-700/80 transition shadow-xs">
+                            Login
+                        </a>
+                        <a th:href="@{/register}" class="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl shadow-lg shadow-emerald-950/30 transition active:scale-95">
+                            Register
+                        </a>
+                    </div>
+
+                    <!-- Auth State: Authenticated -->
+                    <div sec:authorize="isAuthenticated()" class="flex items-center gap-2.5">
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span class="text-xs font-semibold text-slate-300" sec:authentication="name">User</span>
+                        </div>
+                        <a th:href="@{/dashboard}" class="px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md transition">
+                            Dashboard
+                        </a>
+                        <form th:action="@{/logout}" method="post" class="inline">
+                            <button type="submit" class="px-3 py-2 text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-xl transition">
+                                Sign Out
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </a>
 
-            <div class="nav-badges">
-                <span class="badge phase-badge" th:text="${currentPhase}">Phase 2: User Management</span>
-                <span th:if="${dbConnected}" class="badge db-badge db-success">
-                    <span class="indicator-dot online"></span> PostgreSQL Connected
-                </span>
-                <span th:unless="${dbConnected}" class="badge db-badge db-error">
-                    <span class="indicator-dot offline"></span> DB Disconnected
-                </span>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition" aria-label="Toggle navigation">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
             </div>
 
-            <!-- User Authentication Navigation Actions -->
-            <div class="nav-actions">
-                <a th:href="@{/marketplace}" class="btn btn-outline" style="color: #34d399; border-color: rgba(16, 185, 129, 0.4);">🛒 Marketplace</a>
-                <div sec:authorize="isAnonymous()" style="display: flex; gap: 0.75rem; align-items: center;">
-                    <a th:href="@{/login}" class="btn btn-outline">Login</a>
-                    <a th:href="@{/register}" class="btn btn-primary">Register</a>
+            <!-- Mobile Navigation Drawer -->
+            <div id="mobile-menu" class="hidden md:hidden pb-6 pt-2 border-t border-slate-800 space-y-3">
+                <div class="flex flex-col gap-1">
+                    <a th:href="@{/marketplace}" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:bg-slate-800">🛒 Marketplace</a>
+                    <a href="#how-it-works" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:bg-slate-800">How It Works</a>
+                    <a href="#roles" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:bg-slate-800">Stakeholders</a>
+                    <a href="#diagnostics" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:bg-slate-800">Diagnostics</a>
+                    <a href="#roadmap" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-300 hover:bg-slate-800">Roadmap</a>
                 </div>
-                <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="font-size: 0.85rem; color: var(--text-secondary);" sec:authentication="name">User</span>
-                    <a th:href="@{/dashboard}" class="btn btn-primary">Dashboard</a>
-                    <form th:action="@{/logout}" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-outline">Sign Out</button>
-                    </form>
+                <div class="pt-3 border-t border-slate-800 flex flex-col gap-2">
+                    <div sec:authorize="isAnonymous()" class="grid grid-cols-2 gap-2">
+                        <a th:href="@{/login}" class="text-center py-2 text-xs font-bold text-slate-200 bg-slate-900 border border-slate-700 rounded-xl">Login</a>
+                        <a th:href="@{/register}" class="text-center py-2 text-xs font-bold text-white bg-emerald-600 rounded-xl">Register</a>
+                    </div>
+                    <div sec:authorize="isAuthenticated()" class="flex flex-col gap-2">
+                        <a th:href="@{/dashboard}" class="text-center py-2 text-xs font-bold text-white bg-emerald-600 rounded-xl">My Dashboard</a>
+                        <form th:action="@{/logout}" method="post" class="w-full">
+                            <button type="submit" class="w-full py-2 text-xs font-semibold text-rose-400 bg-rose-950/20 border border-rose-900/50 rounded-xl">Sign Out</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container hero-container">
-            <div class="hero-badge">v1.0.0 — Full Ecosystem Live</div>
-            <h2 class="hero-heading">Bridging Waste Management, Agriculture & Sustainable Commerce</h2>
-            <p class="hero-desc">
-                AgroLoop transforms household organic waste into agricultural value. Farmers collect and verify waste, households earn EcoTokens, and everyone participates in a transparent, sustainable marketplace.
-            </p>
+    <main class="flex-1 space-y-20 py-8">
 
-            <!-- Hero Action Buttons -->
-            <div class="hero-actions" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a th:href="@{/register}" class="btn btn-primary">Register as Household</a>
-                <a th:href="@{/login}" class="btn btn-outline">Login to Portal</a>
+        <!-- Hero Section matching Next.js page.tsx -->
+        <section class="relative overflow-hidden rounded-3xl mx-4 sm:mx-6 lg:mx-8 xl:mx-auto max-w-7xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-white p-8 sm:p-14 lg:p-20 shadow-2xl border border-slate-800">
+            <!-- Background Radial Dot Pattern and Ambient Glow -->
+            <div class="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none"></div>
+            <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+                <!-- Platform Badge -->
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider shadow-inner">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Closed-Loop Regional Agriculture</span>
+                </div>
+
+                <!-- Main Hero Headline -->
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
+                    Turn Household Organics into 
+                    <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-200 bg-clip-text text-transparent">
+                        Soil Gold
+                    </span>.
+                </h1>
+
+                <!-- Hero Subtitle -->
+                <p class="text-sm sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+                    Households divert compostable waste, certified regional farmers collect and enrich local soils, and contributors earn 
+                    <span class="text-emerald-400 font-bold">EcoTokens</span> redeemable for heirloom seeds, organic produce, and farm inputs.
+                </p>
+
+                <!-- Hero Action Buttons -->
+                <div class="flex flex-wrap justify-center gap-4 pt-4">
+                    <div sec:authorize="isAnonymous()">
+                        <a th:href="@{/register}" class="inline-flex items-center justify-center px-7 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-900/30 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 active:scale-95">
+                            Submit Compost Scrap
+                        </a>
+                    </div>
+                    <div sec:authorize="isAuthenticated()">
+                        <a th:href="@{/dashboard}" class="inline-flex items-center justify-center px-7 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-900/30 hover:from-emerald-500 hover:to-teal-500 transition-all duration-200 active:scale-95">
+                            Submit Compost Scrap
+                        </a>
+                    </div>
+                    <a th:href="@{/marketplace}" class="inline-flex items-center justify-center px-7 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-sm rounded-2xl backdrop-blur-md transition-all duration-200">
+                        Explore Farmer Marketplace
+                    </a>
+                </div>
+
+                <!-- Quick Pillar Badges -->
+                <div class="pt-8 border-t border-slate-800/80 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs uppercase tracking-wider font-semibold text-slate-400">
+                    <span class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        HMAC-Verified QR Handshakes
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        HttpOnly Secure Session Ledger
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        100% Regional Circularity
+                    </span>
+                </div>
             </div>
+        </section>
 
-            <!-- Quick System Diagnostics Banner -->
-            <div class="system-status-card">
-                <div class="status-grid">
-                    <div class="status-item">
-                        <span class="status-label">Database Status</span>
-                        <span class="status-value" th:classappend="${dbConnected} ? 'text-green' : 'text-red'">
-                            <span th:text="${dbConnected ? 'Active' : 'Offline'}">Active</span>
-                        </span>
+        <!-- System Diagnostics Banner (Matching Next.js & Original Spring Boot values) -->
+        <section id="diagnostics" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="p-6 bg-slate-900/90 rounded-3xl border border-slate-800 shadow-xl backdrop-blur-md">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Authoritative Platform Diagnostics</h2>
                     </div>
-                    <div class="status-item">
-                        <span class="status-label">Engine / DB Info</span>
-                        <span class="status-value monospace" th:text="${dbInfo}">PostgreSQL 16</span>
+                    <div class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 text-emerald-400 border border-slate-700/80" th:text="${currentPhase}">
+                        Phase 8: Multi-Client Ecosystem (Live)
                     </div>
-                    <div class="status-item">
-                        <span class="status-label">Framework</span>
-                        <span class="status-value">Spring Boot 3.3.4 (Java 21+)</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+                        <span class="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Database Engine Status</span>
+                        <div class="flex items-center gap-2 font-bold" th:classappend="${dbConnected} ? 'text-emerald-400' : 'text-rose-400'">
+                            <span class="w-2 h-2 rounded-full" th:classappend="${dbConnected} ? 'bg-emerald-400' : 'bg-rose-400'"></span>
+                            <span th:text="${dbConnected ? 'Active & Operational' : 'Offline'}">Active &amp; Operational</span>
+                        </div>
                     </div>
-                    <div class="status-item">
-                        <span class="status-label">System Time</span>
-                        <span class="status-value monospace" th:text="${timestamp}">2026-09-14 22:30</span>
+
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+                        <span class="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Database Metadata</span>
+                        <p class="font-bold text-slate-200 monospace truncate" th:text="${dbInfo}">PostgreSQL 16</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+                        <span class="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Backend Framework</span>
+                        <p class="font-bold text-slate-200">Spring Boot 3.3.4 (Java 21+)</p>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-1">
+                        <span class="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Synchronized System Time</span>
+                        <p class="font-bold text-emerald-400 monospace" th:text="${timestamp}">2026-10-15 08:30:00</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Role Portals Section -->
-    <section class="roles-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Role Architecture</span>
-                <h3 class="section-title">Three Integrated Ecosystem Stakeholders</h3>
+        <!-- How It Works 3-Step Section matching Next.js -->
+        <section id="how-it-works" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Circular Flow Architecture</span>
+                <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1.5">
+                    How The Closed-Loop Nutrient Cycle Works
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto mt-2">
+                    Three synchronized stages connecting urban organic waste generators with regenerative agricultural soils.
+                </p>
             </div>
-            <div class="cards-grid">
-                <!-- Household Card -->
-                <div class="role-card">
-                    <div class="card-icon household-icon">🏡</div>
-                    <h4>Household Portal</h4>
-                    <p>Submit organic waste with photo attachments, schedule convenient door collections, and monitor your EcoToken reward wallet.</p>
-                    <ul class="card-features">
-                        <li>Organic waste photo uploads</li>
-                        <li>Real-time pickup status tracking</li>
-                        <li>EcoToken balance & marketplace shopping</li>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Stage 01 -->
+                <div class="p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl space-y-4 hover:border-emerald-500/50 transition group">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                        🥦
+                    </div>
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Stage 01</span>
+                        <h3 class="text-lg font-bold text-white mt-0.5">Households Log Organics</h3>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Kitchen scraps, peels, and garden clippings are weighed and photographed. A cryptographically timestamped collection pass is registered in your regional hub.
+                    </p>
+                </div>
+
+                <!-- Stage 02 -->
+                <div class="p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl space-y-4 hover:border-emerald-500/50 transition group">
+                    <div class="w-14 h-14 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                        🚜
+                    </div>
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-teal-400">Stage 02</span>
+                        <h3 class="text-lg font-bold text-white mt-0.5">Farmers Claim & Verify</h3>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Nearby certified growers dispatch pickup routes, scan your doorstep HMAC QR verification pass, and certify net organic weight at the scale.
+                    </p>
+                </div>
+
+                <!-- Stage 03 -->
+                <div class="p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl space-y-4 hover:border-emerald-500/50 transition group">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                        🪙
+                    </div>
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Stage 03</span>
+                        <h3 class="text-lg font-bold text-white mt-0.5">Earn & Redeem EcoTokens</h3>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        The authoritative ledger mints EcoTokens straight to your wallet. Redeem them for living compost, heirloom seeds, orchard fruits, and farm fresh dairy.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Role Portals / Ecosystem Stakeholders Section -->
+        <section id="roles" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Ecosystem Stakeholders</span>
+                <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1.5">
+                    Integrated Role Portals
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto mt-2">
+                    Customized workflow consoles tailored for household waste diversion, agricultural operations, and system governance.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Household Portal -->
+                <div class="p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl flex flex-col justify-between space-y-6 hover:border-slate-700 transition">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl border border-emerald-500/20">
+                            🏡
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Household Portal</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Submit organic waste with photo attachments, schedule convenient doorstep collections, and monitor your EcoToken reward wallet.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-300">
+                            <li class="flex items-center gap-2">
+                                <span class="text-emerald-400">✓</span> Organic waste photo uploads
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-emerald-400">✓</span> Real-time pickup status tracking
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-emerald-400">✓</span> EcoToken balance &amp; marketplace shopping
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <a th:href="@{/dashboard}" class="w-full inline-flex items-center justify-center py-3 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition border border-slate-700/80">
+                            Enter Household Console ➔
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Farmer Portal -->
+                <div class="p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl flex flex-col justify-between space-y-6 hover:border-slate-700 transition">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center text-2xl border border-teal-500/20">
+                            🚜
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Farmer Portal</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Discover available waste submissions, schedule collection runs, verify quality/quantity with photo comparison, and list products.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-300">
+                            <li class="flex items-center gap-2">
+                                <span class="text-teal-400">✓</span> Submissions map &amp; pickup claims
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-teal-400">✓</span> Weight &amp; grade verification at doorstep
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-teal-400">✓</span> Produce and organic compost listings
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <a th:href="@{/farmer/routes}" class="w-full inline-flex items-center justify-center py-3 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition border border-slate-700/80">
+                            View Farmer Routes ➔
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Admin Portal -->
+                <div class="p-8 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl flex flex-col justify-between space-y-6 hover:border-slate-700 transition">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl border border-amber-500/20">
+                            🛡️
+                        </div>
+                        <h3 class="text-xl font-bold text-white">Admin Portal</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Oversee system transactions, audit EcoToken distributions, resolve pickup disputes, and inspect circular economy metrics.
+                        </p>
+                        <ul class="space-y-2 text-xs text-slate-300">
+                            <li class="flex items-center gap-2">
+                                <span class="text-amber-400">✓</span> User role management &amp; security
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-amber-400">✓</span> Dispute resolution &amp; verification audit
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-amber-400">✓</span> Marketplace transaction oversight
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <a th:href="@{/admin/users}" class="w-full inline-flex items-center justify-center py-3 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition border border-slate-700/80">
+                            Governance Console ➔
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Sustainable Offerings Section (Matching Next.js Product Showcase) -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 text-xs font-bold tracking-widest text-emerald-400 uppercase mb-1">
+                        <span>🌾</span>
+                        <span>Farm to Table Verified</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                        Featured Sustainable Products
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1 max-w-xl">
+                        Freshly harvested produce and certified biological soil conditioners available for immediate EcoToken redemption.
+                    </p>
+                </div>
+                <a th:href="@{/marketplace}" class="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-950/60 px-4 py-2.5 rounded-xl border border-emerald-800/80 hover:bg-emerald-900/60 transition shadow-xs self-start sm:self-auto">
+                    <span>View Full Catalog</span>
+                    <span>➔</span>
+                </a>
+            </div>
+
+            <!-- Product Showcase Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Product Card 1 -->
+                <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-emerald-500/50 transition group flex flex-col justify-between">
+                    <div class="h-44 bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 flex flex-col items-center justify-center relative p-4 border-b border-slate-800">
+                        <span class="absolute top-3.5 left-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-emerald-400 border border-emerald-500/30">🌿 COMPOST</span>
+                        <span class="absolute top-3.5 right-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-slate-300 border border-slate-700">45 in stock</span>
+                        <span class="text-5xl group-hover:scale-110 transition-transform">🌱</span>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <h4 class="font-bold text-white text-base group-hover:text-emerald-400 transition">Living Bio-Compost</h4>
+                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Microbial-rich aerobic compost conditioned with household scraps and inoculated organic biochar.</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-400">Price</span>
+                                <p class="text-base font-extrabold text-emerald-400">15 <span class="text-xs font-normal">Tokens</span></p>
+                            </div>
+                            <a th:href="@{/marketplace}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition">
+                                Redeem
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 2 -->
+                <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-emerald-500/50 transition group flex flex-col justify-between">
+                    <div class="h-44 bg-gradient-to-br from-teal-950 via-slate-900 to-emerald-950 flex flex-col items-center justify-center relative p-4 border-b border-slate-800">
+                        <span class="absolute top-3.5 left-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-teal-400 border border-teal-500/30">🌾 SEEDS</span>
+                        <span class="absolute top-3.5 right-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-slate-300 border border-slate-700">80 in stock</span>
+                        <span class="text-5xl group-hover:scale-110 transition-transform">🌾</span>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <h4 class="font-bold text-white text-base group-hover:text-emerald-400 transition">Heirloom Vegetable Seeds</h4>
+                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Non-GMO regional heirloom seed collection packet adapted for regenerative backyard cultivation.</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-400">Price</span>
+                                <p class="text-base font-extrabold text-emerald-400">25 <span class="text-xs font-normal">Tokens</span></p>
+                            </div>
+                            <a th:href="@{/marketplace}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition">
+                                Redeem
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 3 -->
+                <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-emerald-500/50 transition group flex flex-col justify-between">
+                    <div class="h-44 bg-gradient-to-br from-lime-950 via-slate-900 to-green-950 flex flex-col items-center justify-center relative p-4 border-b border-slate-800">
+                        <span class="absolute top-3.5 left-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-lime-400 border border-lime-500/30">🥕 VEGGIES</span>
+                        <span class="absolute top-3.5 right-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-slate-300 border border-slate-700">12 in stock</span>
+                        <span class="text-5xl group-hover:scale-110 transition-transform">🥕</span>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <h4 class="font-bold text-white text-base group-hover:text-emerald-400 transition">Organic Root Veggie Basket</h4>
+                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Crisp seasonal carrots, beets, and radishes harvested directly by participating community growers.</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-400">Price</span>
+                                <p class="text-base font-extrabold text-emerald-400">10 <span class="text-xs font-normal">Tokens</span></p>
+                            </div>
+                            <a th:href="@{/marketplace}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition">
+                                Redeem
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 4 -->
+                <div class="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-emerald-500/50 transition group flex flex-col justify-between">
+                    <div class="h-44 bg-gradient-to-br from-amber-950 via-slate-900 to-orange-950 flex flex-col items-center justify-center relative p-4 border-b border-slate-800">
+                        <span class="absolute top-3.5 left-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-amber-400 border border-amber-500/30">🍯 HONEY</span>
+                        <span class="absolute top-3.5 right-3.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-950/80 text-slate-300 border border-slate-700">30 in stock</span>
+                        <span class="text-5xl group-hover:scale-110 transition-transform">🍯</span>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <h4 class="font-bold text-white text-base group-hover:text-emerald-400 transition">Wildflower Raw Honey</h4>
+                            <p class="text-xs text-slate-400 mt-1 line-clamp-2">Pure unfiltered raw honeycomb extract produced from pollinator friendly cover crops.</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-400">Price</span>
+                                <p class="text-base font-extrabold text-emerald-400">30 <span class="text-xs font-normal">Tokens</span></p>
+                            </div>
+                            <a th:href="@{/marketplace}" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow transition">
+                                Redeem
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Roadmap Section -->
+        <section id="roadmap" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-xs font-bold tracking-widest text-emerald-400 uppercase">Architecture Evolution</span>
+                <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight mt-1.5">
+                    12-Phase System Roadmap
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto mt-2">
+                    Systematic milestone progression from initial domain logic through cross-platform enterprise scale.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Phases 1-8 -->
+                <div class="p-6 bg-slate-900/90 rounded-3xl border border-emerald-500/40 shadow-xl flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm shrink-0 border border-emerald-500/30">
+                            1–8
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-white text-base">Phases 1–8: Core Platform &amp; Multi-Client Ecosystem</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                    Completed &amp; Live (v1.0.0)
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Spring Boot backend, PostgreSQL, JPA inheritance, waste submissions, pickups &amp; verification, EcoTokens ledger, marketplace, Next.js 15 Web Portal, Tauri v2 Desktop Console, and React Native Expo Mobile App.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 9 -->
+                <div class="p-6 bg-slate-900/60 rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-sm shrink-0">
+                            9
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-white text-base">Phase 9: Dynamic Matching &amp; Route Planning</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">
+                                    Planned
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Polymorphic WasteMatcher strategy interface (distance &amp; capacity), spatial geo-radius matching, automated farmer dispatch, and multi-stop collection route optimization.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 10 -->
+                <div class="p-6 bg-slate-900/60 rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-sm shrink-0">
+                            10
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-white text-base">Phase 10: Ratings, Reviews &amp; Reputation</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">
+                                    Planned
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Dual-sided 5-star ratings and verified reviews between Households and Farmers, aggregate reliability scores, and public farmer trust profiles.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 11 -->
+                <div class="p-6 bg-slate-900/60 rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-sm shrink-0">
+                            11
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-white text-base">Phase 11: Real-Time Event Streaming &amp; Push Alerts</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">
+                                    Planned
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Live status tracking via Server-Sent Events (SSE) / WebSockets, instant token minting alerts, and Expo Push Notifications for mobile devices.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 12 -->
+                <div class="p-6 bg-slate-900/60 rounded-3xl border border-slate-800 shadow-md flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-sm shrink-0">
+                            12
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-white text-base">Phase 12: Cloud Object Storage &amp; Scaled Infrastructure</h4>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">
+                                    Planned
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                Pluggable S3 / MinIO cloud storage provider with pre-signed URLs, Kubernetes Helm charts, and Prometheus/Grafana telemetry.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modern Footer Matching Next.js footer.tsx -->
+    <footer class="bg-slate-950 text-slate-400 py-14 border-t border-slate-800/80 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand & Mission Info -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2.5">
+                        <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="w-6 h-6 rounded-md object-contain">
+                        <span class="text-white font-black text-base tracking-tight">AgroLoop</span>
+                    </div>
+                    <p class="text-slate-400 leading-relaxed">
+                        Bridging households and organic farmers through a circular waste-to-reward ecosystem powered by EcoTokens.
+                    </p>
+                    <div class="text-[11px] text-slate-500 space-y-0.5 pt-2 border-t border-slate-800/80">
+                        <p class="font-semibold text-slate-400">AgroLoop Circular Technologies Inc.</p>
+                        <p>100 Sustainability Blvd, Eco City, EC 94103</p>
+                        <p>Inquiries: <a href="mailto:support@agroloop.example" class="text-emerald-400 hover:underline">support@agroloop.example</a></p>
+                    </div>
+                </div>
+
+                <!-- Stakeholders Column -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-100 uppercase tracking-wider mb-3">Stakeholders</h4>
+                    <ul class="space-y-2">
+                        <li><a th:href="@{/dashboard}" class="hover:text-emerald-400 transition">Household Composters</a></li>
+                        <li><a th:href="@{/farmer/routes}" class="hover:text-emerald-400 transition">Organic Farmers</a></li>
+                        <li><a th:href="@{/admin/users}" class="hover:text-emerald-400 transition">Platform Governance</a></li>
+                        <li><a th:href="@{/marketplace}" class="hover:text-emerald-400 transition">Community Marketplace</a></li>
                     </ul>
-                    <span class="card-status-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Active &amp; Live</span>
                 </div>
 
-                <!-- Farmer Card -->
-                <div class="role-card">
-                    <div class="card-icon farmer-icon">🚜</div>
-                    <h4>Farmer Portal</h4>
-                    <p>Discover available waste submissions, schedule collection runs, verify quality/quantity with photo comparison, and list products.</p>
-                    <ul class="card-features">
-                        <li>Submissions map & pickup claims</li>
-                        <li>Post-collection weight & grade verification</li>
-                        <li>Produce and organic compost listings</li>
+                <!-- Architecture & Diagnostics -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-100 uppercase tracking-wider mb-3">System Perimeter</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#diagnostics" class="hover:text-emerald-400 transition">PostgreSQL 16 Engine</a></li>
+                        <li><a href="#roadmap" class="hover:text-emerald-400 transition">Multi-Client Monorepo</a></li>
+                        <li><a th:href="@{/api/v1/meta}" target="_blank" class="hover:text-emerald-400 transition">Meta REST Endpoint</a></li>
+                        <li><a th:href="@{/swagger-ui.html}" target="_blank" class="hover:text-emerald-400 transition">OpenAPI Documentation</a></li>
                     </ul>
-                    <span class="card-status-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Active &amp; Live</span>
                 </div>
 
-                <!-- Admin Card -->
-                <div class="role-card">
-                    <div class="card-icon admin-icon">🛡️</div>
-                    <h4>Admin Portal</h4>
-                    <p>Oversee system transactions, audit EcoToken distributions, resolve pickup disputes, and inspect circular economy metrics.</p>
-                    <ul class="card-features">
-                        <li>User role management & security</li>
-                        <li>Dispute resolution & verification audit</li>
-                        <li>Marketplace transaction oversight</li>
+                <!-- Legal & Governance -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-100 uppercase tracking-wider mb-3">Compliance &amp; Trust</h4>
+                    <ul class="space-y-2">
+                        <li><span class="text-slate-500">ISO 14001 Waste Accounting</span></li>
+                        <li><span class="text-slate-500">GDPR &amp; ePrivacy Compliant</span></li>
+                        <li><span class="text-slate-500">HMAC-SHA256 Handshakes</span></li>
+                        <li><span class="text-slate-500">Immutable Ledger Auditing</span></li>
                     </ul>
-                    <span class="card-status-pill" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">Active &amp; Live</span>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- 12-Phase Roadmap Section -->
-    <section class="roadmap-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Development Roadmap</span>
-                <h3 class="section-title">Implementation Roadmap</h3>
-                <p class="section-subtitle">Following the prioritized workflow from baseline setup to multi-client deployment.</p>
-            </div>
-
-            <div class="phases-timeline">
-                <div class="phase-row current">
-                    <div class="phase-step">1–8</div>
-                    <div class="phase-info">
-                        <div class="phase-title-line">
-                            <span class="phase-name">Phases 1–8: Core Platform &amp; Multi-Client Ecosystem</span>
-                            <span class="phase-tag active-tag">Completed &amp; Live (v1.0.0)</span>
-                        </div>
-                        <p class="phase-desc">Spring Boot backend, PostgreSQL, JPA inheritance, waste submissions, pickups &amp; verification, EcoTokens ledger, marketplace, admin governance, Next.js 15 Web Portal, Tauri v2 Desktop Console, and React Native Expo Mobile App.</p>
-                    </div>
-                </div>
-
-                <div class="phase-row">
-                    <div class="phase-step">9</div>
-                    <div class="phase-info">
-                        <div class="phase-title-line">
-                            <span class="phase-name">Phase 9: Dynamic Matching &amp; Route Planning</span>
-                            <span class="phase-tag pending-tag">Planned</span>
-                        </div>
-                        <p class="phase-desc">Polymorphic <code>WasteMatcher</code> strategy interface (distance &amp; capacity), spatial geo-radius matching, automated farmer dispatch, and multi-stop collection route optimization.</p>
-                    </div>
-                </div>
-
-                <div class="phase-row">
-                    <div class="phase-step">10</div>
-                    <div class="phase-info">
-                        <div class="phase-title-line">
-                            <span class="phase-name">Phase 10: Ratings, Reviews &amp; Reputation</span>
-                            <span class="phase-tag pending-tag">Planned</span>
-                        </div>
-                        <p class="phase-desc">Dual-sided 5-star ratings and verified reviews between Households and Farmers, aggregate reliability scores, and public farmer trust profiles.</p>
-                    </div>
-                </div>
-
-                <div class="phase-row">
-                    <div class="phase-step">11</div>
-                    <div class="phase-info">
-                        <div class="phase-title-line">
-                            <span class="phase-name">Phase 11: Real-Time Event Streaming &amp; Push Alerts</span>
-                            <span class="phase-tag pending-tag">Planned</span>
-                        </div>
-                        <p class="phase-desc">Live status tracking via Server-Sent Events (SSE) / WebSockets, instant token minting alerts, and Expo Push Notifications for mobile devices.</p>
-                    </div>
-                </div>
-
-                <div class="phase-row">
-                    <div class="phase-step">12</div>
-                    <div class="phase-info">
-                        <div class="phase-title-line">
-                            <span class="phase-name">Phase 12: Cloud Object Storage &amp; Scaled Infrastructure</span>
-                            <span class="phase-tag pending-tag">Planned</span>
-                        </div>
-                        <p class="phase-desc">Pluggable S3 / MinIO cloud storage provider with pre-signed URLs, Kubernetes Helm charts, and Prometheus/Grafana telemetry.</p>
-                    </div>
+            <!-- Bottom Copyright & Meta Bar -->
+            <div class="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500">
+                <p>&copy; 2026 AgroLoop Circular Technologies. All rights reserved.</p>
+                <div class="flex items-center gap-3 monospace text-[11px]">
+                    <span>Release: <strong class="text-slate-300">v1.0.0</strong></span>
+                    <span>&bull;</span>
+                    <span>Engine: <strong class="text-emerald-400">Spring Boot 3.3.4</strong></span>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container footer-content">
-            <p>&copy; 2026 AgroLoop. Built with Spring Boot, Thymeleaf &amp; PostgreSQL.</p>
-            <p class="footer-meta">Release: <code>v1.0.0</code> &bull; Active Branch: <code>dev</code></p>
         </div>
     </footer>
 
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            if (btn && menu) {
+                btn.addEventListener('click', function () {
+                    menu.classList.toggle('hidden');
+                });
+            }
+        });
+    </script>
 </body>
 </html>

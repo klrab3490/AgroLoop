@@ -5,265 +5,146 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — AgroLoop</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c22',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1.5rem;
-            background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.08) 0%, var(--bg-primary) 70%);
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #070b14;
         }
-
-        .auth-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
-        }
-
-        .auth-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .auth-logo-img {
-            width: 96px;
-            height: 96px;
-            object-fit: contain;
-            border-radius: 20px;
-            background: #ffffff;
-            padding: 6px;
-            margin-bottom: 1.25rem;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-            transition: transform 0.25s ease;
-        }
-
-        .auth-logo-img:hover {
-            transform: scale(1.05);
-        }
-
-        .auth-title {
-            font-size: 1.6rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: #fff;
-            margin-bottom: 0.35rem;
-        }
-
-        .auth-subtitle {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.45rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.2s ease;
-            box-sizing: border-box;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-emerald);
-            box-shadow: 0 0 0 3px var(--accent-emerald-glow);
-        }
-
-        .btn-block {
-            width: 100%;
-            padding: 0.8rem;
-            font-size: 0.95rem;
-            margin-top: 0.5rem;
-        }
-
-        .alert {
-            padding: 0.8rem 1rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .alert-success {
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .demo-credentials {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .demo-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            text-align: center;
-        }
-
-        .demo-pills {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.5rem;
-        }
-
-        .demo-pill {
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 0.5rem 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .demo-pill:hover {
-            border-color: var(--accent-emerald);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .demo-role {
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .demo-email {
-            font-family: var(--font-mono);
-            color: var(--text-muted);
-            font-size: 0.75rem;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .back-link a {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .back-link a:hover {
-            color: #fff;
+        .monospace {
+            font-family: 'JetBrains Mono', monospace;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 sm:p-6 antialiased relative overflow-x-hidden selection:bg-emerald-500 selection:text-white">
 
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <a th:href="@{/}" style="text-decoration: none; display: inline-block;">
-                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="auth-logo-img">
+    <!-- Ambient Glowing Orbs -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-md relative z-10 space-y-6">
+        <!-- Main Card -->
+        <div class="bg-slate-900/90 rounded-3xl border border-slate-800 p-8 shadow-2xl backdrop-blur-md space-y-6">
+            <!-- Header with Logo -->
+            <div class="text-center space-y-2">
+                <a th:href="@{/}" class="inline-flex items-center justify-center p-3 rounded-2xl bg-slate-950 border border-slate-800 shadow-md hover:scale-105 transition-transform">
+                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="w-12 h-12 object-contain">
                 </a>
-                <h1 class="auth-title">Welcome Back</h1>
-                <p class="auth-subtitle">Sign in to access your AgroLoop portal</p>
+                <h1 class="text-2xl font-black text-white tracking-tight">Welcome Back</h1>
+                <p class="text-xs text-slate-400">Sign in to access your AgroLoop portal</p>
             </div>
 
             <!-- Registration Success Notification -->
-            <div th:if="${param.registered}" class="alert alert-success">
-                <span>✓</span>
-                <span>Registration successful! You can now log in with your email and password.</span>
+            <div th:if="${param.registered}" class="p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-semibold flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Registration successful! You can now log in with your credentials.</span>
             </div>
 
             <!-- Error Notification -->
-            <div th:if="${errorMessage}" class="alert alert-error">
-                <span>⚠️</span>
+            <div th:if="${errorMessage}" class="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs font-semibold flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
                 <span th:text="${errorMessage}">Invalid credentials.</span>
             </div>
 
             <!-- Logout Notification -->
-            <div th:if="${logoutMessage}" class="alert alert-success">
-                <span>✓</span>
+            <div th:if="${logoutMessage}" class="p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs font-semibold flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                 <span th:text="${logoutMessage}">Logged out successfully.</span>
             </div>
 
             <!-- Login Form -->
-            <form th:action="@{/login}" method="post">
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input class="form-input" type="email" id="email" name="email" placeholder="name@example.com" required autofocus>
+            <form th:action="@{/login}" method="post" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5" for="email">Email Address</label>
+                    <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                           type="email" id="email" name="email" placeholder="name@example.com" required autofocus>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required>
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-300" for="password">Password</label>
+                    </div>
+                    <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                           type="password" id="password" name="password" placeholder="••••••••" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-950/40 transition active:scale-98">
+                    Sign In
+                </button>
             </form>
 
             <!-- Registration Link -->
-            <div style="text-align: center; margin-top: 1.25rem; font-size: 0.88rem; color: var(--text-secondary);">
-                Don't have an account? <a th:href="@{/register}" style="color: var(--accent-emerald); font-weight: 700; text-decoration: none;">Register as Household</a>
+            <div class="text-center text-xs text-slate-400 pt-2 border-t border-slate-800/80">
+                Don't have an account? 
+                <a th:href="@{/register}" class="font-bold text-emerald-400 hover:text-emerald-300 hover:underline transition">
+                    Register as Household
+                </a>
             </div>
 
-            <!-- Quick Demo Helper -->
-            <div class="demo-credentials">
-                <div class="demo-title">Quick Fill Demo Accounts</div>
-                <div class="demo-pills">
-                    <div class="demo-pill" onclick="fillCredentials('admin@agroloop.com', 'admin123')">
-                        <span class="demo-role">🛡️ Admin</span>
-                        <span class="demo-email">admin@agroloop.com</span>
-                    </div>
-                    <div class="demo-pill" onclick="fillCredentials('household@agroloop.com', 'household123')">
-                        <span class="demo-role">🏡 Household</span>
-                        <span class="demo-email">household@agroloop.com</span>
-                    </div>
-                    <div class="demo-pill" onclick="fillCredentials('farmer@agroloop.com', 'farmer123')">
-                        <span class="demo-role">🚜 Farmer</span>
-                        <span class="demo-email">farmer@agroloop.com</span>
-                    </div>
+            <!-- Quick Demo Credentials Helper -->
+            <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Fill Demo Accounts</span>
+                    <span class="text-[10px] text-emerald-400 font-semibold">Click to Autofill</span>
+                </div>
+                <div class="space-y-1.5">
+                    <button type="button" onclick="fillCredentials('admin@agroloop.com', 'admin123')" 
+                            class="w-full p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-950 transition text-left flex items-center justify-between group">
+                        <span class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition">🛡️ Admin</span>
+                        <span class="monospace text-[11px] text-slate-400">admin@agroloop.com</span>
+                    </button>
+                    <button type="button" onclick="fillCredentials('household@agroloop.com', 'household123')" 
+                            class="w-full p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-950 transition text-left flex items-center justify-between group">
+                        <span class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition">🏡 Household</span>
+                        <span class="monospace text-[11px] text-slate-400">household@agroloop.com</span>
+                    </button>
+                    <button type="button" onclick="fillCredentials('farmer@agroloop.com', 'farmer123')" 
+                            class="w-full p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-950 transition text-left flex items-center justify-between group">
+                        <span class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition">🚜 Farmer</span>
+                        <span class="monospace text-[11px] text-slate-400">farmer@agroloop.com</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="back-link">
-                <a th:href="@{/}">← Return to Homepage</a>
+            <!-- Back Link -->
+            <div class="text-center pt-2">
+                <a th:href="@{/}" class="text-xs text-slate-400 hover:text-white transition">
+                    ← Return to Homepage
+                </a>
             </div>
         </div>
     </div>
@@ -274,6 +155,5 @@
             document.getElementById('password').value = password;
         }
     </script>
-
 </body>
 </html>

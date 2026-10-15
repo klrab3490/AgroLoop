@@ -5,219 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register — AgroLoop</title>
     <link rel="icon" type="image/png" th:href="@{/images/logo.png}">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c22',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2.5rem 1.5rem;
-            background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.08) 0%, var(--bg-primary) 70%);
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #070b14;
         }
-
-        .auth-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            padding: 2.5rem;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
-        }
-
-        .auth-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .auth-logo-img {
-            width: 96px;
-            height: 96px;
-            object-fit: contain;
-            border-radius: 20px;
-            background: #ffffff;
-            padding: 6px;
-            margin-bottom: 1.25rem;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-            transition: transform 0.25s ease;
-        }
-
-        .auth-logo-img:hover {
-            transform: scale(1.05);
-        }
-
-        .auth-title {
-            font-size: 1.6rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: #fff;
-            margin-bottom: 0.35rem;
-        }
-
-        .auth-subtitle {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .role-notice {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 10px;
-            padding: 0.85rem 1rem;
-            font-size: 0.84rem;
-            color: #d1fae5;
-            margin-bottom: 1.5rem;
-            line-height: 1.45;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.45rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            color: #fff;
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.2s ease;
-            box-sizing: border-box;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--accent-emerald);
-            box-shadow: 0 0 0 3px var(--accent-emerald-glow);
-        }
-
-        .field-error {
-            color: #f87171;
-            font-size: 0.78rem;
-            margin-top: 0.35rem;
-            display: block;
-        }
-
-        .btn-block {
-            width: 100%;
-            padding: 0.85rem;
-            font-size: 0.95rem;
-            margin-top: 0.75rem;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 0.8rem 1rem;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .back-link a {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .back-link a:hover {
-            color: #fff;
+        .monospace {
+            font-family: 'JetBrains Mono', monospace;
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 sm:p-6 antialiased relative overflow-x-hidden selection:bg-emerald-500 selection:text-white">
 
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <a th:href="@{/}" style="text-decoration: none; display: inline-block;">
-                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="auth-logo-img">
+    <!-- Ambient Glowing Orbs -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none"></div>
+
+    <div class="w-full max-w-lg relative z-10 space-y-6 my-8">
+        <!-- Main Registration Card -->
+        <div class="bg-slate-900/90 rounded-3xl border border-slate-800 p-8 sm:p-10 shadow-2xl backdrop-blur-md space-y-6">
+            <!-- Header with Logo -->
+            <div class="text-center space-y-2">
+                <a th:href="@{/}" class="inline-flex items-center justify-center p-3 rounded-2xl bg-slate-950 border border-slate-800 shadow-md hover:scale-105 transition-transform">
+                    <img th:src="@{/images/logo.png}" alt="AgroLoop Logo" class="w-12 h-12 object-contain">
                 </a>
-                <h1 class="auth-title">Create an Account</h1>
-                <p class="auth-subtitle">Join the circular bio-economy network</p>
+                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Create an Account</h1>
+                <p class="text-xs sm:text-sm text-slate-400">Join the circular bio-economy network</p>
             </div>
 
             <!-- Global Error Notification -->
-            <div th:if="${errorMessage}" class="alert-error">
-                <span>⚠️</span>
+            <div th:if="${errorMessage}" class="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs font-semibold flex items-center gap-2.5">
+                <span class="w-2 h-2 rounded-full bg-rose-400"></span>
                 <span th:text="${errorMessage}">Registration error occurred.</span>
             </div>
 
             <!-- Default Role Explanatory Banner -->
-            <div class="role-notice">
-                🌿 <strong>Default Account:</strong> New accounts register as a <strong>Household Member</strong> to submit organic waste and earn EcoTokens. You can easily request to convert your account to a verified <strong>Farmer Partner</strong> from your dashboard at any time.
+            <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-200 text-xs leading-relaxed flex items-start gap-3">
+                <span class="text-lg">🌿</span>
+                <div>
+                    <strong class="font-bold text-white">Default Account:</strong> New accounts register as a <strong class="text-emerald-400">Household Member</strong> to submit organic waste and earn EcoTokens. You can easily request to convert your account to a verified <strong class="text-emerald-400">Farmer Partner</strong> from your dashboard at any time.
+                </div>
             </div>
 
             <!-- Registration Form -->
-            <form th:action="@{/register}" th:object="${registerRequest}" method="post">
-                <div class="form-group">
-                    <label class="form-label" for="name">Full Name</label>
-                    <input class="form-input" type="text" id="name" th:field="*{name}" placeholder="Alice Green" required autofocus>
-                    <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5" for="name">Full Name</label>
+                    <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                           type="text" id="name" th:field="*{name}" placeholder="Alice Green" required autofocus>
+                    <span class="text-xs text-rose-400 mt-1 block" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input class="form-input" type="email" id="email" th:field="*{email}" placeholder="alice@example.com" required>
-                    <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5" for="email">Email Address</label>
+                    <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                           type="email" id="email" th:field="*{email}" placeholder="alice@example.com" required>
+                    <span class="text-xs text-rose-400 mt-1 block" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="address">Pickup / Residential Address</label>
-                    <input class="form-input" type="text" id="address" th:field="*{address}" placeholder="123 Green Valley, Kochi, Kerala" required>
-                    <span class="field-error" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5" for="address">Pickup / Residential Address</label>
+                    <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                           type="text" id="address" th:field="*{address}" placeholder="123 Green Valley, Kochi, Kerala" required>
+                    <span class="text-xs text-rose-400 mt-1 block" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input class="form-input" type="password" id="password" th:field="*{password}" placeholder="At least 6 characters" required>
-                    <span class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5" for="password">Password</label>
+                        <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                               type="password" id="password" th:field="*{password}" placeholder="At least 6 chars" required>
+                        <span class="text-xs text-rose-400 mt-1 block" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1.5" for="confirmPassword">Confirm Password</label>
+                        <input class="w-full px-4 py-3 text-sm rounded-xl bg-slate-950/80 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" 
+                               type="password" id="confirmPassword" th:field="*{confirmPassword}" placeholder="Re-type password" required>
+                        <span class="text-xs text-rose-400 mt-1 block" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="confirmPassword">Confirm Password</label>
-                    <input class="form-input" type="password" id="confirmPassword" th:field="*{confirmPassword}" placeholder="Re-type your password" required>
-                    <span class="field-error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></span>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block">Complete Registration</button>
+                <button type="submit" class="w-full py-3.5 mt-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-950/40 transition active:scale-98">
+                    Complete Registration
+                </button>
             </form>
 
-            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.88rem; color: var(--text-secondary);">
-                Already have an account? <a th:href="@{/login}" style="color: var(--accent-emerald); font-weight: 700; text-decoration: none;">Sign In here</a>
+            <!-- Sign In Link -->
+            <div class="text-center text-xs text-slate-400 pt-3 border-t border-slate-800/80">
+                Already have an account? 
+                <a th:href="@{/login}" class="font-bold text-emerald-400 hover:text-emerald-300 hover:underline transition">
+                    Sign In here
+                </a>
             </div>
 
-            <div class="back-link">
-                <a th:href="@{/}">← Return to Homepage</a>
+            <!-- Back Link -->
+            <div class="text-center pt-1">
+                <a th:href="@{/}">
+                    <span class="text-xs text-slate-400 hover:text-white transition">← Return to Homepage</span>
+                </a>
             </div>
         </div>
     </div>
-
 </body>
 </html>
