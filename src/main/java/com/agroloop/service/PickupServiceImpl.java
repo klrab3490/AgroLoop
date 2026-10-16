@@ -34,11 +34,25 @@ public class PickupServiceImpl implements PickupService {
     private final FarmerRepository farmerRepository;
     private final TokenRewardService tokenRewardService;
 
-    @Autowired(required = false)
-    private RouteStopRepository routeStopRepository;
+    private final RouteStopRepository routeStopRepository;
+    private final CollectionRouteRepository collectionRouteRepository;
 
-    @Autowired(required = false)
-    private CollectionRouteRepository collectionRouteRepository;
+    @Autowired
+    public PickupServiceImpl(
+            PickupRequestRepository pickupRequestRepository,
+            WasteVerificationRepository wasteVerificationRepository,
+            FarmerRepository farmerRepository,
+            TokenRewardService tokenRewardService,
+            @Autowired(required = false) RouteStopRepository routeStopRepository,
+            @Autowired(required = false) CollectionRouteRepository collectionRouteRepository
+    ) {
+        this.pickupRequestRepository = pickupRequestRepository;
+        this.wasteVerificationRepository = wasteVerificationRepository;
+        this.farmerRepository = farmerRepository;
+        this.tokenRewardService = tokenRewardService;
+        this.routeStopRepository = routeStopRepository;
+        this.collectionRouteRepository = collectionRouteRepository;
+    }
 
     public PickupServiceImpl(
             PickupRequestRepository pickupRequestRepository,
@@ -46,10 +60,7 @@ public class PickupServiceImpl implements PickupService {
             FarmerRepository farmerRepository,
             TokenRewardService tokenRewardService
     ) {
-        this.pickupRequestRepository = pickupRequestRepository;
-        this.wasteVerificationRepository = wasteVerificationRepository;
-        this.farmerRepository = farmerRepository;
-        this.tokenRewardService = tokenRewardService;
+        this(pickupRequestRepository, wasteVerificationRepository, farmerRepository, tokenRewardService, null, null);
     }
 
 
