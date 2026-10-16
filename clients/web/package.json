@@ -10,7 +10,8 @@
     "start": "next start",
     "type-check": "tsc --noEmit",
     "lint": "echo 'web lint ok'",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "node scripts/patch-jsqr.cjs"
   },
   "dependencies": {
     "@agroloop/api-client": "workspace:*",

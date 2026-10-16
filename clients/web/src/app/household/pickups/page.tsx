@@ -33,9 +33,21 @@ export default function HouseholdPickupsPage() {
     try {
       // Calls BFF proxy /api/proxy/pickups/{id}/handshake/pass -> backend issues signed pass
       const res = await webApiClient.pickups.generateHandshakePass(pickupId);
+      const compactPayload = res.compactQr ?? {
+        t: "AGROLOOP_PICKUP_HANDSHAKE",
+        v: res.version ?? 1,
+        p: res.pickupId,
+        h: res.householdId,
+        s: res.submissionId,
+        iat: res.issuedAt,
+        exp: res.expiresAt,
+        n: res.nonce,
+        c: res.passCode,
+        sig: res.signature,
+      };
       setSelectedPass({
         pickupId,
-        qrPayload: JSON.stringify(res.compactQr ?? res),
+        qrPayload: JSON.stringify(compactPayload),
         passCode: res.passCode ?? "",
         expiresAt: res.expiresAt,
       });

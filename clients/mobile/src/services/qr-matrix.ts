@@ -18,6 +18,10 @@ class QR8bitByte {
     return this.data.length;
   }
 
+  getLengthInBits(typeNumber: number): number {
+    return typeNumber >= 10 ? 16 : 8;
+  }
+
   write(buffer: QRBitBuffer): void {
     for (let i = 0; i < this.data.length; i++) {
       buffer.put(this.data.charCodeAt(i), 8);
@@ -363,7 +367,7 @@ export class QRCodeModel {
         const buffer = new QRBitBuffer();
         for (const d of this.dataList) {
           buffer.put(d.mode, 4);
-          buffer.put(d.getLength(), 8);
+          buffer.put(d.getLength(), d.getLengthInBits(typeNumber));
           d.write(buffer);
         }
         let totalDataCount = 0;
@@ -518,7 +522,7 @@ export class QRCodeModel {
     const buffer = new QRBitBuffer();
     for (const d of dataList) {
       buffer.put(d.mode, 4);
-      buffer.put(d.getLength(), 8);
+      buffer.put(d.getLength(), d.getLengthInBits(typeNumber));
       d.write(buffer);
     }
 
