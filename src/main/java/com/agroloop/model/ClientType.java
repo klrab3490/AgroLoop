@@ -3,5 +3,6 @@ package com.agroloop.model;
 public enum ClientType {
     MOBILE,
     DESKTOP,
-    WEB
+    WEB,
+    NATIVE
 }

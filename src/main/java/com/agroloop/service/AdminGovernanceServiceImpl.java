@@ -8,10 +8,13 @@ import com.agroloop.model.OrderStatus;
 import com.agroloop.model.Role;
 import com.agroloop.model.TransactionDirection;
 import com.agroloop.model.User;
+import com.agroloop.model.Product;
 import com.agroloop.repository.EcoTokenTransactionRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.OrderRepository;
+import com.agroloop.repository.ProductRepository;
 import com.agroloop.repository.UserRepository;
+import com.agroloop.security.TokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -35,17 +38,26 @@ public class AdminGovernanceServiceImpl implements AdminGovernanceService {
     private final HouseholdRepository householdRepository;
     private final OrderRepository orderRepository;
     private final EcoTokenTransactionRepository ecoTokenTransactionRepository;
+    private final ProductRepository productRepository;
+    private final MarketplaceService marketplaceService;
+    private final TokenService tokenService;
 
     public AdminGovernanceServiceImpl(
             UserRepository userRepository,
             HouseholdRepository householdRepository,
             OrderRepository orderRepository,
-            EcoTokenTransactionRepository ecoTokenTransactionRepository
+            EcoTokenTransactionRepository ecoTokenTransactionRepository,
+            ProductRepository productRepository,
+            MarketplaceService marketplaceService,
+            TokenService tokenService
     ) {
         this.userRepository = Objects.requireNonNull(userRepository, "UserRepository cannot be null");
         this.householdRepository = Objects.requireNonNull(householdRepository, "HouseholdRepository cannot be null");
         this.orderRepository = Objects.requireNonNull(orderRepository, "OrderRepository cannot be null");
         this.ecoTokenTransactionRepository = Objects.requireNonNull(ecoTokenTransactionRepository, "EcoTokenTransactionRepository cannot be null");
+        this.productRepository = Objects.requireNonNull(productRepository, "ProductRepository cannot be null");
+        this.marketplaceService = Objects.requireNonNull(marketplaceService, "MarketplaceService cannot be null");
+        this.tokenService = Objects.requireNonNull(tokenService, "TokenService cannot be null");
     }
 
     @Override
@@ -93,6 +105,39 @@ public class AdminGovernanceServiceImpl implements AdminGovernanceService {
         targetUser.disable();
         userRepository.save(targetUser);
         log.info("User {} ({}) disabled by admin {}", targetUser.getName(), targetUser.getEmail(), adminEmail);
+
+        // 5. Invalidate and revoke all active auth sessions & refresh tokens
+        tokenService.revokeAllUserSessions(userId);
+
+        // 6. If target user is a Farmer, unpublish products and cancel pending placed orders
+        if (targetUser.getRole() == Role.ROLE_FARMER) {
+            // A. Deactivate all active products belonging to this farmer
+            List<Product> activeProducts = productRepository.findByFarmerIdAndActiveTrue(userId);
+            for (Product product : activeProducts) {
+                product.deactivate();
+                productRepository.save(product);
+            }
+            log.info("Deactivated {} products for disabled farmer id={}", activeProducts.size(), userId);
+
+            // B. Cancel existing PLACED orders for this farmer and refund tokens to buyers
+            List<Order> placedOrders = orderRepository.findOrdersForFarmerId(userId).stream()
+                    .filter(o -> o.getStatus() == OrderStatus.PLACED)
+                    .toList();
+            for (Order order : placedOrders) {
+                if (ecoTokenTransactionRepository.findByOrderAndTransactionType(order, com.agroloop.model.TransactionType.MARKETPLACE_PURCHASE).isPresent()) {
+                    marketplaceService.adminCancelOrder(
+                            order.getId(),
+                            adminEmail,
+                            "Supplier account disabled by administration"
+                    );
+                    log.info("Auto-cancelled Order #{} for disabled supplier id={}", order.getId(), userId);
+                } else {
+                    order.cancel("Supplier account disabled by administration", callerAdmin);
+                    orderRepository.save(order);
+                    log.info("Cancelled Order #{} without purchase ledger for disabled supplier id={}", order.getId(), userId);
+                }
+            }
+        }
     }
 
     @Override

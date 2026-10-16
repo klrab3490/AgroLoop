@@ -148,7 +148,7 @@ public class OrderApiController {
 
     @PostMapping("/{id}/cancel")
     @Transactional
-    @PreAuthorize("@orderAuth.canCancelAsHousehold(authentication, #id)")
+    @PreAuthorize("@orderAuth.canCancelOrder(authentication, #id)")
     public ResponseEntity<OrderApiResponse> cancelOrder(
             @PathVariable Long id,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
@@ -170,7 +170,7 @@ public class OrderApiController {
                 request,
                 OrderApiResponse.class,
                 () -> {
-                    marketplaceService.cancelHouseholdOrder(id, email, request.reason());
+                    marketplaceService.cancelOrder(id, email, request.reason());
                     Order updated = marketplaceService.getOrderById(id, email);
                     return OrderApiResponse.from(updated);
                 }

@@ -30,6 +30,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByFarmerAndActiveTrueOrderByCreatedAtDesc(Farmer farmer);
 
+    List<Product> findByFarmerIdAndActiveTrue(Long farmerId);
+
     List<Product> findByNameContainingIgnoreCaseAndActiveTrueOrderByCreatedAtDesc(String name);
 
     List<Product> findByCategoryAndNameContainingIgnoreCaseAndActiveTrueOrderByCreatedAtDesc(

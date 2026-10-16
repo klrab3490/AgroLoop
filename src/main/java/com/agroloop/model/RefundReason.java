@@ -5,6 +5,7 @@ package com.agroloop.model;
  */
 public enum RefundReason {
     HOUSEHOLD_CANCELLATION("Household Cancellation"),
+    FARMER_CANCELLATION("Supplier Cancellation"),
     ADMIN_CANCELLATION("Administrative Cancellation"),
     DISPUTE_APPROVED("Dispute Approved Refund");
 

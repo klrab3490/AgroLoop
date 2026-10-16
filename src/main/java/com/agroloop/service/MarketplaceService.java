@@ -43,6 +43,16 @@ public interface MarketplaceService {
     void cancelHouseholdOrder(Long orderId, String householdEmail, String reason);
 
     /**
+     * Initiates cancellation and atomic refund by an authenticated participating farmer / supplier.
+     */
+    void cancelFarmerOrder(Long orderId, String farmerEmail, String reason);
+
+    /**
+     * Universal order cancellation method supporting household purchaser, participating supplier, or administrator.
+     */
+    void cancelOrder(Long orderId, String actorEmail, String reason);
+
+    /**
      * Initiates cancellation and atomic refund by an authenticated administrator.
      */
     void adminCancelOrder(Long orderId, String adminEmail, String reason);

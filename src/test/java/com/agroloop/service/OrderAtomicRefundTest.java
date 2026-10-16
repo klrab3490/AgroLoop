@@ -300,4 +300,36 @@ class OrderAtomicRefundTest {
         assertThrows(IllegalStateException.class, () ->
                 marketplaceService.disputeOrderAsHousehold(orderId, household.getEmail(), "Second dispute"));
     }
+
+    @Test
+    @DisplayName("Farmer/Supplier cancellation restores stock, refunds tokens, emits ORDER_REFUND, and sets status CANCELLED")
+    void testFarmerCancellationAndRefund() {
+        CartItemDto item1 = new CartItemDto(product1.getId(), "Fresh Spinach", new BigDecimal("10.00"), "bunch", ProductCategory.ORGANIC_VEGETABLES, "John", null, 2);
+        CartDto cart = new CartDto(List.of(item1));
+
+        Order order = marketplaceService.checkout(household.getEmail(), cart, new CheckoutRequest("123 Forest Rd", null));
+        Long orderId = order.getId();
+
+        // Farmer cancels the order (e.g. inventory damaged before dispatch)
+        marketplaceService.cancelFarmerOrder(orderId, farmer.getEmail(), "Out of harvest stock");
+
+        Order cancelledOrder = orderRepository.findById(orderId).orElseThrow();
+        assertEquals(OrderStatus.CANCELLED, cancelledOrder.getStatus());
+        assertEquals("Out of harvest stock", cancelledOrder.getCancellationReason());
+
+        // Stock restored
+        Product p1 = productRepository.findById(product1.getId()).orElseThrow();
+        assertEquals(30, p1.getStock());
+
+        // Household tokens refunded
+        Household reloadedHousehold = householdRepository.findById(household.getId()).orElseThrow();
+        assertEquals(new BigDecimal("200.00"), reloadedHousehold.getTokenBalance());
+
+        // ORDER_REFUND ledger transaction emitted
+        EcoTokenTransaction refundTx = ecoTokenTransactionRepository
+                .findByOrderAndTransactionType(cancelledOrder, TransactionType.ORDER_REFUND)
+                .orElseThrow();
+        assertEquals(new BigDecimal("20.00"), refundTx.getAmount());
+        assertEquals(TransactionDirection.CREDIT, refundTx.getDirection());
+    }
 }

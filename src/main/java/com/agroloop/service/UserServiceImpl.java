@@ -142,10 +142,10 @@ public class UserServiceImpl implements UserService {
                     .executeUpdate();
         }
 
-        // 3. Remove entry from households table if user was converted from Household role
-        entityManager.createNativeQuery("DELETE FROM households WHERE id = :userId")
-                .setParameter("userId", userId)
-                .executeUpdate();
+        // 3. Note: We deliberately preserve the existing entry in the households table
+        // to maintain foreign key integrity for historical immutable ecotoken ledger transactions,
+        // orders, and waste submissions. Hibernate DiscriminatorFormula resolves the active entity
+        // subclass as Farmer based on users.role.
 
         // Flush and clear 1st-level cache so subsequent queries fetch the updated entity
         entityManager.flush();
@@ -214,10 +214,8 @@ public class UserServiceImpl implements UserService {
                     .executeUpdate();
         }
 
-        // 3. Remove entry from households table if user was converted from Household role
-        entityManager.createNativeQuery("DELETE FROM households WHERE id = :userId")
-                .setParameter("userId", userId)
-                .executeUpdate();
+        // 3. Note: Preserve entry in households table to maintain immutable ledger foreign keys.
+        // Entity resolution uses DiscriminatorFormula("role").
 
         // 4. If there are any pending applications for this user, approve them
         farmerApplicationRepository.findTopByUserIdOrderByCreatedAtDesc(userId).ifPresent(app -> {

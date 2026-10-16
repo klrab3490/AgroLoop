@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Alert } from "@/components/ui/alert";
+import { ConfirmationModal } from "@/components/ui";
 import type { OrderApiResponse, PickupRequestApiResponse } from "@agroloop/api-types";
 
 function getProductIcon(name?: string): string {
@@ -43,6 +44,9 @@ export default function FarmerOrdersPage() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Fetch produce customer orders placed for this farmer's products
   const {
@@ -93,6 +97,24 @@ export default function FarmerOrdersPage() {
       setTimeout(() => setActionError(null), 6000);
     } finally {
       setUpdatingOrderId(null);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancellingOrderId || !cancelReason.trim()) return;
+    setIsCancelling(true);
+    setActionError(null);
+    try {
+      await webApiClient.orders.cancelOrder(cancellingOrderId, { reason: cancelReason });
+      await queryClient.invalidateQueries({ queryKey: ["farmer-orders"] });
+      setActionSuccess(`Order #${cancellingOrderId} cancelled and customer tokens refunded.`);
+      setCancellingOrderId(null);
+      setCancelReason("");
+      setTimeout(() => setActionSuccess(null), 5000);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to cancel order");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -626,16 +648,31 @@ export default function FarmerOrdersPage() {
                         <div className="flex flex-wrap items-center gap-2 self-start lg:self-center shrink-0">
                           {order.id && !isCompleted && !isCancelled && (
                             <>
-                              {/* 1. If PLACED: Can Mark Packed or Dispatch */}
+                              {/* 1. If PLACED: Can Mark Packed or Dispatch or Cancel */}
                               {isPlaced && (
-                                <button
-                                  type="button"
-                                  onClick={() => order.id && handleUpdateOrderStatus(order.id, "PACKED")}
-                                  disabled={isUpdating}
-                                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                                >
-                                  {isUpdating ? "Updating..." : "📦 Mark as Packed"}
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => order.id && handleUpdateOrderStatus(order.id, "PACKED")}
+                                    disabled={isUpdating}
+                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    {isUpdating ? "Updating..." : "📦 Mark as Packed"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (order.id) {
+                                        setCancellingOrderId(order.id);
+                                      }
+                                    }}
+                                    disabled={isUpdating || isCancelling}
+                                    className="px-3 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 disabled:opacity-50 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <span>❌</span>
+                                    <span>Cancel & Refund</span>
+                                  </button>
+                                </>
                               )}
 
                               {/* 2. If PACKED or PLACED: Can Dispatch */}
@@ -772,6 +809,39 @@ export default function FarmerOrdersPage() {
           )}
         </div>
       )}
+
+      {/* Cancellation Modal for Supplier */}
+      <ConfirmationModal
+        isOpen={cancellingOrderId !== null}
+        title="Cancel Order & Refund Customer"
+        description={`Cancelling Order #${cancellingOrderId} will release all locked tokens from escrow back to the customer's wallet and restore produce stock inventory.`}
+        confirmLabel="Confirm Cancellation"
+        isDestructive={true}
+        isLoading={isCancelling}
+        onConfirm={handleCancelOrder}
+        onCancel={() => {
+          setCancellingOrderId(null);
+          setCancelReason("");
+        }}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-600">
+            Cancelling Order #{cancellingOrderId} will release all locked tokens from escrow back to the customer&apos;s wallet and restore produce stock inventory.
+          </p>
+          <div>
+            <label className="block text-2xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Cancellation Reason *
+            </label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g., Unable to fulfill order due to harvest inventory damage"
+              className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+              rows={3}
+            />
+          </div>
+        </div>
+      </ConfirmationModal>
     </div>
   );
 }

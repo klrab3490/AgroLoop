@@ -66,6 +66,34 @@ public class OrderSecurityEvaluator {
     }
 
     @Transactional(readOnly = true)
+    public boolean canCancelAsFarmer(Authentication auth, Long orderId) {
+        if (auth == null || orderId == null) {
+            return false;
+        }
+        Optional<Order> orderOpt = orderRepository.findById(orderId);
+        if (orderOpt.isEmpty()) {
+            return false;
+        }
+        Long userId = extractUserId(auth);
+        if (userId == null) {
+            return false;
+        }
+        return orderOpt.get().getItems().stream()
+                .anyMatch(item -> Objects.equals(item.getFarmerId(), userId));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean canCancelOrder(Authentication auth, Long orderId) {
+        if (auth == null || orderId == null) {
+            return false;
+        }
+        if (isAdmin(auth)) {
+            return true;
+        }
+        return canCancelAsHousehold(auth, orderId) || canCancelAsFarmer(auth, orderId);
+    }
+
+    @Transactional(readOnly = true)
     public boolean canDisputeAsHousehold(Authentication auth, Long orderId) {
         return canCancelAsHousehold(auth, orderId);
     }

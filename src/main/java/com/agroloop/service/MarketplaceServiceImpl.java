@@ -14,6 +14,7 @@ import com.agroloop.model.OrderItem;
 import com.agroloop.model.OrderStatus;
 import com.agroloop.model.Product;
 import com.agroloop.model.RefundReason;
+import com.agroloop.model.Role;
 import com.agroloop.model.TransactionDirection;
 import com.agroloop.model.TransactionType;
 import com.agroloop.model.User;
@@ -201,13 +202,33 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Override
     @Transactional
     public void cancelHouseholdOrder(Long orderId, String householdEmail, String reason) {
-        householdRepository.findByEmail(householdEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Household not found with email: " + householdEmail));
-        User callerUser = userRepository.findByEmail(householdEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + householdEmail));
+        cancelOrder(orderId, householdEmail, reason);
+    }
 
-        // Note: executeRefund will lock Order, Household, and Products in strict order
-        executeRefund(orderId, callerUser, RefundReason.HOUSEHOLD_CANCELLATION, reason, null);
+    @Override
+    @Transactional
+    public void cancelFarmerOrder(Long orderId, String farmerEmail, String reason) {
+        cancelOrder(orderId, farmerEmail, reason);
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Long orderId, String actorEmail, String reason) {
+        User actor = userRepository.findByEmail(actorEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + actorEmail));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+
+        if (actor.getRole() == Role.ROLE_ADMIN) {
+            executeRefund(orderId, actor, RefundReason.ADMIN_CANCELLATION, reason, null);
+        } else if (order.getHousehold() != null && Objects.equals(order.getHousehold().getId(), actor.getId())) {
+            executeRefund(orderId, actor, RefundReason.HOUSEHOLD_CANCELLATION, reason, null);
+        } else if (order.getItems().stream().anyMatch(item -> Objects.equals(item.getFarmerId(), actor.getId()))) {
+            executeRefund(orderId, actor, RefundReason.FARMER_CANCELLATION, reason, null);
+        } else {
+            throw new AccessDeniedException("User is not authorized to cancel Order #" + orderId);
+        }
     }
 
     @Override
@@ -298,11 +319,17 @@ public class MarketplaceServiceImpl implements MarketplaceService {
             if (!Objects.equals(order.getHousehold().getId(), actor.getId())) {
                 throw new AccessDeniedException("Household does not own Order #" + orderId);
             }
+        } else if (refundReason == RefundReason.FARMER_CANCELLATION) {
+            boolean isFarmerItem = order.getItems().stream()
+                    .anyMatch(item -> Objects.equals(item.getFarmerId(), actor.getId()));
+            if (!isFarmerItem) {
+                throw new AccessDeniedException("Farmer does not participate in Order #" + orderId);
+            }
         }
 
         // 2. Validate state preconditions against RefundReason
         switch (refundReason) {
-            case HOUSEHOLD_CANCELLATION, ADMIN_CANCELLATION -> {
+            case HOUSEHOLD_CANCELLATION, FARMER_CANCELLATION, ADMIN_CANCELLATION -> {
                 if (order.getStatus() != OrderStatus.PLACED) {
                     throw new IllegalStateException("Order #" + orderId + " is in status " + order.getStatus() + " and cannot be cancelled directly");
                 }

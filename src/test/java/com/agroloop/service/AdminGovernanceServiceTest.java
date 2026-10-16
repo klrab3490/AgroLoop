@@ -3,15 +3,20 @@ package com.agroloop.service;
 import com.agroloop.dto.SolvencyMetricsDto;
 import com.agroloop.model.Admin;
 import com.agroloop.model.EcoTokenTransaction;
+import com.agroloop.model.Farmer;
 import com.agroloop.model.Household;
 import com.agroloop.model.Order;
 import com.agroloop.model.OrderStatus;
+import com.agroloop.model.Product;
+import com.agroloop.model.ProductCategory;
 import com.agroloop.model.Role;
 import com.agroloop.model.TransactionDirection;
 import com.agroloop.repository.EcoTokenTransactionRepository;
 import com.agroloop.repository.HouseholdRepository;
 import com.agroloop.repository.OrderRepository;
+import com.agroloop.repository.ProductRepository;
 import com.agroloop.repository.UserRepository;
+import com.agroloop.security.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,6 +60,15 @@ class AdminGovernanceServiceTest {
 
     @Mock
     private EcoTokenTransactionRepository ecoTokenTransactionRepository;
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private MarketplaceService marketplaceService;
+
+    @Mock
+    private TokenService tokenService;
 
     @InjectMocks
     private AdminGovernanceServiceImpl adminGovernanceService;
@@ -149,6 +163,38 @@ class AdminGovernanceServiceTest {
 
         assertFalse(household.isEnabled());
         verify(userRepository).save(household);
+        verify(tokenService).revokeAllUserSessions(10L);
+    }
+
+    @Test
+    @DisplayName("disableUser on Farmer deactivates active products, auto-cancels placed orders, and revokes sessions")
+    void disableUser_farmerUser_deactivatesProductsAndCancelsOrders() {
+        Farmer farmer = new Farmer("Bob Farmer", "bob@example.com", "hash", "Bob's Farm", "123 Farm Rd", null);
+        ReflectionTestUtils.setField(farmer, "id", 20L);
+
+        Product p1 = new Product(farmer, "Organic Compost", "Desc", ProductCategory.COMPOST_AND_SOIL, "kg", new BigDecimal("15.00"), 50, null);
+        ReflectionTestUtils.setField(p1, "id", 101L);
+        assertTrue(p1.isActive());
+
+        Order placedOrder = new Order(household, "123 Green Way", null);
+        ReflectionTestUtils.setField(placedOrder, "id", 501L);
+
+        when(userRepository.findByEmail("admin1@agroloop.com")).thenReturn(Optional.of(admin1));
+        when(userRepository.findActiveUsersByRoleForUpdate(Role.ROLE_ADMIN)).thenReturn(List.of(admin1));
+        when(userRepository.findById(20L)).thenReturn(Optional.of(farmer));
+        when(productRepository.findByFarmerIdAndActiveTrue(20L)).thenReturn(List.of(p1));
+        when(orderRepository.findOrdersForFarmerId(20L)).thenReturn(List.of(placedOrder));
+        when(ecoTokenTransactionRepository.findByOrderAndTransactionType(placedOrder, com.agroloop.model.TransactionType.MARKETPLACE_PURCHASE))
+                .thenReturn(Optional.of(EcoTokenTransaction.marketplacePurchase(household, placedOrder, new BigDecimal("10.00"), BigDecimal.ZERO, household)));
+
+        adminGovernanceService.disableUser(20L, "admin1@agroloop.com");
+
+        assertFalse(farmer.isEnabled());
+        verify(userRepository).save(farmer);
+        assertFalse(p1.isActive());
+        verify(productRepository).save(p1);
+        verify(marketplaceService).adminCancelOrder(501L, "admin1@agroloop.com", "Supplier account disabled by administration");
+        verify(tokenService).revokeAllUserSessions(20L);
     }
 
     @Test

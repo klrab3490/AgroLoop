@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/spinner";
 import { Alert } from "@/components/ui/alert";
+import { ConfirmationModal } from "@/components/ui";
 
 function getProductIcon(name?: string): string {
   const lower = (name || "").toLowerCase();
@@ -35,6 +36,9 @@ export default function FarmerOrderDetailAuditPage({ params }: { params: Promise
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const {
     data: order,
@@ -71,6 +75,25 @@ export default function FarmerOrderDetailAuditPage({ params }: { params: Promise
       setTimeout(() => setActionError(null), 6000);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancelReason.trim()) return;
+    setIsCancelling(true);
+    setActionError(null);
+    try {
+      await webApiClient.orders.cancelOrder(orderId, { reason: cancelReason });
+      await queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      await queryClient.invalidateQueries({ queryKey: ["farmer-orders"] });
+      setCancelModalOpen(false);
+      setCancelReason("");
+      setActionSuccess("Order has been cancelled and customer tokens have been refunded.");
+      setTimeout(() => setActionSuccess(null), 5000);
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to cancel order");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -377,6 +400,18 @@ export default function FarmerOrderDetailAuditPage({ params }: { params: Promise
               <span>✅</span>
               <span>{isUpdating ? "Settling Escrow..." : "Mark Delivered & Release Tokens"}</span>
             </button>
+
+            {isPlaced && (
+              <button
+                type="button"
+                onClick={() => setCancelModalOpen(true)}
+                disabled={isUpdating || isCancelling}
+                className="px-5 py-3 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer ml-auto"
+              >
+                <span>❌</span>
+                <span>Cancel & Refund Order</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -396,6 +431,39 @@ export default function FarmerOrderDetailAuditPage({ params }: { params: Promise
           </p>
         </div>
       )}
+
+      {/* Cancellation Modal for Supplier */}
+      <ConfirmationModal
+        isOpen={cancelModalOpen}
+        title="Cancel Order & Refund Customer"
+        description="Cancelling this order will release all locked tokens from escrow back to the customer's wallet and restore produce stock inventory."
+        confirmLabel="Confirm Cancellation"
+        isDestructive={true}
+        isLoading={isCancelling}
+        onConfirm={handleCancelOrder}
+        onCancel={() => {
+          setCancelModalOpen(false);
+          setCancelReason("");
+        }}
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-slate-600">
+            Cancelling this order will release all locked tokens from escrow back to the customer&apos;s wallet and restore produce stock inventory.
+          </p>
+          <div>
+            <label className="block text-2xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Cancellation Reason *
+            </label>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g., Unable to fulfill order due to harvest inventory damage"
+              className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+              rows={3}
+            />
+          </div>
+        </div>
+      </ConfirmationModal>
     </div>
   );
 }
