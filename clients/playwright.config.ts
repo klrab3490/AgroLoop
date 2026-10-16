@@ -28,7 +28,7 @@ export default defineConfig({
       testMatch: /.*web.*\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: process.env.PLAYWRIGHT_WEB_URL || "http://localhost:3100",
+        baseURL: process.env.PLAYWRIGHT_WEB_URL || "http://localhost:3002",
       },
     },
     {
@@ -41,18 +41,20 @@ export default defineConfig({
     },
   ],
 
-  webServer: [
-    {
-      command: "pnpm --filter=@agroloop/web dev:e2e",
-      url: "http://localhost:3100",
-      reuseExistingServer: !process.env.CI,
-      timeout: 120000,
-    },
-    {
-      command: "pnpm --filter=@agroloop/desktop dev",
-      url: "http://localhost:1420",
-      reuseExistingServer: !process.env.CI,
-      timeout: 120000,
-    },
-  ],
+  webServer: process.env.PLAYWRIGHT_WEB_URL
+    ? undefined
+    : [
+        {
+          command: "pnpm --filter=@agroloop/web dev:e2e",
+          url: "http://localhost:3100",
+          reuseExistingServer: true,
+          timeout: 120000,
+        },
+        {
+          command: "pnpm --filter=@agroloop/desktop dev",
+          url: "http://localhost:1420",
+          reuseExistingServer: true,
+          timeout: 120000,
+        },
+      ],
 });

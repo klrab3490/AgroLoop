@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 
 export default function HouseholdLedgerPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: transactions, isLoading, error } = useQuery({
     queryKey: ["household-ledger"],
@@ -20,6 +20,16 @@ export default function HouseholdLedgerPage() {
     queryFn: () => webApiClient.household.getBalance(),
     enabled: isAuthenticated && user?.role === "ROLE_HOUSEHOLD",
   });
+
+  if (authLoading) {
+    return (
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)] animate-pulse">
+        <div className="h-6 w-32 rounded-xl bg-slate-200/60" />
+        <div className="h-16 rounded-2xl bg-slate-200/60" />
+        <div className="h-96 rounded-3xl bg-slate-200/50" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated || user?.role !== "ROLE_HOUSEHOLD") {
     return (

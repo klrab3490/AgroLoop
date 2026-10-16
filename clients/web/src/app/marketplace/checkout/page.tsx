@@ -10,7 +10,7 @@ import { webApiClient } from "@/lib/api";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { hydratedItems, estimatedTotalTokens, clearCart } = useCart();
   const [shippingAddress, setShippingAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,6 +105,19 @@ export default function CheckoutPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)] animate-pulse">
+        <div className="h-6 w-32 rounded-xl bg-slate-200/60" />
+        <div className="h-16 rounded-2xl bg-slate-200/60" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 h-96 rounded-3xl bg-slate-200/50" />
+          <div className="lg:col-span-4 h-96 rounded-3xl bg-slate-200/50" />
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

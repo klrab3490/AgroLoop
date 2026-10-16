@@ -16,6 +16,23 @@ interface RefreshResolution {
 // Global server-side mutex to coalesce concurrent refresh operations
 const inFlightRefreshes = new Map<string, Promise<RefreshResolution>>();
 
+// Grace period cache: absorbs rapid successive reloads using an already-rotated token (15-second window)
+interface CachedRefresh {
+  result: RefreshResolution;
+  expiresAt: number;
+}
+const recentRefreshes = new Map<string, CachedRefresh>();
+
+function getCachedRefresh(token: string): RefreshResolution | null {
+  const cached = recentRefreshes.get(token);
+  if (!cached) return null;
+  if (Date.now() > cached.expiresAt) {
+    recentRefreshes.delete(token);
+    return null;
+  }
+  return cached.result;
+}
+
 async function performBackendRefresh(
   refreshToken: string,
   requestId: string
@@ -42,12 +59,22 @@ async function performBackendRefresh(
       extractCookieValue(setCookieHeader, "eco_refresh_token") ||
       extractCookieValue(setCookieHeader, "refreshToken");
 
-    return {
+    const resolution: RefreshResolution = {
       ok: backendRes.ok,
       status: backendRes.status,
       data,
       newRefreshToken: newRefreshToken || refreshToken,
     };
+
+    if (backendRes.ok) {
+      // Store in grace cache for 15 seconds to prevent race conditions during page transitions
+      recentRefreshes.set(refreshToken, {
+        result: resolution,
+        expiresAt: Date.now() + 15000,
+      });
+    }
+
+    return resolution;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Refresh backend connection failed";
     return {
@@ -67,6 +94,31 @@ export async function POST(req: NextRequest) {
       { title: "Unauthorized", detail: "No refresh token available in session" },
       { status: 401 }
     );
+  }
+
+  // Check grace cache first
+  const cached = getCachedRefresh(cookieToken);
+  if (cached && cached.ok) {
+    const response = NextResponse.json({
+      accessToken: cached.data.accessToken,
+      expiresInSeconds: cached.data.expiresInSeconds,
+    });
+
+    if (cached.newRefreshToken) {
+      const isSecure =
+        process.env.COOKIE_SECURE === "true" ||
+        (process.env.NODE_ENV === "production" && req.nextUrl.protocol === "https:");
+
+      response.cookies.set("eco_refresh_token", cached.newRefreshToken, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
+
+    return response;
   }
 
   const requestId = req.headers.get("x-request-id") || crypto.randomUUID();

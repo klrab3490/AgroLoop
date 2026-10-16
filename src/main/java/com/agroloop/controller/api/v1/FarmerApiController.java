@@ -270,6 +270,16 @@ public class FarmerApiController {
         return ResponseEntity.ok(ProductApiResponse.from(updated));
     }
 
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity<Void> deleteProduct(
+            @PathVariable Long id,
+            Authentication auth
+    ) {
+        Farmer farmer = getAuthenticatedFarmer(auth);
+        productService.toggleProductStatus(id, farmer.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/orders")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<OrderApiResponse>> getOrders(Authentication auth) {

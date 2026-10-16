@@ -53,6 +53,16 @@ export default function FarmerProductsPage() {
     }
   };
 
+  const handleDeleteProduct = async (productId?: number) => {
+    if (!productId) return;
+    try {
+      await webApiClient.farmer.deleteProduct(productId);
+      await queryClient.invalidateQueries({ queryKey: ["farmer-products"] });
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to update product status");
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8 sm:py-10 space-y-8 min-h-[calc(100vh-4rem)]">
@@ -131,6 +141,7 @@ export default function FarmerProductsPage() {
                 <th className="py-3.5 px-6">Category</th>
                 <th className="py-3.5 px-6 text-right">Price</th>
                 <th className="py-3.5 px-6 text-right">Stock</th>
+                <th className="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -147,6 +158,14 @@ export default function FarmerProductsPage() {
                   </td>
                   <td className="py-4 px-6 text-right font-bold text-slate-900">
                     {p.stock ?? 0} {p.unit || "units"}
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <button
+                      onClick={() => handleDeleteProduct(p.id)}
+                      className="px-2.5 py-1 text-2xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition cursor-pointer"
+                    >
+                      Deactivate
+                    </button>
                   </td>
                 </tr>
               ))}

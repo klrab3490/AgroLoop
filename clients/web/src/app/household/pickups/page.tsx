@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { webApiClient } from "@/lib/api";
 import { QrCodeView } from "@/components/qr-code-view";
@@ -17,8 +17,10 @@ interface HandshakePassData {
 
 export default function HouseholdPickupsPage() {
   const { user, isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedPass, setSelectedPass] = useState<HandshakePassData | null>(null);
   const [passLoading, setPassLoading] = useState(false);
+  const [cancelLoadingId, setCancelLoadingId] = useState<number | null>(null);
   const [passError, setPassError] = useState<string | null>(null);
 
   const { data: pickups, isLoading, error } = useQuery<PickupRequestApiResponse[]>({
@@ -26,6 +28,19 @@ export default function HouseholdPickupsPage() {
     queryFn: () => webApiClient.pickups.listPickups(),
     enabled: isAuthenticated && user?.role === "ROLE_HOUSEHOLD",
   });
+
+  const handleCancelPickup = async (pickupId: number) => {
+    setCancelLoadingId(pickupId);
+    setPassError(null);
+    try {
+      await webApiClient.pickups.cancelPickup(pickupId, { reason: "Household cancelled pickup request" });
+      await queryClient.invalidateQueries({ queryKey: ["household-pickups"] });
+    } catch (err: unknown) {
+      setPassError(err instanceof Error ? err.message : "Failed to cancel pickup");
+    } finally {
+      setCancelLoadingId(null);
+    }
+  };
 
   const handleRequestPass = async (pickupId: number) => {
     setPassLoading(true);
@@ -165,13 +180,22 @@ export default function HouseholdPickupsPage() {
                   <p className="text-xs text-slate-500 truncate max-w-lg">📍 {pickup.pickupAddress || "Registered Address"}</p>
                 </div>
 
-                {/* QR Pass Action */}
+                {/* Action Bar */}
                 <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0">
+                  {pickup.id != null && (pickup.status === "REQUESTED" || pickup.status === "ASSIGNED" || pickup.status === "SCHEDULED") && (
+                    <button
+                      onClick={() => handleCancelPickup(pickup.id!)}
+                      disabled={cancelLoadingId === pickup.id}
+                      className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
+                    >
+                      {cancelLoadingId === pickup.id ? "Cancelling..." : "Cancel Pickup"}
+                    </button>
+                  )}
                   {canRequestPass && (
                     <button
                       onClick={() => handleRequestPass(pickup.id!)}
                       disabled={passLoading}
-                      className="px-4 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 transition flex items-center gap-2 shadow-sm shadow-emerald-200"
+                      className="px-4 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 transition flex items-center gap-2 shadow-sm shadow-emerald-200 cursor-pointer"
                     >
                       <span>📲</span> View QR Pickup Pass
                     </button>

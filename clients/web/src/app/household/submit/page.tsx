@@ -239,8 +239,9 @@ export default function SubmitWastePage() {
 
         {/* Estimated Weight */}
         <div className="space-y-1">
-          <label className="block text-xs font-bold text-slate-700">Estimated Weight (kg)</label>
+          <label htmlFor="estimated-weight" className="block text-xs font-bold text-slate-700">Estimated Weight (kg)</label>
           <input
+            id="estimated-weight"
             type="number"
             step="any"
             min="0.1"
@@ -257,7 +258,7 @@ export default function SubmitWastePage() {
         {/* Pickup Address & Geolocation */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-slate-700">Doorstep Pickup Address</label>
+            <label htmlFor="pickup-address" className="block text-xs font-bold text-slate-700">Doorstep Pickup Address</label>
             <button
               type="button"
               onClick={handleGetCurrentLocation}
@@ -268,6 +269,7 @@ export default function SubmitWastePage() {
             </button>
           </div>
           <input
+            id="pickup-address"
             type="text"
             required
             value={address}
@@ -328,8 +330,9 @@ export default function SubmitWastePage() {
 
         {/* Notes */}
         <div className="space-y-1">
-          <label className="block text-xs font-bold text-slate-700">Special Collection Notes (Optional)</label>
+          <label htmlFor="pickup-notes" className="block text-xs font-bold text-slate-700">Special Collection Notes (Optional)</label>
           <textarea
+            id="pickup-notes"
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

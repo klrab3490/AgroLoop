@@ -80,8 +80,9 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+            <label htmlFor="login-email" className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
             <input
+              id="login-email"
               type="email"
               required
               value={email}
@@ -92,8 +93,9 @@ function LoginForm() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+            <label htmlFor="login-password" className="block text-xs font-bold text-slate-700 mb-1">Password</label>
             <input
+              id="login-password"
               type="password"
               required
               value={password}

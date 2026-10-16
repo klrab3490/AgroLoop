@@ -18,6 +18,7 @@ export interface FarmerEndpoints {
   getProducts(): Promise<ProductApiResponse[]>;
   createProduct(request: FarmerProductApiRequest, options?: MutationOptions): Promise<ProductApiResponse>;
   updateProduct(id: number, request: FarmerProductApiRequest): Promise<ProductApiResponse>;
+  deleteProduct(id: number): Promise<void>;
   getOrders(): Promise<OrderApiResponse[]>;
   getActiveRoutes(): Promise<import("@agroloop/api-types").CollectionRouteApiResponse[]>;
   getRouteDetails(id: number): Promise<import("@agroloop/api-types").CollectionRouteApiResponse>;
@@ -75,6 +76,10 @@ export function createFarmerEndpoints(client: AgroLoopApiClient): FarmerEndpoint
 
     async updateProduct(id: number, request: FarmerProductApiRequest) {
       return client.put<ProductApiResponse>(`/farmer/products/${id}`, request);
+    },
+
+    async deleteProduct(id: number) {
+      return client.delete<void>(`/farmer/products/${id}`);
     },
 
     async getOrders() {
