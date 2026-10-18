@@ -9,7 +9,7 @@ describe("version-checker", () => {
           tag_name: "v1.2.0",
           name: "AgroLoop v1.2.0",
           body: "Major feature updates",
-          html_url: "https://github.com/AgnaMariya/AgroLoop/releases/tag/v1.2.0",
+          html_url: "https://github.com/klrab3490/AgroLoop/releases/tag/v1.2.0",
           assets: [
             {
               name: "agroloop-desktop.dmg",
@@ -37,7 +37,7 @@ describe("version-checker", () => {
           tag_name: "v1.0.2",
           name: "AgroLoop v1.0.2",
           body: "Bug fixes",
-          html_url: "https://github.com/AgnaMariya/AgroLoop/releases/tag/v1.0.2",
+          html_url: "https://github.com/klrab3490/AgroLoop/releases/tag/v1.0.2",
         }),
         { status: 200 }
       );

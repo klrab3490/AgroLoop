@@ -148,7 +148,7 @@ To build or develop the Next.js Web Portal, Expo React Native mobile client, or 
 
 Clone the repository and enter the directory:
 ```bash
-git clone git@github-personal:AgnaMariya/AgroLoop.git
+git clone git@github-personal:klrab3490/AgroLoop.git
 cd AgroLoop
 ```
 
@@ -1223,12 +1223,12 @@ feature/<phase-name> (Individual feature branch)
 4. **Open Pull Request Targeting `dev`:**
    - Direct CLI merges to `dev` or `main` are strictly forbidden.
    - Open a Pull Request on GitHub targeting **base: `dev`**:
-     👉 **[Create PR to dev](https://github.com/AgnaMariya/AgroLoop/compare/dev...feature/<feature-name>?expand=1)**
+     👉 **[Create PR to dev](https://github.com/klrab3490/AgroLoop/compare/dev...feature/<feature-name>?expand=1)**
    - Fill out the automated checklist in [`.github/pull_request_template.md`](../.github/pull_request_template.md).
    - GitHub Actions CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) automatically runs the test suite against the PR.
 5. **Release Promotion to `main` via PR:**
    - When a phase/milestone is ready for release, open a PR from `dev` to `main`:
-     👉 **[Create PR from dev to main](https://github.com/AgnaMariya/AgroLoop/compare/main...dev?expand=1)**
+     👉 **[Create PR from dev to main](https://github.com/klrab3490/AgroLoop/compare/main...dev?expand=1)**
    - Review, approve, and merge into `main`.
 6. **Automated Main Release Packaging:**
    - Merging or pushing code into `main` automatically fires [`.github/workflows/main-release.yml`](../.github/workflows/main-release.yml).

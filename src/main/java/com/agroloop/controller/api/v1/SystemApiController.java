@@ -1,18 +1,21 @@
 package com.agroloop.controller.api.v1;
 
-import com.agroloop.dto.api.v1.response.SystemHealthApiResponse;
-import com.agroloop.dto.api.v1.response.SystemMetaApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.agroloop.dto.api.v1.response.SystemHealthApiResponse;
+import com.agroloop.dto.api.v1.response.SystemMetaApiResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * Public system discovery, health check, and client compatibility endpoints.
- * Unauthenticated by design to allow first-run server verification from Mobile, Desktop, and Web.
+ * Unauthenticated by design to allow first-run server verification from Mobile,
+ * Desktop, and Web.
  */
 @RestController
 @RequestMapping("/api/v1")
@@ -30,8 +33,7 @@ public class SystemApiController {
             @Value("${agroloop.api.version:v1}") String apiVersion,
             @Value("${agroloop.api.minimum-client-version:1.0.0}") String minimumClientVersion,
             @Value("${agroloop.app.version:1.0.7}") String appVersion,
-            @Value("${agroloop.github.repo:AgnaMariya/AgroLoop}") String githubRepo
-    ) {
+            @Value("${agroloop.github.repo:klrab3490/AgroLoop}") String githubRepo) {
         this.serverVersion = serverVersion;
         this.apiVersion = apiVersion;
         this.minimumClientVersion = minimumClientVersion;
@@ -55,7 +57,6 @@ public class SystemApiController {
                 minimumClientVersion,
                 serverVersion,
                 appVersion,
-                githubRepo
-        ));
+                githubRepo));
     }
 }

@@ -112,7 +112,7 @@ export const UpdateCheckerModal: React.FC<UpdateCheckerModalProps> = ({ isOpen, 
               Repository
             </span>
             <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
-              AgnaMariya/AgroLoop
+              klrab3490/AgroLoop
             </div>
           </div>
         </div>
@@ -330,7 +330,7 @@ export const UpdateCheckerModal: React.FC<UpdateCheckerModalProps> = ({ isOpen, 
         {/* Footer Actions */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-subtle)", paddingTop: "14px" }}>
           <a
-            href="https://github.com/AgnaMariya/AgroLoop/releases"
+            href="https://github.com/klrab3490/AgroLoop/releases"
             target="_blank"
             rel="noopener noreferrer"
             style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "none" }}

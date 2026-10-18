@@ -77,7 +77,7 @@ export function UpdateCheckerModal({ visible, onClose }: UpdateCheckerModalProps
               </View>
               <View style={styles.repoCol}>
                 <Text style={styles.versionLabel}>GitHub Repo</Text>
-                <Text style={styles.repoName}>AgnaMariya/AgroLoop</Text>
+                <Text style={styles.repoName}>klrab3490/AgroLoop</Text>
               </View>
             </View>
 
@@ -179,7 +179,7 @@ export function UpdateCheckerModal({ visible, onClose }: UpdateCheckerModalProps
           {/* Footer Actions */}
           <View style={styles.footer}>
             <TouchableOpacity
-              onPress={() => Linking.openURL("https://github.com/AgnaMariya/AgroLoop/releases")}
+              onPress={() => Linking.openURL("https://github.com/klrab3490/AgroLoop/releases")}
             >
               <Text style={styles.githubLink}>GitHub ↗</Text>
             </TouchableOpacity>

@@ -49,7 +49,7 @@ export function resolveEnv(key: string, defaultValue: string): string {
   return defaultValue;
 }
 
-export const DEFAULT_GITHUB_REPO = resolveEnv("GITHUB_REPO", "AgnaMariya/AgroLoop");
+export const DEFAULT_GITHUB_REPO = resolveEnv("GITHUB_REPO", "klrab3490/AgroLoop");
 export const CURRENT_PLATFORM_VERSION = resolveEnv("APP_VERSION", "1.0.7");
 
 export interface GitHubReleaseAsset {
@@ -195,11 +195,11 @@ export async function checkLatestRelease(
 
     const assets: GitHubReleaseAsset[] = Array.isArray(release.assets)
       ? release.assets.map((a: Record<string, unknown>) => ({
-          name: String(a.name ?? ""),
-          size: Number(a.size ?? 0),
-          downloadUrl: String(a.browser_download_url ?? ""),
-          contentType: String(a.content_type ?? ""),
-        }))
+        name: String(a.name ?? ""),
+        size: Number(a.size ?? 0),
+        downloadUrl: String(a.browser_download_url ?? ""),
+        contentType: String(a.content_type ?? ""),
+      }))
       : [];
 
     return {

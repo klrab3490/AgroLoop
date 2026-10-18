@@ -62,7 +62,7 @@ export function UpdateCheckerModal({ isOpen, onClose }: UpdateCheckerModalProps)
           </div>
           <div className="text-right">
             <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider block">Repository</span>
-            <span className="text-xs font-semibold text-slate-700">AgnaMariya/AgroLoop</span>
+            <span className="text-xs font-semibold text-slate-700">klrab3490/AgroLoop</span>
           </div>
         </div>
 
@@ -177,7 +177,7 @@ export function UpdateCheckerModal({ isOpen, onClose }: UpdateCheckerModalProps)
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <a
-            href="https://github.com/AgnaMariya/AgroLoop/releases"
+            href="https://github.com/klrab3490/AgroLoop/releases"
             target="_blank"
             rel="noopener noreferrer"
             className="text-2xs font-semibold text-slate-500 hover:text-emerald-600 transition"

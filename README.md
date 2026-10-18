@@ -388,10 +388,10 @@ feature/<name> (Local Feature Branch)
    git push -u origin feature/<feature-name>
    ```
 3. **Open PR targeting `dev`**:
-   👉 [Create Pull Request to `dev`](https://github.com/AgnaMariya/AgroLoop/compare/dev...feature/<feature-name>?expand=1)  
+   👉 [Create Pull Request to `dev`](https://github.com/klrab3490/AgroLoop/compare/dev...feature/<feature-name>?expand=1)  
    Complete the PR checklist in `.github/pull_request_template.md`. GitHub Actions runs automated tests on Java 21.
 4. **Release PR to `main`**:
-   👉 [Create Release PR to `main`](https://github.com/AgnaMariya/AgroLoop/compare/main...dev?expand=1)
+   👉 [Create Release PR to `main`](https://github.com/klrab3490/AgroLoop/compare/main...dev?expand=1)
 
 
 
